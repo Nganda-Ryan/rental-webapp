@@ -1,0 +1,109 @@
+/**
+ * @license
+ *
+ * Font Family: Glancyr
+ *
+ * Font Styles:
+ * glancyr extra light
+ * glancyr extra light Italic
+ * glancyr light
+ * glancyr light Italic
+ * glancyr regular
+ * glancyr Italic
+ * glancyr Medium
+ * glancyr Medium Italic
+ * glancyr Bold
+ * glancyr Bold Italic
+ *
+*/
+
+
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-extra-light-100.ttf") format("ttf");
+    font-weight: 100;
+    font-display: swap;
+    font-style: normal;
+}
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-extra-light-italic-100.ttf") format("ttf");
+    font-weight: 100;
+    font-display: swap;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-light-200.ttf") format("ttf");
+    font-weight: 200;
+    font-display: swap;
+    font-style: normal;
+}
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-light-italic-200.ttf") format("ttf");
+    font-weight: 200;
+    font-display: swap;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-regular-400.ttf") format("ttf");
+    font-weight: 400;
+    font-display: swap;
+    font-style: normal;
+}
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-regular-italic-400.ttf") format("ttf");
+    font-weight: 400;
+    font-display: swap;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-medium-500.ttf") format("ttf");
+    font-weight: 500;
+    font-display: swap;
+    font-style: normal;
+}
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-medium-italic-500.ttf") format("ttf");
+    font-weight: 500;
+    font-display: swap;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-semibold-600.ttf") format("ttf");
+    font-weight: 600;
+    font-display: swap;
+    font-style: normal;
+}
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-semibold-italic-600.ttf") format("ttf");
+    font-weight: 600;
+    font-display: swap;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-bold-700.ttf") format("ttf");
+    font-weight: 700;
+    font-display: swap;
+    font-style: normal;
+}
+@font-face {
+    font-family: Glancyr ;
+    src: url("../fonts/glancyr-glancyr-bold-italic-700.ttf") format("ttf");
+    font-weight: 700;
+    font-display: swap;
+    font-style: italic;
+}
