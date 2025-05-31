@@ -227,6 +227,7 @@ export async function logout() {
   redirect("/login");
 }
 
+export const runtime = "edge";
 
 
 /*

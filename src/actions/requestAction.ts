@@ -245,3 +245,5 @@ export async function requestPropertyVerification(application: IPropertyVerifica
     }
   }
 }
+
+export const runtime = "edge";

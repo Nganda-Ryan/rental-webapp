@@ -12,6 +12,8 @@ const testUser = {
   password: "12345678",
 };
 
+export const runtime = "edge";
+
 
 
 
