@@ -35,5 +35,3 @@ export async function searchUser(params: SeachUserParams) {
     }
   }
 }
-
-export const runtime = "edge";
