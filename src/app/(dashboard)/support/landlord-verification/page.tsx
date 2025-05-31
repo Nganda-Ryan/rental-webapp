@@ -26,7 +26,7 @@ import { ProcessingModal } from '@/components/Modal/ProcessingModal'
 import RenderMobileCardSkeleton from '@/components/skeleton/RenderMobileCardSkeleton'
 import RenderDesktopTableSkeleton from '@/components/skeleton/RenderDesktopTableSkeleton'
 import Image from 'next/image'
-import { getStatusIcon } from '@/lib/utils'
+import { getStatusIcon } from "@/lib/utils-component";
 
 interface Document {
   name: string

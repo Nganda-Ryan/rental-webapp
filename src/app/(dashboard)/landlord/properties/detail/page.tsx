@@ -540,6 +540,7 @@ const PropertyDetail = () => {
                 </Overlay>
                 <Overlay isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                     <VerificationForm
+                        propertyTitle=""
                         propertyId={property.id}
                         onClose={() => setIsModalOpen(false)}
                         onSubmit={handleVerificationSubmit}
@@ -547,6 +548,7 @@ const PropertyDetail = () => {
                 </Overlay>
                 <Overlay isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                     <VerificationForm
+                        propertyTitle=""
                         propertyId={property.id}
                         onClose={() => setIsModalOpen(false)}
                         onSubmit={handleVerificationSubmit}

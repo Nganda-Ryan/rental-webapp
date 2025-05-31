@@ -60,11 +60,9 @@ const propertyTypes = [
 ]
 
 
-const Page = ({
-  initialData,
-}: PropertyFormProps) => {
+const Page = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imagePreview, setImagePreview] = useState(initialData?.image || "");
+  const [imagePreview, setImagePreview] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<{ label: string; value: string } | null>(null);
   const [isCplxAsset, setIsCplxAsset] = useState(false);
@@ -565,7 +563,7 @@ const Page = ({
                             rows={4}
                             {...register("description")}
                             placeholder="Describe the property..."
-                            defaultValue={initialData?.description}
+                            defaultValue={""}
                           />
                         </div>
 
@@ -576,7 +574,7 @@ const Page = ({
                             rows={4}
                             {...register("tag")}
                             placeholder="Tags..."
-                            defaultValue={initialData?.description}
+                            defaultValue={""}
                           />
                         </div>
                       </div>
@@ -592,7 +590,7 @@ const Page = ({
                             type="checkbox"
                             {...register("billingItem", { required: "Select at least one billing Item" })}
                             className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
-                            defaultChecked={initialData?.amenities?.includes(bi)}
+                            defaultChecked={false}
                           />
                           <span className="text-sm text-gray-700 dark:text-gray-300">{bi.label}</span>
                         </label>

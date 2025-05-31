@@ -25,17 +25,13 @@ import InvoiceGenerator from "@/components/feature/Properties/InvoiceGenerator";
 import { useParams } from 'next/navigation';
 import { getAsset } from "@/actions/assetAction";
 import { AssetData, AssetDataDetailed } from "@/types/Property";
-import { getStatusIcon } from "@/lib/utils";
+import { getStatusIcon } from "@/lib/utils-component";
 import { PropertySkeletonPageSection1, PropertySkeletonPageSection2 } from "@/components/skeleton/pages/PropertySkeletonPage";
 import Button from "@/components/ui/Button";
 import { ContractForm } from "@/components/feature/Properties/ContractForm";
 
 
-interface PropertyDetailProps {
-  onBack: () => void;
-  onEdit?: (property: any) => void;
-}
-const PropertyDetail = ({ onBack, onEdit }: PropertyDetailProps) => {
+const PropertyDetail = () => {
     const [asset, setAsset] = useState<AssetDataDetailed | null>(null);
     const [isReady, setIsReady] = useState(false);
 
@@ -289,7 +285,6 @@ const PropertyDetail = ({ onBack, onEdit }: PropertyDetailProps) => {
         setSuccessMessage("Property deleted successfully");
         setShowSuccessModal(true);
         setTimeout(() => {
-        onBack();
         }, 2000);
     };
     const handleAttachProperties = (selectedProperties: string[]) => {
@@ -494,7 +489,7 @@ const PropertyDetail = ({ onBack, onEdit }: PropertyDetailProps) => {
                                         { asset?.StatusCode == "DRAFT" && <Button onClick={handleVerificationFormOpen} variant='neutral' disable={false} isSubmitBtn={false}>
                                             <FileText size={16} /> Verify Property
                                         </Button>}
-                                        <Button onClick={() => onEdit?.(property)} variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false}>
+                                        <Button variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false}>
                                             <Building2 size={16} /> Edit Property
                                         </Button>
                                         <Button onClick={() => setIsManagerSearchOpen(true)} variant='neutral' disable={canAttachManager()} isSubmitBtn={false}>

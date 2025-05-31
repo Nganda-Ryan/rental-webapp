@@ -29,7 +29,7 @@ import toast from 'react-hot-toast';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal';
 import Link from 'next/link';
 import ProfileVerificationDetailSkeleton from '@/components/skeleton/pages/ProfileVerificationDetailSkeleton';
-import { getStatusIcon } from '@/lib/utils';
+import { getStatusIcon } from "@/lib/utils-component";
 
 interface ModalAction {
   type: 'APPROVED' | 'DECLINED'
