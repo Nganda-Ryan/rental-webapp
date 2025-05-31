@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "install-force": "npm install --force", 
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "preinstall": "npm install --force",
+    "install-force": "npm install --force", 
     "pages:build": "npx @cloudflare/next-on-pages",
     "preview": "npm run pages:build && wrangler pages dev",
     "deploy": "npm run pages:build && wrangler pages deploy"
