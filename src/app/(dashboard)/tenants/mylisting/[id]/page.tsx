@@ -183,4 +183,3 @@ const ListingDetail = () => {
 }
 
 export default ListingDetail;
-export const runtime = 'edge';

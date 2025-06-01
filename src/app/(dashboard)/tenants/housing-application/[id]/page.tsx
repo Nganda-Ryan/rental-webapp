@@ -201,4 +201,3 @@ const ApplicationDetail = () => {
 
 
 export default ApplicationDetail;
-export const runtime = 'edge';
