@@ -5,9 +5,7 @@ import { uploadFile } from '@/lib/fileUpload';
 import { verifySession } from '@/lib/session';
 import { IPropertyVerification } from '@/types/Property';
 import { GetRequestsParams, ProfileApplication_T, VerifyRequestType } from '@/types/requestTypes';
-import axios, { AxiosInstance, AxiosError } from 'axios';
-import { error } from 'console';
-import { cp } from 'fs';
+import axios, { AxiosInstance } from 'axios';
 import path from "path";
 
 /**
@@ -193,7 +191,7 @@ export async function requestPropertyVerification(application: IPropertyVerifica
         
       if (contentUrl instanceof File) {
         const uploadedDoc = await uploadFile(contentUrl, docPathList[index]);
-        if(uploadedDoc.error) console.log('-->error', error)
+        if(uploadedDoc.error) console.log('-->error', uploadedDoc.error)
         uploadedDocs.push(`Asset/${session.Code}/${application.body[index].Type}${path.extname(contentUrl.name)}`);
       } else {
         uploadedDocs.push(contentUrl as string);
