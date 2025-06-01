@@ -300,4 +300,5 @@ const PropertyDetailView = () => {
   )
 }
 
-export default PropertyDetailView
+export default PropertyDetailView;
+export const runtime = 'edge';

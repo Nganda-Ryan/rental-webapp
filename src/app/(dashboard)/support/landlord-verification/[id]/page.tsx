@@ -300,4 +300,5 @@ const LessorDetailView = () => {
   )
 }
 
-export default LessorDetailView
+export default LessorDetailView;
+export const runtime = 'edge';

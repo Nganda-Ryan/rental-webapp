@@ -668,3 +668,5 @@ const PropertyDetail = () => {
 };
 
 export default PropertyDetail;
+
+export const runtime = 'edge';
