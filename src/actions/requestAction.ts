@@ -3,10 +3,11 @@
 
 import { uploadFile } from '@/lib/fileUpload';
 import { verifySession } from '@/lib/session';
+import { getExtension } from '@/lib/utils';
 import { IPropertyVerification } from '@/types/Property';
 import { GetRequestsParams, ProfileApplication_T, VerifyRequestType } from '@/types/requestTypes';
 import axios, { AxiosInstance } from 'axios';
-import path from "path";
+import path from "node:path";
 
 /**
  * Pre-configured Axios instance for API calls.
@@ -119,9 +120,9 @@ export async function verifyRequest(verifInfo: VerifyRequestType, requestType: s
 export async function requestLessorProfile(application: ProfileApplication_T){
   try {
     const session = await verifySession();
-    const idCardRectoPath = `${process.env.PROFILE_FILE_NAME_SRC}/${session.Code}/CNI_RECTO${path.extname(application.idCardRecto.name)}`;
-    const idCardVersoPath = `${process.env.PROFILE_FILE_NAME_SRC}/${session.Code}/CNI_VERSO${path.extname(application.idCardVerso.name)}`;
-    const selfiePath = `${process.env.PROFILE_FILE_NAME_SRC}/${session.Code}/SELFIE${path.extname(application.selfie.name)}`;
+    const idCardRectoPath = `${process.env.PROFILE_FILE_NAME_SRC}/${session.Code}/CNI_RECTO${getExtension(application.idCardRecto.name)}`;
+    const idCardVersoPath = `${process.env.PROFILE_FILE_NAME_SRC}/${session.Code}/CNI_VERSO${getExtension(application.idCardVerso.name)}`;
+    const selfiePath = `${process.env.PROFILE_FILE_NAME_SRC}/${session.Code}/SELFIE${getExtension(application.selfie.name)}`;
 
     console.log('-->idCardRectoPath', idCardRectoPath);
     console.log('-->idCardVersoPath', idCardVersoPath);
@@ -182,7 +183,7 @@ export async function requestPropertyVerification(application: IPropertyVerifica
     const session = await verifySession();
 
     const docPathList = application.body.map(doc => {
-      return doc.ContentUrl instanceof File ? `${process.env.ASSET_FILE_NAME_SRC}/${session.Code}/${doc.Type} ${path.extname(doc.ContentUrl.name)}` : '';
+      return doc.ContentUrl instanceof File ? `${process.env.ASSET_FILE_NAME_SRC}/${session.Code}/${doc.Type} ${getExtension(doc.ContentUrl.name)}` : '';
     });
 
     let uploadedDocs:  string [] = [];
@@ -192,7 +193,7 @@ export async function requestPropertyVerification(application: IPropertyVerifica
       if (contentUrl instanceof File) {
         const uploadedDoc = await uploadFile(contentUrl, docPathList[index]);
         if(uploadedDoc.error) console.log('-->error', uploadedDoc.error)
-        uploadedDocs.push(`Asset/${session.Code}/${application.body[index].Type}${path.extname(contentUrl.name)}`);
+        uploadedDocs.push(`Asset/${session.Code}/${application.body[index].Type}${getExtension(contentUrl.name)}`);
       } else {
         uploadedDocs.push(contentUrl as string);
       }

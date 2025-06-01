@@ -3,8 +3,8 @@
 import axios, { AxiosInstance, isAxiosError } from "axios";
 import { CreatePropertyType, IPropertyVerification, SeachPropertyParams } from "@/types/Property";
 import { verifySession } from "@/lib/session";
-import path from "node:path";
 import { uploadFile } from "@/lib/fileUpload";
+import { getExtension } from "@/lib/utils";
 
 const testUser = {
   id: "1",
@@ -23,8 +23,8 @@ export async function createAsset(asset: CreatePropertyType, coverFile: any) {
     const token = session.accessToken;
     const cover = coverFile[0] as File;
 
-    const coverPath = `${process.env.ASSET_FILE_NAME_SRC}/AS-${Date.now()}/COVER${path.extname(cover.name)}`;
-    const R2CoverPath = `Assets/AS-${Date.now()}/COVER${path.extname(cover.name)}`;
+    const coverPath = `${process.env.ASSET_FILE_NAME_SRC}/AS-${Date.now()}/COVER${getExtension(cover.name)}`;
+    const R2CoverPath = `Assets/AS-${Date.now()}/COVER${getExtension(cover.name)}`;
     const uploadedCover = await uploadFile(cover, R2CoverPath);
     
     const response = await axios.post(`${process.env.ASSET_WORKER_ENDPOINT}/api/v1/Asset`, {
