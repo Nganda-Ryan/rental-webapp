@@ -9,11 +9,6 @@ import { searchUser } from "@/actions/userAction";
 interface TenantContractFormProps {
   onClose: () => void;
   onSubmit: (data: any) => void;
-  tenant: {
-    name: string;
-    email: string;
-    phone: string;
-  };
 }
 interface UserOption {
   label: string;
@@ -21,110 +16,20 @@ interface UserOption {
   role: string;
 }
 
+const billingItemsList = [
+  {label: "Eau", value: "WATER"},
+  {label: "Electricité", value: "ELEC"},
+  {label: "Service Internet", value: "INET01"},
+  {label: "Gaze", value: "GAS"},
+  {label: "Loyé mensuel", value: "RENT"},
+  {label: "Ancien Service", value: "SVC-OLD"},
+];
+
+
 export const TenantContractForm = ({
   onClose,
   onSubmit,
-  tenant={
-    name: "",
-    email: "",
-    phone: "",
-  },
 }: TenantContractFormProps) => {
-  const [startDate, setStartDate] = useState("");
-  const [description, setDescription] = useState("");
-  const [paymentDay, setPaymentDay] = useState("1");
-  const [tenantList, setTenantList] = useState<UserOption []>([
-    { label: "Fred", value: "#003", role: "RENTER" },
-    { label: "Emma", value: "#004", role: "RENTER" },
-    { label: "John", value: "#005", role: "RENTER" },
-  ]);
-  const [offSet, setOffSet] = useState(0);
-  const [searchTerm, setChearchTerm] = useState("");
-  const [selectedTenant, setSelectedTenant] = useState<{ label: string; value: string } | null>(null);
-  const [utilities, setUtilities] = useState({
-    energy: false,
-    water: false,
-    wifi: false,
-    parking: false,
-    maintenance: false,
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     if(searchTerm.trim() != ""){
-  //     console.log(2)
-  //       try {
-  //         setIsLoading(true);
-  //         const params: SeachUserParams = {
-  //           orderBy: 'U.Email',
-  //           orderMode: 'desc',
-  //           limit: 1000,
-  //           offset: offSet,
-  //           term: searchTerm,
-  //         };
-  //         const result = await searchUser(params);
-  //         console.log('API result:', result);
-  //         if (result.data && result.data.body.items.length > 0) {
-  //           const datas = result.data.body.items.map((item: any) => {
-  //             return {
-  //               label: item.user.Email,
-  //               value: item.Code,
-  //               role: item.RoleCode,
-  //             };
-  //           }).filter((item: any) => {
-  //             return item.role.toUpperCase().includes("RENTER");
-  //           }).sort((a:any, b:any) => a.label.localeCompare(b.label));
-  //           console.log('-->datas', datas);
-  //           setTenantList(datas);
-  //         }
-  //       } catch (error) {
-  //         console.log('-->error', error)
-  //       } finally {
-  //         setIsLoading(false);
-  //       }
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, [searchTerm]);
-
-  useEffect(() => {
-    console.log(1)
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const params: SeachUserParams = {
-          orderBy: 'U.Email',
-          orderMode: 'desc',
-          limit: 1000,
-          offset: offSet,
-        };
-        const result = await searchUser(params);
-        console.log('API result:', result);
-        if (result.data && result.data.body.items.length > 0) {
-          const datas = result.data.body.items.map((item: any) => {
-            return {
-              label: item.user.Email,
-              value: item.Code,
-              role: item.RoleCode,
-            };
-          }).filter((item: any) => {
-            return item.role.toUpperCase().includes("RENTER");
-          }).sort((a:any, b:any) => a.label.localeCompare(b.label));
-          console.log('-->datas', datas);
-          setTenantList(datas);
-        }
-      } catch (error) {
-        console.log('-->error', error)
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-  
   const {
     control,
     register,
@@ -145,18 +50,59 @@ export const TenantContractForm = ({
     },
   });
 
+  const [tenantList, setTenantList] = useState<UserOption []>([
+    { label: "Fred", value: "#003", role: "RENTER" },
+    { label: "Emma", value: "#004", role: "RENTER" },
+    { label: "John", value: "#005", role: "RENTER" },
+  ]);
   
-  const handleContractCreation = (data: any) => {
-    console.log(data);
-  };
+  const [searchTerm, setChearchTerm] = useState("");
+  const [selectedTenant, setSelectedTenant] = useState<{ label: string; value: string } | null>(null);
+
+  const startDate = watch("startDate");
+  const today = new Date().toISOString().split("T")[0]; // format YYYY-MM-DD
+  const [isLoading, setIsLoading] = useState(false);
+  
+  
+  useEffect(() => {
+    console.log(1)
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const params: SeachUserParams = {
+          orderBy: 'U.Email',
+          orderMode: 'desc',
+          limit: 1000,
+          offset: 0,
+        };
+        const result = await searchUser(params);
+        console.log('API result:', result);
+        if (result.data && result.data.body.items.length > 0) {
+          const datas = result.data.body.items.map((item: any) => {
+            return {
+              label: item.user.Email,
+              value: item.UserCode,
+              role: item.RoleCode,
+            };
+          }).filter((item: any) => {
+            return item.role.toUpperCase().includes("RENTER");
+          }).sort((a:any, b:any) => a.label.localeCompare(b.label));
+          console.log('-->datas', datas);
+          setTenantList(datas);
+        }
+      } catch (error) {
+        console.log('-->error', error)
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+  
 
 
-  const handleFindTenant = (email: string) => {
-    setTenantList([
-      { label: "Ryan", value: "#001", role: "RENTER" },
-      { label: "Erwin", value: "#002", role: "RENTER" },
-    ])
-  }
+
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto sm:min-w-171.5">
@@ -166,28 +112,36 @@ export const TenantContractForm = ({
             Create Tenant Contract
           </h2>
         </div>
-        <form onSubmit={handleSubmit(handleContractCreation)} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
           <div>
             <div className="flex flex-col">
               <label className="mb-1 text-sm text-gray-700 dark:text-gray-300">Tenant</label>
+              
               <Controller
                 name="renterUserId"
                 control={control}
-                render={({ field }) => (
-                  <Select
-                    options={tenantList}
-                    value={tenantList.find(option => option.value === field.value) ?? null}
-                    onChange={(selectedOption) => {
-                      field.onChange(selectedOption?.value);
-                      setChearchTerm(selectedOption?.value || "");
-                      setSelectedTenant(selectedOption || null);
-                    }}
-                    placeholder="Select a tenant"
-                  />
+                rules={{ required: "please select a tenant" }}
+                render={({ field, fieldState: { error } }) => (
+                  <>
+                    <Select
+                      options={tenantList}
+                      value={tenantList.find(option => option.value === field.value) ?? null}
+                      onChange={(selectedOption) => {
+                        field.onChange(selectedOption?.value);
+                        setChearchTerm(selectedOption?.value || "");
+                        setSelectedTenant(selectedOption || null);
+                      }}
+                      placeholder="Select a tenant"
+                    />
+                    {error && (
+                      <p className="mt-1 text-sm text-red-500">{error.message}</p>
+                    )}
+                  </>
                 )}
               />
             </div>
           </div>
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Contract Start Date
@@ -199,58 +153,64 @@ export const TenantContractForm = ({
               />
               <input
                 type="date"
-                required
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                {...register("startDate", {
+                  required: "The start date is required",
+                  validate: (value) =>
+                    value >= today || "Start date cannot be in the past",
+                })}
+                min={today}
               />
+              {errors.startDate && (
+                <p className="text-sm text-red-500">{errors.startDate.message}</p>
+              )}
             </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Payment Day
+              Contract End Date
             </label>
-            <select
-              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={paymentDay}
-              onChange={(e) => setPaymentDay(e.target.value)}
-            >
-              {Array.from(
-                {
-                  length: 28,
-                },
-                (_, i) => i + 1,
-              ).map((day) => (
-                <option key={day} value={day}>
-                  {day}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <Calendar
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="date"
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                {...register("endDate", {
+                  required: "The end date is required",
+                  validate: (value) =>
+                    !startDate || value >= startDate || "End date cannot be before start date",
+                })}
+                min={startDate || today}
+              />
+              {errors.endDate && (
+                <p className="text-sm text-red-500">{errors.endDate.message}</p>
+              )}
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Utilities Included
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {Object.entries(utilities).map(([key, value]) => (
-                <label key={key} className="flex items-center space-x-2">
+
+          <div className="space-y-4">
+            <h3 className="font-medium">Billing Items</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {billingItemsList.map((bi) => (
+                <label key={bi.value} className="flex items-center space-x-2" id="rent">
                   <input
+                    value={bi.value}
                     type="checkbox"
-                    checked={value}
-                    onChange={() =>
-                      setUtilities((prev) => ({
-                        ...prev,
-                        [key as keyof typeof utilities]: !prev[key as keyof typeof utilities],
-                      }))
-                    }
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    {...register("billingItems", { required: "Select at least one billing Item" })}
+                    className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
+                    defaultChecked={bi.value === "RENT" ? true : false} // Default to checked for rent
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
-                    {key}
-                  </span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{bi.label}</span>
                 </label>
               ))}
             </div>
+            {errors && (
+              <p className="text-sm text-red-500 mt-5">{errors.billingItems?.message}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -259,9 +219,8 @@ export const TenantContractForm = ({
             <textarea
               className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Additional contract details..."
+              {...register("notes")}
+              placeholder="Some notes about the contract..."
             />
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

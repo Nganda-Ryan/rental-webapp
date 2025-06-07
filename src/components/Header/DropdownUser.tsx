@@ -61,8 +61,6 @@ const DropdownUser = () => {
   useEffect(() =>{
     if(auth.profileList && auth.profileList.length > 0){
 
-      console.log('-->Dropdown.auth.profileList', auth.profileList);
-      console.log('-->Dropdown.auth.activeProfile', auth.activeProfile);
       const filteredMenu = ALL_PROFILE_MENU.filter(menu =>
         menu.profileName.some(name => auth.profileList.includes(name))
       );
@@ -88,7 +86,6 @@ const DropdownUser = () => {
     localStorage.removeItem("selectedProfile");
     localStorage.removeItem("selectedMenu");
     await logout();
-    router.push("/signin");
   };
 
   return (

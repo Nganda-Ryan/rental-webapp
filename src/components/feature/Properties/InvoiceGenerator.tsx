@@ -59,9 +59,9 @@ export const InvoiceGenerator = ({
   }
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[75vh] overflow-y-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4 z-10">
+    <div className="rounded-lg w-full max-h-[75vh] overflow-y-auto px-4 sm:px-0 max-w-3xl mx-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg">
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-4 z-10">
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-lg sm:text-xl font-semibold dark:text-white">
@@ -81,37 +81,23 @@ export const InvoiceGenerator = ({
           </div>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 sm:p-4 rounded-lg space-y-4">
-            <h3 className="font-medium text-blue-800 dark:text-blue-300 border-b border-blue-100 dark:border-blue-800 pb-2">
-              Required Information
-            </h3>
-            <div className="grid gap-4">
+        <form onSubmit={handleSubmit} className="p-4 space-y-6">
+          <div className="grid gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Tenant
+              </label>
+              <input
+                type="text"
+                value={contract.tenant}
+                readOnly
+                className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg dark:text-white"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tenant
-                </label>
-                <input
-                  type="text"
-                  value={contract.tenant}
-                  readOnly
-                  className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Invoice Provider
-                </label>
-                <input
-                  type="text"
-                  value="Rentila Property Management"
-                  readOnly
-                  className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Invoice Date
+                  Period Start
                 </label>
                 <div className="relative">
                   <Calendar
@@ -121,48 +107,28 @@ export const InvoiceGenerator = ({
                   <input
                     type="date"
                     className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                    value={invoiceDate}
-                    onChange={(e) => setInvoiceDate(e.target.value)}
+                    value={periodStart}
+                    onChange={(e) => setPeriodStart(e.target.value)}
                     required
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Period Start
-                  </label>
-                  <div className="relative">
-                    <Calendar
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                      size={20}
-                    />
-                    <input
-                      type="date"
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                      value={periodStart}
-                      onChange={(e) => setPeriodStart(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Period End
-                  </label>
-                  <div className="relative">
-                    <Calendar
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                      size={20}
-                    />
-                    <input
-                      type="date"
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                      value={periodEnd}
-                      onChange={(e) => setPeriodEnd(e.target.value)}
-                      required
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Period End
+                </label>
+                <div className="relative">
+                  <Calendar
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={20}
+                  />
+                  <input
+                    type="date"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                    value={periodEnd}
+                    onChange={(e) => setPeriodEnd(e.target.value)}
+                    required
+                  />
                 </div>
               </div>
             </div>
@@ -198,9 +164,6 @@ export const InvoiceGenerator = ({
                     />
                     <div>
                       <p className="font-medium dark:text-white">{element.name}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {element.frequency} payment
-                      </p>
                     </div>
                   </div>
                   <div className="relative w-full sm:w-auto mt-2 sm:mt-0">

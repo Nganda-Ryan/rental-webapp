@@ -26,7 +26,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const getUserProfile = async () => {
       const profiles = await getProfile();
-      console.log('-->AuthContext.profileList', profiles);
       if (profiles?.length > 0) {
         setProfileList(profiles);
         if (!activeProfile) {

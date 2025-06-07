@@ -3,14 +3,13 @@ import React, { useEffect, useState } from "react";
 import {
   Building2,
   Users,
-  WrenchIcon,
   MapPin,
   Share2,
   UserPlus,
   FileText,
-  Trash,
   DollarSign,
 } from "lucide-react";
+import { useRouter } from 'next/navigation';
 import { ManagerSearch } from "@/components/feature/Properties/ManagerSearch";
 import { VerificationForm } from "@/components/feature/Properties/VerificationForm";
 import { DeletePropertyModal } from "@/components/feature/Properties/DeletePropertyModal";
@@ -23,13 +22,24 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Overlay from "@/components/Overlay";
 import InvoiceGenerator from "@/components/feature/Properties/InvoiceGenerator";
 import { useParams } from 'next/navigation';
-import { getAsset } from "@/actions/assetAction";
-import { AssetData, AssetDataDetailed } from "@/types/Property";
+import { createContract, getAsset } from "@/actions/assetAction";
+import { AssetData, AssetDataDetailed, IIvoiceFormParams } from "@/types/Property";
 import { getStatusIcon } from "@/lib/utils-component";
-import { PropertySkeletonPageSection1, PropertySkeletonPageSection2 } from "@/components/skeleton/pages/PropertySkeletonPage";
+import { PropertySkeletonPageSection1 } from "@/components/skeleton/pages/PropertySkeletonPage";
 import Button from "@/components/ui/Button";
-import { ContractForm } from "@/components/feature/Properties/ContractForm";
+import toast from 'react-hot-toast';
+import { ResponsiveTable } from "@/components/feature/Support/ResponsiveTable";
 
+
+
+interface IContractColumn {
+    tenant: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+    monthlyRent: string;
+    id: string;
+}
 
 const PropertyDetail = () => {
     const [asset, setAsset] = useState<AssetDataDetailed | null>(null);
@@ -37,20 +47,21 @@ const PropertyDetail = () => {
 
     const [isImageLoading, setIsImageLoading] = useState(true);
     
-    const [isManagerSearchOpen, setIsManagerSearchOpen] = useState(false);
-    const [isContractFormOpen, setContractFormOpen] = useState(false);
-    const [showShareLink, setShowShareLink] = useState(false);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [isAttachPropertiesModalOpen, setIsAttachPropertiesModalOpen] = useState(false);
+    const [contractList, setContractList] = useState<IContractColumn[]>([]);
     const [selectedTenant, setSelectedTenant] = useState<any>(null);
     const [successMessage, setSuccessMessage] = useState("");
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [invoiceParam, setInvoiceParam] = useState<IIvoiceFormParams>();
+    const [isManagerSearchOpen, setIsManagerSearchOpen] = useState(false);
+    const [isContractFormOpen, setContractFormOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isAttachPropertiesModalOpen, setIsAttachPropertiesModalOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-    const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false)
-    const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
+    const [showShareLink, setShowShareLink] = useState(false);
     const params = useParams();
+    const router = useRouter();
 
-    
     useEffect(() => {
         const getUnits = (items:any[]): AssetData [] => {
             return items.map(item => {
@@ -100,10 +111,18 @@ const PropertyDetail = () => {
                             Street: item.Address.Street,
                         },
                     }
+                    const _contracts = item.contracts.map((contract: any) => ({
+                        id: contract.Code,
+                        tenant: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
+                        startDate: contract.StartDate,
+                        endDate: contract.EndDate,
+                        status: contract.StatusCode,
+                        monthlyRent: assetData.Price,// + ' ' + assetData.Currency,
+                    })) as IContractColumn[];
 
-                    console.log('-->assetData', assetData);
                     
                     setAsset(assetData)
+                    setContractList(_contracts);
                 }
             } catch (error) {
                 console.log(error)
@@ -115,80 +134,10 @@ const PropertyDetail = () => {
         fetchData();
     }, []);
 
-    const closeModal = () => setIsModalOpen(false);
+    
 
-    const property = {
-        id: "1",
-        image:
-        "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-        address: "123 Marina Avenue",
-        location: "San Francisco, CA 94107",
-        units: 4,
-        price: "$2,500",
-        beds: 2,
-        baths: 2,
-        sqft: 1200,
-        status: "Pending Verification",
-        yearBuilt: "2015",
-        lastRenovated: "2021",
-        description:
-        "Modern apartment complex featuring contemporary design and premium amenities. Located in a prime location with easy access to public transportation and local attractions.",
-        type: "complex",
-        amenities: [
-        "Parking",
-        "Swimming Pool",
-        "Gym",
-        "Pet Friendly",
-        "Security System",
-        ],
-        currentTenants: [
-        {
-            name: "John Smith",
-            unit: "4B",
-            since: "Jan 2023",
-        },
-        {
-            name: "Sarah Johnson",
-            unit: "2A",
-            since: "Mar 2023",
-        },
-        ],
-        recentMaintenance: [
-        {
-            date: "Jul 1, 2023",
-            issue: "HVAC Maintenance",
-            status: "Completed",
-        },
-        {
-            date: "Jun 15, 2023",
-            issue: "Plumbing Repair",
-            status: "Completed",
-        },
-        ],
-    };
 
-    const invoices = [
-        {
-          id: 'INV001',
-          contractId: 'CTR001',
-          tenant: 'John Smith',
-          date: '2023-07-01',
-          period: 'July 2023',
-          amount: '$2,500',
-          status: 'Paid',
-          elements: ['Lease', 'Utilities', 'Parking'],
-        },
-        {
-          id: 'INV002',
-          contractId: 'CTR002',
-          tenant: 'Sarah Johnson',
-          date: '2023-07-01',
-          period: 'July 2023',
-          amount: '$1,800',
-          status: 'Pending',
-          elements: ['Lease', 'Utilities'],
-        },
-    ]
+
     const contracts = [
         {
           id: 'CTR001',
@@ -246,6 +195,107 @@ const PropertyDetail = () => {
         },
     ]
 
+    const invoices = [
+        {
+            id: 'INV001',
+            contractId: 'CTR001',
+            tenant: 'John Smith',
+            date: '2023-07-01',
+            period: 'July 2023',
+            amount: '$2,500',
+            status: 'Paid',
+            elements: ['Lease', 'Utilities', 'Parking'],
+        },
+        {
+            id: 'INV002',
+            contractId: 'CTR002',
+            tenant: 'Sarah Johnson',
+            date: '2023-07-01',
+            period: 'July 2023',
+            amount: '$1,800',
+            status: 'Pending',
+            elements: ['Lease', 'Utilities'],
+        },
+    ];
+
+    const contractColumns = [
+        {
+            key: 'tenant',
+            label: 'Tenant',
+            priority: 'high' as const,
+            render: (_:any, contract: IContractColumn) => (
+            <div className="font-medium text-gray-800 dark:text-gray-100">
+                {contract.tenant}
+            </div>
+            ),
+        },
+        {
+            key: 'period',
+            label: 'Period',
+            priority: 'medium' as const,
+            render: (_: any, contract: IContractColumn) => (
+            <div className="text-sm text-gray-800 dark:text-gray-100">
+                <div>From {contract.startDate}</div>
+                <div className="text-gray-600 dark:text-gray-300">to {contract.endDate}</div>
+            </div>
+            ),
+        },
+        {
+            key: 'monthlyRent',
+            label: 'Monthly Rent',
+            priority: 'high' as const,
+            render: (_: any, contract: IContractColumn) => (
+            <div className="font-medium text-gray-800 dark:text-gray-100">
+                {`${contract.monthlyRent} ${asset?.Currency ?? ''}`}
+            </div>
+            ),
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            priority: 'high' as const,
+            render: (_: any, contract: IContractColumn) => (
+                <>
+                    {getStatusIcon(contract.status)}
+                </>
+            ),
+        }
+    ]
+    const units = [
+        {
+        id: '1',
+        name: 'Room 101',
+        type: 'Modern Studio',
+        status: 'Occupied',
+        image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
+        beds: 1,
+        baths: 1,
+        sqft: 450,
+        rent: '$1,200',
+        currentTenant: {
+            name: 'John Smith',
+            since: 'Jan 2023',
+            until: 'Dec 2023',
+        },
+        amenities: ['Air Conditioning', 'Balcony', 'Kitchen'],
+        maintenanceHistory: [
+            {
+            date: 'Jul 15, 2023',
+            type: 'Regular Maintenance',
+            description: 'AC Service',
+            status: 'Completed',
+            },
+        ],
+        occupancyHistory: [
+            {
+            tenant: 'John Smith',
+            startDate: 'Jan 2023',
+            endDate: 'Dec 2023',
+            status: 'Current',
+            },
+        ],
+        },
+    ]
  
     const tenantRequests = [
         {
@@ -266,7 +316,7 @@ const PropertyDetail = () => {
         },
     ];
     const handleShareLink = () => {
-        const shareLink = `https://rentila.com/properties/${property.id}/apply`;
+        const shareLink = `https://rentila.com/properties/ASkswDWMB1748465484436/apply`;
         setShowShareLink(true);
     };
     const handleCreateContract = () => {
@@ -280,7 +330,6 @@ const PropertyDetail = () => {
         setIsModalOpen(true);
     }
     const handleDeleteProperty = async () => {
-        console.log("Deleting property:", property.id);
         setIsDeleteModalOpen(false);
         setSuccessMessage("Property deleted successfully");
         setShowSuccessModal(true);
@@ -292,31 +341,49 @@ const PropertyDetail = () => {
         setSuccessMessage("Properties attached successfully");
         setShowSuccessModal(true);
     };
-    const handleContractSubmit = (contractData: any) => {
+    const handleContractSubmit = async (contractData: any) => {
         console.log("Contract data:", contractData);
-        setContractFormOpen(false);
-        setSuccessMessage("Contract created successfully");
-        setShowSuccessModal(true);
+        try {
+            const result = await createContract({
+                ...contractData,
+                assetCode: asset?.Code ?? "",
+            });
+
+            console.log('-->result', result)
+            if(result.contract){
+                setSuccessMessage("Contract created successfully");
+                setShowSuccessModal(true);
+            } else if(result.error){
+                toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            }
+        } catch (error) {
+            
+        } finally {
+            setContractFormOpen(false);
+        }
+        
+        
     };
-    const onMarkAsPaid = (invoiceId: string) => {
-        console.log('Mark as paid:', invoiceId)
-        setSelectedInvoice(null)
-        setSuccessMessage('Invoice marked as paid')
-        setShowSuccessModal(true)
+    const handleSelectedContract = (contractId: string) => {
+        console.log("Selected contract ID:", contractId);
+        router.push(`/landlord/properties/ASkswDWMB1748465484436/contracts/${contractId}`)
     }
+
     const canCreateInvoice = (): boolean => {
         let can = asset?.whoIs == 'OWNER' ? true : asset?.Permission.includes("ManageBilling");
         if(asset?.IsVerified == 0){
             can = false;
         }
-        console.log("-->can", can);
         return can == undefined ? true : !can;
     }
-
     const canAttachManager = (): boolean => {
         let can = asset?.whoIs == 'OWNER' && asset.IsVerified == 1 ? true : false;
         return can == undefined ? true : !can;
     }
+    const canCreateContract = (): boolean => {
+        return contractList.some(contract => (contract.status == 'ACTIVE'));
+    }
+
     return (
         <DefaultLayout>
             <Breadcrumb previousPage pageName="Locatif" />
@@ -355,28 +422,28 @@ const PropertyDetail = () => {
                                 </div>
 
                                 {/* Property detail */}
-                                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+                                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
-                                        <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
-                                            {asset?.Title} {
-                                                asset?.TypeCode !== "CPLXMOD" && `(${asset?.Price}/${asset?.Currency})`
-                                            }
-                                        </h2>
-                                        <div className="flex items-center text-gray-600 dark:text-gray-400">
-                                            <MapPin size={16} className="mr-1" />
-                                            <span>{`${asset?.Address.City}, ${asset?.Address.Street}`}</span>
-                                        </div>
+                                            <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
+                                                {asset?.Title} {
+                                                    asset?.TypeCode !== "CPLXMOD" && `(${asset?.Price}/${asset?.Currency})`
+                                                }
+                                            </h2>
+                                            <div className="flex items-center text-gray-800 dark:text-gray-100">
+                                                <MapPin size={16} className="mr-1" />
+                                                <span>{`${asset?.Address.City}, ${asset?.Address.Street}`}</span>
+                                            </div>
                                         </div>
                                         <span>
-                                        {getStatusIcon(asset?.StatusCode ?? 'DRAFT')}
+                                            {getStatusIcon(asset?.StatusCode ?? 'DRAFT')}
                                         </span>
                                     </div>
                                     <div className="grid grid-cols-4 gap-4 py-4 border-t border-gray-100 dark:border-gray-700">
                                         {asset?.BillingItems.map((item) => (
                                         <div
                                             key={item}
-                                            className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm text-gray-800 dark:text-gray-100"
+                                            className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-100"
                                         >
                                             {item}
                                         </div>
@@ -385,6 +452,87 @@ const PropertyDetail = () => {
                                 </div>
 
                                 
+                                {/* CONTRACT */}
+                                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                                    <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                                        <FileText size={20} className="text-gray-400" />
+                                        Lease Contracts
+                                    </h2>
+                                    </div>
+                                    {contracts.length > 0 ? (
+                                    <ResponsiveTable
+                                        columns={contractColumns}
+                                        data={contractList}
+                                        onRowClick={(contract) => handleSelectedContract(contract.id)}
+                                        keyField="id"
+                                    />
+                                    ) : (
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm">No lease contracts available</p>
+                                    )}
+                                </div>
+
+                                {/* UNITS */}
+                                {/* <div className="bg-white rounded-lg p-6 shadow-sm">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-xl font-semibold flex items-center gap-2">
+                                        <Building2 size={20} className="text-gray-400" />
+                                        Property Units
+                                        </h2>
+                                    </div>
+                                    {units.length > 0 ? (
+                                        <ResponsiveTable
+                                            columns={[
+                                                {
+                                                    key: 'status',
+                                                    label: 'Status',
+                                                    priority: 'high',
+                                                    render: (_, unit) => (
+                                                        <span
+                                                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${unit.status === 'Occupied' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
+                                                        >
+                                                        {unit.status}
+                                                        </span>
+                                                    ),
+                                                },
+                                                {
+                                                    key: 'rent',
+                                                    label: 'Rent',
+                                                    priority: 'medium',
+                                                    render: (_, unit) => (
+                                                        <span className="font-medium text-gray-900">
+                                                        {unit.rent}
+                                                        </span>
+                                                    ),
+                                                },
+                                                {
+                                                    key: 'tenant',
+                                                    label: 'Current Tenant',
+                                                    priority: 'medium',
+                                                    render: (_, unit) =>
+                                                        unit.currentTenant ? (
+                                                        <div>
+                                                            <div className="text-sm font-medium text-gray-900">
+                                                            {unit.currentTenant.name}
+                                                            </div>
+                                                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            Since: {unit.currentTenant.since}
+                                                            </div>
+                                                        </div>
+                                                        ) : (
+                                                        <span className="text-sm text-gray-500 dark:text-gray-400">No tenant</span>
+                                                        ),
+                                                },
+                                            ]}
+                                            data={units}
+                                            onRowClick={(unit) => handleSelectedUnit(unit.id)}
+                                            keyField="id"
+                                        />
+                                    ) : (
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm">No units available</p>
+                                    )}
+                                </div> */}
+
                                 {/* BILLING STATEMENT */}
                                 <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
                                     <div className="flex items-center justify-between mb-6">
@@ -406,66 +554,64 @@ const PropertyDetail = () => {
                                         </div>
 
                                         <div className="overflow-x-auto">
-                                        <table className="w-full">
-                                            <thead className="bg-gray-50 dark:bg-gray-700">
-                                            <tr>
-                                                {[
-                                                "Invoice ID",
-                                                "Tenant",
-                                                "Date",
-                                                "Period",
-                                                "Amount",
-                                                "Status",
-                                                "Actions"
-                                                ].map((heading) => (
-                                                <th
-                                                    key={heading}
-                                                    className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 text-nowrap"
-                                                >
-                                                    {heading}
-                                                </th>
-                                                ))}
-                                            </tr>
-                                            </thead>
-
-                                            <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                                            {invoices.map((invoice) => (
-                                                <tr key={invoice.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.id}</td>
-                                                <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.tenant}</td>
-                                                <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.date}</td>
-                                                <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.period}</td>
-                                                <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.amount}</td>
-                                                <td className="px-4 py-2">
-                                                    <span
-                                                    className={`px-2 py-1 text-xs rounded-full ${
-                                                        invoice.status === "Paid"
-                                                        ? "bg-green-100 text-green-800 dark:bg-green-200 dark:text-green-900"
-                                                        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-200 dark:text-yellow-900"
-                                                    }`}
+                                            <table className="w-full">
+                                                <thead className="bg-gray-50 dark:bg-gray-700">
+                                                <tr>
+                                                    {[
+                                                    "Invoice ID",
+                                                    "Tenant",
+                                                    "Date",
+                                                    "Period",
+                                                    "Amount",
+                                                    "Status",
+                                                    "Actions"
+                                                    ].map((heading) => (
+                                                    <th
+                                                        key={heading}
+                                                        className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 text-nowrap"
                                                     >
-                                                    {invoice.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-2">
-                                                    <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => setSelectedInvoice(invoice.id)}
-                                                        className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                    >
-                                                        View
-                                                    </button>
-                                                    </div>
-                                                </td>
+                                                        {heading}
+                                                    </th>
+                                                    ))}
                                                 </tr>
-                                            ))}
-                                            </tbody>
-                                        </table>
+                                                </thead>
+
+                                                <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
+                                                {invoices.map((invoice) => (
+                                                    <tr key={invoice.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                    <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.id}</td>
+                                                    <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.tenant}</td>
+                                                    <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.date}</td>
+                                                    <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.period}</td>
+                                                    <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.amount}</td>
+                                                    <td className="px-4 py-2">
+                                                        <span
+                                                        className={`px-2 py-1 text-xs rounded-full ${
+                                                            invoice.status === "Paid"
+                                                            ? "bg-green-100 text-green-800 dark:bg-green-200 dark:text-green-900"
+                                                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-200 dark:text-yellow-900"
+                                                        }`}
+                                                        >
+                                                        {invoice.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-2">
+                                                        <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => {}}
+                                                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                                        >
+                                                            View
+                                                        </button>
+                                                        </div>
+                                                    </td>
+                                                    </tr>
+                                                ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
-
-                                
                                 
                             </div>
                         :
@@ -475,7 +621,7 @@ const PropertyDetail = () => {
                     
                     <div className="space-y-6">
                         {/* ACTIONS */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
                             <h3 className="font-medium mb-4 text-gray-800 dark:text-gray-100 ">Quick Actions</h3>
                             <div className="space-y-3">
                                 {
@@ -483,9 +629,11 @@ const PropertyDetail = () => {
                                         <Button onClick={handleShareLink} variant='neutral' disable={asset?.IsVerified == 0} isSubmitBtn={false}>
                                             <Share2 size={16} /> Invite Tenant
                                         </Button>
-                                        <Button onClick={handleCreateContract} variant='neutral' disable={asset?.IsVerified == 0} isSubmitBtn={false}>
+                                        {
+                                            contractList.length == 0 && <Button onClick={handleCreateContract} variant='neutral' disable={asset?.IsVerified == 0} isSubmitBtn={false}>
                                             <FileText size={16} /> Create a contract
                                         </Button>
+                                        }
                                         { asset?.StatusCode == "DRAFT" && <Button onClick={handleVerificationFormOpen} variant='neutral' disable={false} isSubmitBtn={false}>
                                             <FileText size={16} /> Verify Property
                                         </Button>}
@@ -542,7 +690,7 @@ const PropertyDetail = () => {
                             )}
                         </div>
                         {/* TENANT REQUESTS */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
                             <div className="flex items-center gap-2 mb-4">
                             <Users size={20} className="text-gray-400" />
                             <h3 className="font-medium">Tenant Requests</h3>
@@ -550,20 +698,20 @@ const PropertyDetail = () => {
                             <div className="space-y-4">
                             {tenantRequests.map((request) => (
                                 <div
-                                key={request.id}
-                                className="border border-gray-100 rounded-lg p-4"
+                                    key={request.id}
+                                    className="border border-gray-100 rounded-lg p-4"
                                 >
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                    <h4 className="font-medium">{request.name}</h4>
-                                    <p className="text-sm text-gray-500">{request.email}</p>
-                                    <p className="text-sm text-gray-500">{request.phone}</p>
+                                        <h4 className="font-medium dark:text-gray-300">{request.name}</h4>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">{request.email}</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">{request.phone}</p>
                                     </div>
                                     <div className="flex flex-col items-end">
                                     <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                                         {request.status}
                                     </span>
-                                    <span className="text-xs text-gray-500 mt-1">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                         {request.submitted}
                                     </span>
                                     </div>
@@ -606,15 +754,6 @@ const PropertyDetail = () => {
                         }}
                     />
                 </Overlay>
-                {/* <Overlay isOpen={isManagerSearchOpen} onClose={() => setIsManagerSearchOpen(false)}>
-                    <ContractForm
-                        onClose={() => setIsManagerSearchOpen(false)}
-                        onSelect={(manager) => {
-                        console.log("Selected manager:", manager);
-                        setIsManagerSearchOpen(false);
-                        }}
-                    />
-                </Overlay> */}
                 <Overlay isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                     <VerificationForm
                         propertyId={asset?.Code ?? ""}
@@ -641,7 +780,6 @@ const PropertyDetail = () => {
                     <TenantContractForm
                         onClose={() => setContractFormOpen(false)}
                         onSubmit={handleContractSubmit}
-                        tenant={selectedTenant}
                     />
                 </Overlay>
                 <Overlay isOpen={showInvoiceGenerator} onClose={() => setShowInvoiceGenerator(false)}>

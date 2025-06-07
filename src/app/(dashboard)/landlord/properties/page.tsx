@@ -5,7 +5,7 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { CreatePropertyType, Property, SeachPropertyParams } from "@/types/Property";
 import { useEffect, useState } from "react";
 import { Button } from "@headlessui/react";
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 import PropertyCard from "@/components/Cards/PropertyCard";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { AssetData } from "@/types/Property";

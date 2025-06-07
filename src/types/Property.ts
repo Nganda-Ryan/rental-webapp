@@ -162,3 +162,67 @@ export interface IContract {
   "notes": "sample",
   "billingItems":string []
 }
+
+export interface IContractForm {
+  "profilCode": string,
+  "renterUserId": string,
+  "assetCode": string,
+  "initialDuration": number,
+  "startDate": string,
+  "endDate": string,
+  "notes": string,
+  "billingItems": string []
+}
+
+export interface IContractDetail {
+  id: string;
+  tenant: {
+    name: string;
+    email: string;
+    phone: string;
+  }
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  status: string;
+  billingElements: Array<{
+    name: string;
+    amount: number;
+    code: string;
+    paid: boolean;
+    date: number;
+  }>;
+  paymentHistory: Array<{
+    date: string;
+    amount: number;
+    status: string;
+  }>;
+  documents: Array<{
+    name: string;
+    type: string;
+    date: string;
+  }>;
+  notifications: Array<{
+    type: string;
+    message: string;
+    date: string;
+  }>;
+}
+
+export interface IIvoiceFormParams {
+  tenant: {
+    id: string;
+    name: string;
+  }
+  contractId: string;
+  startDate: string;
+  endDate: string;
+  billingElements: Array<{
+    name: string;
+    amount: number;
+    code: string;
+    paid: boolean;
+    date: number;
+  }>;
+  totalAmount: number;
+}

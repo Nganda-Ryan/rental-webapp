@@ -224,7 +224,7 @@ export async function getProfile(){
 
 export async function logout() {
   await deleteSession();
-  redirect("/login");
+  redirect("/signin");
 }
 
 

@@ -8,8 +8,9 @@ type Props = {
 }
 const Overlay = ({children, isOpen, onClose} : Props) => {
     const overlayRef = useRef<HTMLDivElement>(null);
+    const overlayRef2 = useRef<HTMLDivElement>(null);
     const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>): void => {
-        if (e.target === overlayRef.current) {
+        if (e.target === overlayRef.current || e.target === overlayRef2.current) {
             console.log('overlay clicked')
             onClose();
         }
@@ -36,12 +37,12 @@ const Overlay = ({children, isOpen, onClose} : Props) => {
     return (
         <div
             ref={overlayRef}
-            className={`fixed inset-0 -top-50 -bottom-50 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-[1000000]`}
+            className={`fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-[1000000]`}
             onClick={handleOverlayClick}
         >
-            <span onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}>
+            <div onClick={handleOverlayClick} ref={overlayRef2} className='w-full'>
                 {children}
-            </span>
+            </div>
         </div>
     )
 }

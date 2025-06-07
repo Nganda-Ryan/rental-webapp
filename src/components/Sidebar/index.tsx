@@ -129,8 +129,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   useEffect(() => {
     if (!auth.activeProfile) return;
-    console.log('-->Sidebar.auth.profileList', auth.profileList);
-    console.log('-->Sidebar.auth.activeProfile', auth.activeProfile);
 
     const filtered = ALL_MENU_GROUPS.map((group) => {
       const menuItems = group.menuItems.filter((item) =>
