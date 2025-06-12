@@ -124,9 +124,10 @@ export async function getAsset(assetCode: string): Promise<any> {
   }
 }
 
-export async function searchAsset(params: SeachPropertyParams) {
+export async function searchAsset(params: SeachPropertyParams, profile: string) {
   try {
     const session = await verifySession();
+    console.log('-->session', session);
     const apiClient: AxiosInstance = axios.create({
         baseURL: process.env.SEARCH_WORKER_ENDPOINT,
         headers: {
@@ -137,7 +138,10 @@ export async function searchAsset(params: SeachPropertyParams) {
     const response = await apiClient.request({
       method: 'GET',
       url: '/api/v1/Asset',
-      params
+      params: {
+        ...params,
+        profileCode: session.Profiles.find(p => p.RoleCode === profile)?.Code
+      }
     });
 
     return {

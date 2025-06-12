@@ -213,7 +213,7 @@ export async function signUpAction(_payload: any){
 export async function getProfile(){
   const cookie = (await cookies()).get('session')?.value;
   const session = await decrypt(cookie);
-  const rolePriority = ['ADMIN', 'SUPPORT', 'LANDLORD', 'RENTER'];
+  const rolePriority = ['ADMIN', 'SUPPORT', 'LANDLORD', 'MANAGER', 'RENTER'];
   const sortedRoles = [...(session?.roles || [])].sort(
     (a, b) => rolePriority.indexOf(a) - rolePriority.indexOf(b)
   );

@@ -22,13 +22,14 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Overlay from "@/components/Overlay";
 import InvoiceGenerator from "@/components/feature/Properties/InvoiceGenerator";
 import { useParams } from 'next/navigation';
-import { createContract, getAsset } from "@/actions/assetAction";
-import { AssetData, AssetDataDetailed } from "@/types/Property";
+import { createContract, createInvoice, getAsset, searchInvoice } from "@/actions/assetAction";
+import { AssetData, AssetDataDetailed, IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, SeachInvoiceParams } from "@/types/Property";
 import { getStatusIcon } from "@/lib/utils-component";
 import { PropertySkeletonPageSection1 } from "@/components/skeleton/pages/PropertySkeletonPage";
 import Button from "@/components/ui/Button";
 import toast from 'react-hot-toast';
 import { ResponsiveTable } from "@/components/feature/Support/ResponsiveTable";
+import { formatDateToText } from "@/lib/utils";
 
 
 
@@ -42,13 +43,15 @@ interface IContractColumn {
 }
 
 const PropertyDetail = () => {
+    const today = new Date().toISOString().split("T")[0];
     const [asset, setAsset] = useState<AssetDataDetailed | null>(null);
     const [isReady, setIsReady] = useState(false);
 
     const [isImageLoading, setIsImageLoading] = useState(true);
     
-    const [contractList, setContractList] = useState<IContractColumn[]>([]);
+    const [contractTableData, setContractTableData] = useState<IContractColumn[]>([]);
     const [selectedTenant, setSelectedTenant] = useState<any>(null);
+    const [action, setAction] = useState<"CREATE" | "UPDATE">("CREATE");
     const [successMessage, setSuccessMessage] = useState("");
     const [isManagerSearchOpen, setIsManagerSearchOpen] = useState(false);
     const [isContractFormOpen, setContractFormOpen] = useState(false);
@@ -57,7 +60,11 @@ const PropertyDetail = () => {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
+    const [invoiceFormDefaultValue, setInvoiceFormDefaultValue] = useState<IInvoiceForm>();
+    const [tempInvoiceFormDefaultValue, setTempInvoiceFormDefaultValue] = useState<IInvoiceForm>();
+    const [invoiceTableData, setInvoiceTableData] = useState<IInvoiceForm[]>([]);
     const [showShareLink, setShowShareLink] = useState(false);
+    const [activeContract, setActiveContract] = useState<IContractDetail>();
     const params = useParams();
     const router = useRouter();
 
@@ -99,7 +106,7 @@ const PropertyDetail = () => {
                         IsActive: item.IsActive, // 1 ou 0
                         TypeCode: item.TypeCode,
                         IsVerified: item.IsVerified, // 1 ou 0
-                        Permission: result.data.body.ConfigPermissionList.map((item:any) => (item.Title)),
+                        Permission: result.data.body.ConfigPermissionList.map((item:any) => (item.Code)),
                         whoIs: result.data.body.whoIs,
                         BillingItems: result.data.body.billingItems.map((item: any) => (item.ItemCode)),
                         Units: getUnits(item.assets),
@@ -110,18 +117,101 @@ const PropertyDetail = () => {
                             Street: item.Address.Street,
                         },
                     }
-                    const _contracts = item.contracts.map((contract: any) => ({
-                        id: contract.Code,
-                        tenant: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
-                        startDate: contract.StartDate,
-                        endDate: contract.EndDate,
-                        status: contract.StatusCode,
-                        monthlyRent: assetData.Price,// + ' ' + assetData.Currency,
-                    })) as IContractColumn[];
 
+                    if(item.contracts && item.contracts.length > 0){
+                        const _rawActiveContract = item.contracts.find((contract: any) => (contract.status == 'ACTIVE')) ?? item.contracts[0];
+                        const _activeContract: IContractDetail = {
+                            id: _rawActiveContract.Code,
+                            billingElements: _rawActiveContract.billingItems.map((item:any) => ({
+                                code: item.Code,
+                                label: item.ItemCode
+                            })),
+                            endDate: _rawActiveContract.EndDate,
+                            monthlyRent: _rawActiveContract.asset.Price,
+                            currency: _rawActiveContract.Currency,
+                            notes: "",
+                            startDate: _rawActiveContract.StartDate,
+                            status: _rawActiveContract.StatusCode,
+                            tenant: {
+                                name: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
+                                email: _rawActiveContract.renter.user.Email,
+                                phone: _rawActiveContract.renter.user.Phone,
+                                userCode: _rawActiveContract.renter.user.Code,
+                            }
+                        };
+                        const _invoiceformDefaultValue: IInvoiceForm = {
+                            id: _activeContract.id,
+                            tenant: _activeContract.tenant.name,
+                            tableId: "",
+                            startDate: _activeContract.startDate,
+                            endDate: "",
+                            monthlyRent: _activeContract.monthlyRent,
+                            status: _activeContract.status,
+                            notes: _activeContract.notes,
+                            currency: _activeContract.currency,
+                            billingElements: _activeContract.billingElements.map((item: any) => ({
+                                code: item.label,
+                                label: item.label,
+                                amount: 0,
+                                paidDate: today,
+                                status: false,
+                            }))
+                        };
+                        const _contractTableData = item.contracts.map((contract: any) => ({
+                            id: contract.Code,
+                            tenant: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
+                            startDate: contract.StartDate,
+                            endDate: contract.EndDate,
+                            status: contract.StatusCode,
+                            monthlyRent: assetData.Price,// + ' ' + assetData.Currency,
+                        })) as IContractColumn[];
+
+                        
+
+                        const getInvoiceParam: SeachInvoiceParams = {
+                            orderBy: "Item.CreatedAt",
+                            orderMode: "desc",
+                            assetCodes: [assetData.Code]
+                        };
+                    
+                        const getInvoiceResult = await searchInvoice(getInvoiceParam);
+                        if(getInvoiceResult.data){
+                            console.log('-->getInvoiceResult', getInvoiceResult)
+                            const _invoiceTableData: IInvoiceForm[] = getInvoiceResult.data.body.items.map((inv: any, index: number) => {
+                                return {
+                                    id: inv.Code,
+                                    tableId: "INV"+(index+1),
+                                    status: inv.StatusCode,
+                                    startDate: inv.StartDate.split("T")[0],
+                                    endDate: inv.EndDate.split("T")[0],
+                                    tenant: "",
+                                    monthlyRent: assetData.Price,
+                                    notes: inv.notes,
+                                    currency: assetData.Currency,
+                                    billingElements: inv.items.map((item: any) => ({
+                                        code: item.ItemCode,
+                                        label: item.ItemCode,
+                                        amount: item.Amount,
+                                        paidDate: item.PaidDate ? item.PaidDate.split("T")[0] : "",
+                                        status: item.IsPaid == 1 ? true : false,
+                                    }))
+                                }
+                            });
+
+                            const recentInvoice = _invoiceTableData.length > 0 && _invoiceTableData[0];
+                            
+                            if(recentInvoice){
+                                _invoiceformDefaultValue.startDate = recentInvoice.endDate;
+                            }
+                        }
+
+                        setActiveContract(_activeContract);
+                        setInvoiceFormDefaultValue(_invoiceformDefaultValue);
+                        setTempInvoiceFormDefaultValue(_invoiceformDefaultValue);
+                        setContractTableData(_contractTableData);
+                    }
                     
                     setAsset(assetData)
-                    setContractList(_contracts);
                 }
             } catch (error) {
                 console.log(error)
@@ -131,10 +221,15 @@ const PropertyDetail = () => {
         }
 
         fetchData();
-    }, []);
+    }, [params.id, today]);
 
+    useEffect(() => {
+        if(showInvoiceGenerator == false){
+            setInvoiceFormDefaultValue(tempInvoiceFormDefaultValue);
+            setAction("CREATE");
+        }
+    }, [showInvoiceGenerator, tempInvoiceFormDefaultValue]);
     
-
 
 
     const contracts = [
@@ -260,6 +355,58 @@ const PropertyDetail = () => {
             ),
         }
     ]
+    const invoiceColumns = [
+        {
+            key: 'tableId',
+            label: 'ID',
+            priority: "medium" as "medium",
+            render: (_: any, invoice: IInvoiceForm) => (
+                <div className="text-gray-800 text-sm dark:text-gray-100">
+                    {invoice.tableId}
+                </div>
+            ),
+        },
+        {
+            key: 'period',
+            label: 'Period',
+            priority: "medium" as "medium",
+            render: (_: any, invoice: IInvoiceForm) => (
+            <div className="text-sm text-gray-800 dark:text-gray-100">
+                <div><span className='font-bold'>From</span> {formatDateToText(invoice.startDate)}</div>
+                <div className="text-gray-600 dark:text-gray-300">to {formatDateToText(invoice.endDate)}</div>
+            </div>
+            ),
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            priority: "medium" as "medium",
+            render: (_: any, invoice: IInvoiceForm) => (
+            <>
+                {getStatusIcon(invoice.status == "DRAFT" ? "UNPAID" : invoice.status)}
+            </>
+            ),
+        },
+        {
+            key: 'actions',
+            label: 'Actions',
+            priority: "high" as "high",
+            render: (_: any, invoice: IInvoiceForm) => (
+                <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleClickUpdateInvoice(invoice);
+                }}
+                    className="px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200 
+                                bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 
+                                dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800 dark:active:bg-blue-700"
+                    >
+                    Update
+                </button>
+
+            ),
+        },
+    ]
     const units = [
         {
         id: '1',
@@ -367,20 +514,80 @@ const PropertyDetail = () => {
         console.log("Selected contract ID:", contractId);
         router.push(`/landlord/properties/ASkswDWMB1748465484436/contracts/${contractId}`)
     }
+    const handleCreateInvoice = async (data: IInvoiceForm) => {
+        try {
+            const invoicePayload: IInvoice = {
+                contractCode: activeContract?.id ?? "",
+                endDate: data.endDate,
+                startDate: data.startDate,
+                notes: data.notes,
+                profilCode: "", //lessor profile
+                userId: activeContract?.tenant.userCode ?? "", //renter
+                items: data.billingElements.map(item => ({
+                    amount: String(item.amount),
+                    isPaid: item.status,
+                    itemCode: item.label,
+                    notes: "",
+                    paidDate: item.paidDate
+                })),
+            }
+            const result = await createInvoice(invoicePayload);
+            console.log('-->result', result)
+            if(result.data){
+                setShowSuccessModal(true)
+            } else if(result.error){
+                toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            }
+        } catch (error) {
+            toast.error("Something went wrong during the process. Try again or contact the administrator", { position: 'bottom-right' });
+            console.log('-->ContractDetailPage.handleCreateInvoice.error', error);
+        } finally {
+            setShowInvoiceGenerator(false)
+        }
+        
+        
+    }
+    const handleClickUpdateInvoice = (data: IInvoiceTableData) => {
+        if(invoiceTableData && invoiceTableData.length > 0){
+            const foundInvoice = invoiceTableData.find(inv => inv.id == data.id);
+            if (!foundInvoice) {
+                toast.error("Invoice not found", { position: 'bottom-right' });
+                return;
+            }
+            const _invoice: IInvoiceForm = {
+                ...foundInvoice,
+                id: foundInvoice.id ?? "",
+                billingElements: invoiceTableData[0].billingElements
+            }
+
+            setInvoiceFormDefaultValue(_invoice);
+            setAction("UPDATE");
+            setShowInvoiceGenerator(true);
+        }
+    }
 
     const canCreateInvoice = (): boolean => {
-        let can = asset?.whoIs == 'OWNER' ? true : asset?.Permission.includes("ManageBilling");
-        if(asset?.IsVerified == 0){
-            can = false;
+        if(asset){
+            const hasPermission = asset.Permission.includes("ManageBilling");
+            if(hasPermission){
+                if(asset.IsVerified == 0){
+                    return false;
+                } else {
+                    if(contractTableData.some(contract => (contract.status == 'ACTIVE'))){
+                        return true;
+                    }
+                }
+            }
         }
-        return can == undefined ? true : !can;
+
+        return false;
     }
     const canAttachManager = (): boolean => {
         let can = asset?.whoIs == 'OWNER' && asset.IsVerified == 1 ? true : false;
         return can == undefined ? true : !can;
     }
     const canCreateContract = (): boolean => {
-        return contractList.some(contract => (contract.status == 'ACTIVE'));
+        return contractTableData.some(contract => (contract.status == 'ACTIVE'));
     }
 
     return (
@@ -462,7 +669,7 @@ const PropertyDetail = () => {
                                     {contracts.length > 0 ? (
                                         <ResponsiveTable
                                             columns={contractColumns}
-                                            data={contractList}
+                                            data={contractTableData}
                                             onRowClick={(contract) => handleSelectedContract(contract.id)}
                                             keyField="id"
                                         />
@@ -629,7 +836,7 @@ const PropertyDetail = () => {
                                             <Share2 size={16} /> Invite Tenant
                                         </Button>
                                         {
-                                            contractList.length == 0 && <Button onClick={handleCreateContract} variant='neutral' disable={asset?.IsVerified == 0} isSubmitBtn={false}>
+                                            contractTableData.length == 0 && <Button onClick={handleCreateContract} variant='neutral' disable={asset?.IsVerified == 0} isSubmitBtn={false}>
                                             <FileText size={16} /> Create a contract
                                         </Button>
                                         }
@@ -644,7 +851,7 @@ const PropertyDetail = () => {
                                         </Button>
                                     </>
                                 }
-                                <Button onClick={() => setShowInvoiceGenerator(true)} variant='neutral' disable={canCreateInvoice()} isSubmitBtn={false}>
+                                <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={canCreateInvoice()} isSubmitBtn={false}>
                                     <DollarSign size={16} /> Create Invoice
                                 </Button>
                                 
@@ -744,6 +951,14 @@ const PropertyDetail = () => {
                 
 
                 {/* Modal Actions */}
+                <Overlay isOpen={showInvoiceGenerator} onClose={() => setShowInvoiceGenerator(false)}>
+                    <InvoiceGenerator
+                        onClose={() => setShowInvoiceGenerator(false)}
+                        onCreate={(data: IInvoiceForm) => {handleCreateInvoice(data)}}
+                        defaultValue={invoiceFormDefaultValue}
+                        action={action}
+                    />
+                </Overlay>
                 <Overlay isOpen={isManagerSearchOpen} onClose={() => setIsManagerSearchOpen(false)}>
                     <ManagerSearch
                         onClose={() => setIsManagerSearchOpen(false)}
@@ -781,7 +996,6 @@ const PropertyDetail = () => {
                         onSubmit={handleContractSubmit}
                     />
                 </Overlay>
-
                 <Overlay isOpen={showSuccessModal} onClose={() => setShowSuccessModal(false)}>
                     <SuccessModal
                         onClose={() => setShowSuccessModal(false)}

@@ -58,7 +58,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
         )}
 
         {/* Image */}
-        {CoverUrl == "" ?
+        {CoverUrl == "" || CoverUrl == null?
           <div className="relative h-54 w-full overflow-hidden">
             <div role="status" className="h-full w-full rounded-sm shadow-sm animate-pulse">
                 <div className="h-full flex items-center justify-center bg-gray-300 rounded-sm dark:bg-gray-700">

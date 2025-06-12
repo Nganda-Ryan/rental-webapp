@@ -13,7 +13,7 @@ import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
 import { useParams } from 'next/navigation';
 import { createInvoice, getContract, searchInvoice } from '@/actions/assetAction';
-import { IContractDetail, IInvoice, IInvoiceForm, SeachInvoiceParams } from '@/types/Property';
+import { IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, SeachInvoiceParams } from '@/types/Property';
 import { getStatusIcon } from '@/lib/utils-component';
 import Button from '@/components/ui/Button';
 import Overlay from '@/components/Overlay';
@@ -24,13 +24,6 @@ import ContractDetailSkeleton from '@/components/skeleton/ContractDetailSkeleton
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
 import { useRouter } from 'next/navigation';
 import { formatDateToText } from '@/lib/utils';
-
-interface InvoiceTableData {
-    id: string;
-    status: string;
-    startDate: string;
-    endDate: string;
-}
 
 const ContractDetail = () => {
     const [contract, setContract] = useState<IContractDetail>();
@@ -242,7 +235,7 @@ const ContractDetail = () => {
         
     }
 
-    const handleClickUpdateInvoice = (data: InvoiceTableData) => {
+    const handleClickUpdateInvoice = (data: IInvoiceTableData) => {
         if(invoiceTableData && invoiceTableData.length > 0){
             const foundInvoice = invoiceTableData.find(inv => inv.id == data.id);
             if (!foundInvoice) {

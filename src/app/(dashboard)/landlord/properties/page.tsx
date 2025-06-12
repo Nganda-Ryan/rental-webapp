@@ -11,6 +11,7 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import { AssetData } from "@/types/Property";
 import { searchAsset } from "@/actions/assetAction";
 import PropertySkeletonCard from "@/components/skeleton/PropertySkeletonCard";
+import { useAuth } from "@/context/AuthContext";
 
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -21,6 +22,7 @@ const PropertiesPage = () => {
   const [assetList,setAssetList] = useState<AssetData[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [offSet, setOffSet] = useState(0);
+  const auth = useAuth();
 
   const router = useRouter();
   useEffect(() => {
@@ -32,7 +34,7 @@ const PropertiesPage = () => {
           limit: 1000,
           offset: offSet,
         };
-        const result = await searchAsset(params);
+        const result = await searchAsset(params, auth.activeProfile);
         console.log('API result:', result);
         if(result.data && result.data.body.items.length > 0) {
           const datas = result.data.body.items.map((item: any) => {

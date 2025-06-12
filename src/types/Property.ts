@@ -88,6 +88,7 @@ export interface SeachPropertyParams {
   offset?: number;
   limit?: number;
   page?: number;
+  profileCode?: string;
 }
 export interface SeachInvoiceParams {
   "orderBy": string,
@@ -95,7 +96,7 @@ export interface SeachInvoiceParams {
   "statusCodes"?: string[], //not required
   "codes"?: string[],//not required
   "contractCodes"?: string[], //not required
-   "assetCodes"?: string[], //not required
+  "assetCodes"?: string[], //not required
   "profileCode"?: string[],//not required
 }
 
@@ -238,4 +239,11 @@ export interface IInvoice {
     "paidDate" : string,
     "notes": string
   }>
+}
+
+export interface IInvoiceTableData {
+  id: string;
+  status: string;
+  startDate: string;
+  endDate: string;
 }
