@@ -69,7 +69,7 @@ const Breadcrumb = ({ pageName, previousPage }: BreadcrumbProps) => {
         { previousPage && <ArrowLeft size={24} onClick={() => router.back()}/>}
         <h1 className="text-xl md:text-2xl font-bold">{pageName}</h1>
       </div>
-      <nav className="hidden sm:inline">
+      <nav className="hidden md:inline">
         <ol className="flex items-center gap-2 max-w-[95vw]">
           {pathElements}
         </ol>

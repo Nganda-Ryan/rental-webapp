@@ -23,7 +23,7 @@ import Overlay from "@/components/Overlay";
 import InvoiceGenerator from "@/components/feature/Properties/InvoiceGenerator";
 import { useParams } from 'next/navigation';
 import { createContract, getAsset } from "@/actions/assetAction";
-import { AssetData, AssetDataDetailed, IIvoiceFormParams } from "@/types/Property";
+import { AssetData, AssetDataDetailed } from "@/types/Property";
 import { getStatusIcon } from "@/lib/utils-component";
 import { PropertySkeletonPageSection1 } from "@/components/skeleton/pages/PropertySkeletonPage";
 import Button from "@/components/ui/Button";
@@ -50,7 +50,6 @@ const PropertyDetail = () => {
     const [contractList, setContractList] = useState<IContractColumn[]>([]);
     const [selectedTenant, setSelectedTenant] = useState<any>(null);
     const [successMessage, setSuccessMessage] = useState("");
-    const [invoiceParam, setInvoiceParam] = useState<IIvoiceFormParams>();
     const [isManagerSearchOpen, setIsManagerSearchOpen] = useState(false);
     const [isContractFormOpen, setContractFormOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -461,14 +460,14 @@ const PropertyDetail = () => {
                                     </h2>
                                     </div>
                                     {contracts.length > 0 ? (
-                                    <ResponsiveTable
-                                        columns={contractColumns}
-                                        data={contractList}
-                                        onRowClick={(contract) => handleSelectedContract(contract.id)}
-                                        keyField="id"
-                                    />
-                                    ) : (
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm">No lease contracts available</p>
+                                        <ResponsiveTable
+                                            columns={contractColumns}
+                                            data={contractList}
+                                            onRowClick={(contract) => handleSelectedContract(contract.id)}
+                                            keyField="id"
+                                        />
+                                        ) : (
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm">No lease contracts available</p>
                                     )}
                                 </div>
 
@@ -782,18 +781,7 @@ const PropertyDetail = () => {
                         onSubmit={handleContractSubmit}
                     />
                 </Overlay>
-                <Overlay isOpen={showInvoiceGenerator} onClose={() => setShowInvoiceGenerator(false)}>
-                    <InvoiceGenerator
-                        onClose={() => setShowInvoiceGenerator(false)}
-                        onGenerate={(data: any) => {
-                            console.log('Generate invoice:', data)
-                            setShowInvoiceGenerator(false)
-                            setSuccessMessage('Invoice generated successfully')
-                            setShowSuccessModal(true)
-                        }}
-                        contract={contracts[0]}
-                    />
-                </Overlay>
+
                 <Overlay isOpen={showSuccessModal} onClose={() => setShowSuccessModal(false)}>
                     <SuccessModal
                         onClose={() => setShowSuccessModal(false)}

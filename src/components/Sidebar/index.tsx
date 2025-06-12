@@ -102,7 +102,7 @@ const ALL_MENU_GROUPS = [
         icon: <ShieldCheck size={20} />,
         label: "Support Users",
         route: "/support/support-users",
-        profiles: ["ADMIN"],
+        profiles: ["SUPPORT", "ADMIN"],
       },
       {
         icon: <Settings size={20} />,

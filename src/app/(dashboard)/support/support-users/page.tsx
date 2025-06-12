@@ -2,7 +2,6 @@
 import React, { useState } from 'react'
 import {
   Search,
-  Shield,
   Mail,
   Phone,
   UserPlus,
@@ -14,6 +13,7 @@ import {
 import { NewSupportUserForm } from '@/components/feature/Support/NewSupportUserForm' 
 import DefaultLayout from '@/components/Layouts/DefaultLayout'
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
+import Overlay from '@/components/Overlay'
 interface SupportUser {
   id: string
   name: string
@@ -214,11 +214,14 @@ const SupportUsers = () => {
             </p>
           </div>
         )}
-        <NewSupportUserForm
-          isOpen={showNewUserForm}
-          onClose={() => setShowNewUserForm(false)}
-          onSubmit={handleNewUserSubmit}
-        />
+
+        <Overlay isOpen={showNewUserForm} onClose={() => setShowNewUserForm(false)}>
+          <NewSupportUserForm
+              isOpen={showNewUserForm}
+              onClose={() => setShowNewUserForm(false)}
+              onSubmit={handleNewUserSubmit}
+            />
+        </Overlay>
       </div>
     </DefaultLayout>
   )

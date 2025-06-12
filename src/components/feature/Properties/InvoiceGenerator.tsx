@@ -1,231 +1,281 @@
 "use client"
 
-import React, { useState } from 'react'
-import { Calendar, DollarSign, X } from 'lucide-react'
+import React, { useEffect } from 'react'
+import { Calendar, X } from 'lucide-react'
+import { IContractDetail, IInvoiceForm } from '@/types/Property'
+import { useWatch, useFieldArray, useForm } from "react-hook-form";
 
 interface InvoiceGeneratorProps {
   onClose: () => void
-  onGenerate: (data: any) => void
-  contract: {
-    id: string
-    tenant: string
-    unit: string
-    startDate: string
-    endDate: string
-    monthlyRent: string
-    status: string
-    nextInvoiceDate: string
-    billingElements: Array<{
-      name: string
-      amount: number
-      frequency: string
-    }>
-  }
+  onCreate: (data: IInvoiceForm) => void
+  action: "CREATE" | "UPDATE"
+  defaultValue: IInvoiceForm | undefined
 }
 
 export const InvoiceGenerator = ({
   onClose,
-  onGenerate,
-  contract,
+  onCreate,
+  defaultValue,
+  action
 }: InvoiceGeneratorProps) => {
-  const [invoiceDate, setInvoiceDate] = useState(
-    new Date().toISOString().split('T')[0],
-  )
-  const [periodStart, setPeriodStart] = useState('')
-  const [periodEnd, setPeriodEnd] = useState('')
-  const [selectedElements, setSelectedElements] = useState(
-    contract.billingElements.map((element) => ({
-      ...element,
-      included: true,
-      currentAmount: element.amount,
-    })),
-  )
+  const {
+    control,
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<IInvoiceForm>({
+    defaultValues: {
+      id: defaultValue?.id,
+      tenant: defaultValue?.tenant,
+      startDate: defaultValue?.startDate,
+      endDate: defaultValue?.endDate,
+      currency: defaultValue?.currency,
+      monthlyRent: defaultValue?.monthlyRent,
+      status: "",
+      billingElements: defaultValue?.billingElements ?? [],
+      notes: "",
+    },
+  });
+  const startDate = useWatch({ name: "startDate", control });
+  const endDate = useWatch({ name: "endDate", control });
+  const { fields } = useFieldArray({
+    control,
+    name: "billingElements"
+  });
+  const getMinEndDate = () => {
+    if (!startDate) return "";
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split("T")[0];
+  };
+
+  useEffect(() => {
+  if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
+    setValue("endDate", ""); // Réinitialise Period End
+  }
+}, [startDate, endDate, setValue]);
+  const today = new Date().toISOString().split("T")[0]; // format YYYY-MM-DD
   
-  const totalAmount = selectedElements
-    .filter((element) => element.included)
-    .reduce((sum, element) => sum + Number(element.currentAmount), 0)
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const invoiceData = {
-      contractId: contract.id,
-      invoiceDate,
-      periodStart,
-      periodEnd,
-      billingElements: selectedElements.filter((element) => element.included),
-      totalAmount,
-    }
-    onGenerate(invoiceData)
+
+  
+  const handleSubmit2 = (data: IInvoiceForm) => {
+    onCreate(data)
   }
   
   return (
-    <div className="rounded-lg w-full max-h-[75vh] overflow-y-auto px-4 sm:px-0 max-w-3xl mx-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-lg">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-4 z-10">
-          <div className="flex justify-between items-center">
+    <div className="rounded-lg w-full max-h-[75vh] overflow-y-auto max-w-3xl mx-auto bg-white dark:bg-gray-800">
+      <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-4 z-10">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-lg sm:text-xl font-semibold dark:text-white">
+              
+              {
+                action == "CREATE" ? "Generate Invoice" : "Update Invoice"
+              }
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {
+                action == "CREATE" ? `Create a new invoice for ${defaultValue?.tenant}` : `Update an invoice for ${defaultValue?.tenant}`
+              }
+              
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <X size={20} className="text-gray-500 dark:text-gray-400" />
+          </button>
+        </div>
+      </div>
+      
+      <form onSubmit={handleSubmit(handleSubmit2)} className="p-4 space-y-6">
+        <div className="grid gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Tenant
+            </label>
+            <input
+              type="text"
+              {...register("tenant")}
+              readOnly
+              className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg dark:text-white"
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <h2 className="text-lg sm:text-xl font-semibold dark:text-white">
-                Generate Invoice
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Create a new invoice for {contract.tenant}
-              </p>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Period Start
+              </label>
+              <div className="relative">
+                <Calendar
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type="date"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  {...register("startDate", { required: "The start date is required" })}
+                  min={defaultValue?.startDate}
+                />
+              </div>
+              {errors.startDate && (
+                <p className="text-sm text-red-500">{errors.startDate.message}</p>
+              )}
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              aria-label="Close"
-            >
-              <X size={20} className="text-gray-500 dark:text-gray-400" />
-            </button>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Period End
+              </label>
+              <div className="relative">
+                <Calendar
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type="date"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  {...register("endDate", { required: "The end date is required" })}
+                  min={getMinEndDate()}
+                />
+              </div>
+              {errors.endDate && (
+                <p className="text-sm text-red-500">{errors.endDate.message}</p>
+              )}
+            </div>
           </div>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-4 space-y-6">
-          <div className="grid gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Tenant
-              </label>
-              <input
-                type="text"
-                value={contract.tenant}
-                readOnly
-                className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg dark:text-white"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Period Start
-                </label>
-                <div className="relative">
-                  <Calendar
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={20}
-                  />
-                  <input
-                    type="date"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                    value={periodStart}
-                    onChange={(e) => setPeriodStart(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Period End
-                </label>
-                <div className="relative">
-                  <Calendar
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={20}
-                  />
-                  <input
-                    type="date"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                    value={periodEnd}
-                    onChange={(e) => setPeriodEnd(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
+        <div className="space-y-4">
+          <h3 className="font-medium text-lg border-b border-gray-200 dark:border-gray-700 pb-2 dark:text-white">
+            Billing Elements
+          </h3>
+          <div className="space-y-3">
+            {
+              fields.map((item, index) => (
+                <BillingElementField
+                  key={item.id}
+                  index={index}
+                  item={item}
+                  register={register}
+                  errors={errors}
+                  defaultValue={defaultValue}
+                  control={control}
+                  action={action}
+                />
+              ))
+            }
           </div>
-          
-          <div className="space-y-4">
-            <h3 className="font-medium text-lg border-b border-gray-200 dark:border-gray-700 pb-2 dark:text-white">
-              Billing Elements
-            </h3>
-            <div className="space-y-3">
-              {selectedElements.map((element, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg gap-3 sm:gap-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={element.included}
-                      onChange={() =>
-                        setSelectedElements(
-                          selectedElements.map((e, i) =>
-                            i === index
-                              ? {
-                                  ...e,
-                                  included: !e.included,
-                                }
-                              : e,
-                          ),
-                        )
-                      }
-                      className="rounded border-gray-300 dark:border-gray-600"
-                    />
-                    <div>
-                      <p className="font-medium dark:text-white">{element.name}</p>
-                    </div>
-                  </div>
-                  <div className="relative w-full sm:w-auto mt-2 sm:mt-0">
-                    <DollarSign
-                      size={16}
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className="w-full sm:w-32 pl-8 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                      value={element.currentAmount}
-                      onChange={(e) =>
-                        setSelectedElements(
-                          selectedElements.map((el, i) =>
-                            i === index
-                              ? {
-                                  ...el,
-                                  currentAmount: parseFloat(e.target.value),
-                                }
-                              : el,
-                          ),
-                        )
-                      }
-                      disabled={!element.included}
-                      required={element.included}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <div className="flex justify-between items-center">
-              <span className="font-medium dark:text-white">Total Amount</span>
-              <span className="text-xl font-bold dark:text-white">
-                ${totalAmount.toFixed(2)}
-              </span>
-            </div>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg w-full sm:w-auto"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-900 dark:bg-blue-800 text-white rounded-lg hover:bg-blue-800 dark:hover:bg-blue-700 w-full sm:w-auto"
-            >
-              Generate Invoice
-            </button>
-          </div>
-        </form>
-      </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Description
+          </label>
+          <textarea
+            className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            rows={4}
+            {...register("notes")}
+            placeholder="Some notes about the contract..."
+          />
+        </div>
+        
+        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg w-full sm:w-auto"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-900 dark:bg-blue-800 text-white rounded-lg hover:bg-blue-800 dark:hover:bg-blue-700 w-full sm:w-auto"
+          >
+            Generate Invoice
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
+
+
+
+
+const BillingElementField = ({ index, item, register, errors, defaultValue, control, action }: { index: number, item: any, register: any, errors: any, defaultValue: any, control: any, action: "CREATE" | "UPDATE" }) => {
+  const status = useWatch({ name: `billingElements.${index}.status`, control });
+  
+  const isChecked = status === true;
+
+  const today = new Date().toISOString().split("T")[0];
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-x">
+      {/* Checkbox + Label + Paid */}
+      <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 mr-8">
+        <input
+          type="checkbox"
+          disabled={action == 'UPDATE'}
+          className="rounded border-gray-300 dark:border-gray-600"
+          {...register(`billingElements.${index}.status`)}
+        />
+        <p className="font-medium dark:text-white">{item.label}</p>
+        <span
+          className={`px-2 py-1 text-xs rounded-full 
+            ${isChecked 
+              ? "bg-green-100 text-green-800 dark:bg-green-200 dark:text-green-900" 
+              : "bg-red-100 text-red-800 dark:bg-red-200 dark:text-red-900"
+            }`}
+        >
+          {isChecked ? "Paid" : "Unpaid"}
+        </span>
+      </div>
+
+      {/* Montant + Date */}
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center w-full sm:w-auto flex-1">
+        {/* Montant */}
+        <div className="relative w-full sm:w-32 flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-300">
+            {defaultValue?.currency}
+          </span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            disabled={action == "UPDATE"}
+            className={`w-full pl-14 pr-4 py-2 border rounded-lg dark:text-white "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 ${errors.billingElements?.[index]?.amount ? "border-red-500" : ""}
+              ${action == "UPDATE" ? "dark:text-white bg-gray-200 dark:bg-gray-600 cursor-not-allowed border-gray-200 dark:border-gray-600" : ""}  
+            `}
+            {...register(`billingElements.${index}.amount`, {
+              required: isChecked ? "Please enter the paid amount" : false,
+            })}
+          />
+        </div>
+
+        {/* Date */}
+        {
+          isChecked 
+          &&
+          <input
+            type="date"
+            max={today}
+            min={defaultValue?.startDate}
+            className={`w-full sm:w-44 px-4 py-2 border rounded-lg ${errors.billingElements?.[index]?.paidDate ? "border-red-500" : ""}`}
+            {...register(`billingElements.${index}.paidDate`, {
+              required: isChecked ? "Please enter the paid date" : false,
+            })}
+          />
+        }
+      </div>
+    </div>
+  );
+};
+
+
 
 export default InvoiceGenerator

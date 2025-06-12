@@ -38,7 +38,6 @@ export async function login(formData: FormData) {
     const token = firebaseResult.user.accessToken;
     const userId = firebaseResult.user.uid;
     const cfUserResult = await getCloudflareUser(userId, token);
-    // console.log('-->cfUserResult', cfUserResult);
     if(cfUserResult.error){
       return {
         code: cfUserResult.code,
@@ -138,7 +137,7 @@ export async function signUpAction(_payload: any){
               user: null,
               error: null,
               code: "redirect",
-              redirectTo: "/landlord/properties"
+              redirectTo: "/tenants"
             }
           }
 
@@ -174,7 +173,7 @@ export async function signUpAction(_payload: any){
       .filter((p: any) => p.IsActive)
       .map((p: any) => p.RoleCode);
     
-    const rolePriority = ['ADMIN', 'SUPPORT', 'LANDLORD', 'RENTER'];
+      const rolePriority = ['ADMIN', 'SUPPORT', 'LANDLORD', 'RENTER'];
       const activeRole = rolePriority.find(role => roles.includes(role)) ?? roles[0];
     
       const sessionInfo = {

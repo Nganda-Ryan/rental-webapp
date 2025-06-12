@@ -89,6 +89,15 @@ export interface SeachPropertyParams {
   limit?: number;
   page?: number;
 }
+export interface SeachInvoiceParams {
+  "orderBy": string,
+  "orderMode": "asc" | "desc",
+  "statusCodes"?: string[], //not required
+  "codes"?: string[],//not required
+  "contractCodes"?: string[], //not required
+   "assetCodes"?: string[], //not required
+  "profileCode"?: string[],//not required
+}
 
 export type AssetData = {
   Code: string;
@@ -180,49 +189,53 @@ export interface IContractDetail {
     name: string;
     email: string;
     phone: string;
+    userCode: string;
   }
   startDate: string;
   endDate: string;
   monthlyRent: number;
+  currency: string;
   status: string;
+  notes: string;
   billingElements: Array<{
-    name: string;
-    amount: number;
-    code: string;
-    paid: boolean;
-    date: number;
-  }>;
-  paymentHistory: Array<{
-    date: string;
-    amount: number;
-    status: string;
-  }>;
-  documents: Array<{
-    name: string;
-    type: string;
-    date: string;
-  }>;
-  notifications: Array<{
-    type: string;
-    message: string;
-    date: string;
-  }>;
+    code: string,
+    label: string,
+  }>
 }
 
-export interface IIvoiceFormParams {
-  tenant: {
-    id: string;
-    name: string;
-  }
-  contractId: string;
+
+export interface IInvoiceForm {
+  id: string;
+  tableId: string;
+  tenant: string,
   startDate: string;
   endDate: string;
+  monthlyRent: number;
+  status: string;
+  notes: string;
+  currency: string;
   billingElements: Array<{
-    name: string;
-    amount: number;
-    code: string;
-    paid: boolean;
-    date: number;
-  }>;
-  totalAmount: number;
+    code: string,
+    label: string,
+    amount: number,
+    paidDate: string,
+    status: boolean,
+  }>
+}
+
+
+export interface IInvoice {
+  "profilCode": string,
+  "userId": string,
+  "contractCode": string,
+  "startDate": string,
+  "endDate": string,
+  "notes": string,
+  "items": Array<{
+    "itemCode": string,
+    "amount": string,
+    "isPaid" : boolean,  
+    "paidDate" : string,
+    "notes": string
+  }>
 }

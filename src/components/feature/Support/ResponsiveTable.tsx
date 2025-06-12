@@ -89,7 +89,7 @@ export const ResponsiveTable = ({
                 className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
               >
                 {columns.map((column) => (
-                  <td key={column.key} className="px-6 py-4 text-gray-900 dark:text-gray-100">
+                  <td key={column.key} className="px-6 py-2.5 text-gray-900 dark:text-gray-100">
                     {column.render ? column.render(row[column.key], row) : row[column.key]}
                   </td>
                 ))}

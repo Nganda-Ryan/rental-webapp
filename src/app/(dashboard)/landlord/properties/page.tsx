@@ -83,18 +83,6 @@ const PropertiesPage = () => {
       }
 
       console.log('-->data', data);
-      // const createdAsset = await createAsset(payload);
-      
-      // const response = await fetch("/api/upload-image", {
-      //   method: "POST",
-      //   body: formData,
-      // });
-      // const result = await response.json();
-      // if(result.success){
-      //   payload.coverUrl = result.url;
-      // }
-      
-      // setPropertyFormOpen(false);
     } catch (error) {
       console.log("-->error", error);
     }

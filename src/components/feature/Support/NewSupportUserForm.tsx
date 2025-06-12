@@ -4,13 +4,15 @@ import {
   X,
   Shield,
   Mail,
-  Phone,
   Key,
   Eye,
   EyeOff,
   AlertCircle,
   Check,
 } from 'lucide-react'
+import PhoneInput from 'react-phone-input-2';
+import { getNames, getCode } from 'country-list';
+import Select from 'react-select';
 interface NewSupportUserFormProps {
   isOpen: boolean
   onClose: () => void
@@ -22,6 +24,15 @@ interface Permission {
   description: string
   roles: string[]
 }
+
+const countryOptions = getNames()
+.map((name) => ({
+  label: name,
+  value: getCode(name),
+}))
+.filter((option) => option.value !== undefined) as { label: string; value: string }[]
+
+
 export const NewSupportUserForm = ({
   isOpen,
   onClose,
@@ -30,6 +41,7 @@ export const NewSupportUserForm = ({
   const [showPassword, setShowPassword] = useState(false)
   const [selectedRole, setSelectedRole] = useState('support')
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
+  const [selectedCountry, setSelectedCountry] = useState<{ label: string; value: string } | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -99,8 +111,7 @@ export const NewSupportUserForm = ({
   }
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="rounded-lg w-full max-h-[75vh] sm:max-h-[85vh] overflow-y-auto max-w-xl mx-auto bg-white dark:bg-gray-800">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">Add Support Team Member</h2>
           <button
@@ -117,22 +128,18 @@ export const NewSupportUserForm = ({
               <Shield size={20} className="text-gray-400" />
               Role Assignment
             </h3>
-            <div className="grid grid-cols-3 gap-4">
-              {['admin', 'moderator', 'support'].map((role) => (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {['admin', 'support'].map((role) => (
                 <button
                   key={role}
                   type="button"
                   onClick={() => handleRoleChange(role)}
-                  className={`p-4 rounded-lg border text-left transition-colors
+                  className={`p-2 rounded-lg border text-left transition-colors
                     ${selectedRole === role ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-500'}`}
                 >
                   <div className="font-medium capitalize">{role}</div>
                   <div className="text-sm text-gray-500">
-                    {role === 'admin'
-                      ? 'Full system access'
-                      : role === 'moderator'
-                        ? 'Verification & support'
-                        : 'Basic support access'}
+                    {role === 'admin' ? 'Full system access' : 'Basic support access' }
                   </div>
                 </button>
               ))}
@@ -141,103 +148,122 @@ export const NewSupportUserForm = ({
           {/* User Information */}
           <div className="space-y-4">
             <h3 className="font-medium">User Information</h3>
-            <div className="grid grid-cols-2 gap-4">
+            
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
+                <label className="block text-sm font-medium text-gray-700">First Name</label>
                 <input
                   type="text"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      name: e.target.value,
-                    })
-                  }
+                  name="firstName"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                 />
+                {/* {formError.firstname && <p className="text-red-500">{formError.firstname}</p>} */}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <Phone
-                    size={16}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  />
-                  <input
-                    type="tel"
-                    required
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        phone: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail
-                    size={16}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  />
-                  <input
-                    type="email"
-                    required
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        email: e.target.value,
-                      })
-                    }
-                  />
-                </div>
+                <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                <input
+                  type="text"
+                  required
+                  name="lastName"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+                {/* {formError.lastname && <p className="text-red-500">{formError.lastname}</p>} */}
               </div>
             </div>
-          </div>
-          {/* Permissions */}
-          <div className="space-y-4">
-            <h3 className="font-medium">Permissions</h3>
-            <div className="space-y-3">
-              {permissions.map((permission) => (
-                <div
-                  key={permission.id}
-                  className={`p-4 border rounded-lg transition-colors
-                    ${selectedPermissions.includes(permission.id) ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}
-                    ${permission.roles.includes(selectedRole) ? 'opacity-100' : 'opacity-50'}
-                  `}
-                >
-                  <label className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedPermissions.includes(permission.id)}
-                      onChange={() => handlePermissionToggle(permission.id)}
-                      disabled={!permission.roles.includes(selectedRole)}
-                      className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <div>
-                      <div className="font-medium">{permission.name}</div>
-                      <div className="text-sm text-gray-500">
-                        {permission.description}
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              ))}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <input
+                type="password"
+                required
+                name="password"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              />
+              {/* {formError.password && <p className="text-red-500">{formError.password}</p>} */}
             </div>
+            
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Gender</label>
+              <select
+                name="gender"
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              >
+                <option value="">Select gender</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+              </select>
+              {/* {formError.gender && <p className="text-red-500">{formError.gender}</p>} */}
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md"
+                />
+                {/* {formError.email && <p className="text-red-500">{formError.email}</p>} */}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Primary Phone</label>
+              <div className="mt-1 relative">
+                <PhoneInput
+                  country={'cm'}
+                  inputClass="w-full pl-10 !py-2 !text-sm"
+                  inputStyle={{ width: '100%' }}
+                  specialLabel=""
+                  enableSearch
+                />
+                {/* {formError.phone && <p className="text-red-500">{formError.phone}</p>} */}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Country</label>
+              <Select
+                options={countryOptions}
+                instanceId="country-select"
+                placeholder="Select country"
+                value={selectedCountry}
+                onChange={(option) => setSelectedCountry(option)}
+              />
+              {/* {formError.country && <p className="text-red-500">{formError.country}</p>} */}
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700">City</label>
+              <input
+                type="text"
+                required
+                name="city"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              />
+              {/* {formError.city && <p className="text-red-500">{formError.city}</p>} */}
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Street</label>
+              <input
+                type="text"
+                required
+                name="street"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              />
+              {/* {formError.street && <p className="text-red-500">{formError.street}</p>} */}
+            </div>            
           </div>
+          
           {/* Initial Password */}
           <div className="space-y-4">
             <h3 className="font-medium">Security</h3>
@@ -295,7 +321,6 @@ export const NewSupportUserForm = ({
             </button>
           </div>
         </form>
-      </div>
     </div>
   )
 }

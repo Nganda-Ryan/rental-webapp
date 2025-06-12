@@ -76,12 +76,14 @@ export async function decrypt(session: string | undefined = "") {
 }
 
 export const verifySession = cache(async () => {
-  const cookie = (await cookies()).get('session')?.value
-  const session = await decrypt(cookie)
- 
-  if (!session) {
-    redirect('/signin')
+  const cookie = (await cookies()).get('session')?.value;
+  const session = await decrypt(cookie);
+
+  // console.log('-->session', session);
+
+  if (!session || (session.expiresAt && new Date(session.expiresAt) < new Date())) {
+    redirect('/signin');
   }
- 
-  return session
-})
+
+  return session;
+});

@@ -12,12 +12,12 @@ export const getStatusIcon = (status: string) => {
         <span className='text-xs'>{status}</span>
       </div>
     }
-    else if (status.toUpperCase() == 'APPROVED' || status.toUpperCase() == 'APPROVED' || status.toUpperCase() == 'RENTED' || status.toUpperCase() == 'ACTIVE'){
+    else if (status.toUpperCase() == 'APPROVED' || status.toUpperCase() == 'APPROVED' || status.toUpperCase() == 'RENTED' || status.toUpperCase() == 'ACTIVE' || status.toUpperCase() == 'PAID'){
       return <div className="w-fit flex items-center justify-end flex-nowrap gap-1 px-2 py-1 bg-green-100 rounded-xl text-green-600 text-xs font-medium me-2 dark:bg-gray-700 dark:text-green-400 border border-green-400">
         <span><CheckCircle size={15} className="text-green-600 dark:text-green-400" /></span>
         <span className='text-xs'>{status}</span>
       </div>
-    } else if(status.toUpperCase() == 'CANCELED' || status.toUpperCase() == 'CANCEL' || status.toUpperCase() == 'REJECTED'){
+    } else if(status.toUpperCase() == 'CANCELED' || status.toUpperCase() == 'CANCEL' || status.toUpperCase() == 'REJECTED' || status.toUpperCase() == 'UNPAID'){
       return <div className="w-fit flex items-center justify-end flex-nowrap gap-1 px-2 py-1 bg-red-100 rounded-xl text-red-600 text-xs font-medium me-2 dark:bg-gray-700 dark:text-red-400 border border-red-400">
         <span><XCircle size={15} className="text-red-600 dark:text-red-400" /></span>
         <span className='text-xs'>{status}</span>

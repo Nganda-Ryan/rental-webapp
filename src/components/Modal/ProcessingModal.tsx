@@ -7,7 +7,7 @@ export const ProcessingModal = ({
   message,
 }: SuccessModalProps) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[75vh] overflow-y-auto">
+    <div className="rounded-lg w-full max-h-[75vh] overflow-y-auto max-w-sm mx-auto bg-white dark:bg-gray-800">
       <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md p-6 text-center">
         {/* <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" /> */}
         <div role="status" className="flex justify-center items-center mb-4">

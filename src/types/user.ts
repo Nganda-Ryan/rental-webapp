@@ -9,6 +9,21 @@ export type CreateUserType = {
     "addressData": AddressDataType;
 };
 
+
+export interface ICreateUserParam {
+    "email":string,
+    "phone":string,
+    "gender":string,
+    "lastname":string,
+    "firstname":string,
+    "username": string,
+    "password": string,
+    "userId":string,
+    "role":string,
+    "addressData": AddressDataType
+}
+
+
 export type AddressDataType = {
     "street": string;
     "city": string;

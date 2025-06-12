@@ -60,9 +60,9 @@ export const LoginForm = () => {
         }      
       } else {
         setIsLoading(false);
-        toast.success("Connexion réussie", { position: 'bottom-right' });
         if (result.redirectTo) {
           router.push(result.redirectTo);
+          toast.success("Connexion réussie", { position: 'bottom-right' });
         } else {
           toast.error("Erreur interne du système", { position: 'bottom-right' });
         }
@@ -79,6 +79,10 @@ export const LoginForm = () => {
 
   return (
     <div className="w-full max-w-md space-y-8">
+      <Overlay isOpen={isLoading} onClose={() => {}}>
+        <ProcessingModal
+         message="Loading you account ..." />
+      </Overlay>
       <div className="text-center">
         <div className="flex justify-center mb-4">
           <Building2 className="h-12 w-12 text-blue-900" />
@@ -166,10 +170,6 @@ export const LoginForm = () => {
           </div>
         </div>
       </form>
-      <Overlay isOpen={isLoading} onClose={() => {}}>
-        <ProcessingModal
-         message="Loading you account ..." />
-      </Overlay>
     </div>
   )
 }
