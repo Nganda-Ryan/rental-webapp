@@ -114,7 +114,7 @@ const LessorDetailView = () => {
         }
         console.log('-->payload', payload)
         setActionModal((prev) => ({ ...prev, isOpen: false }));
-        const result  = await verifyRequest(payload, "Asset");
+        const result  = await verifyRequest(payload, "User/Profile");
         if (result.code) {
           console.log('Error approving request:', result.error);
           toast.error("Someting wend wrong during the process, please try again", { position: 'bottom-right' });

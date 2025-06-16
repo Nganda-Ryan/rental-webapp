@@ -1,8 +1,9 @@
 "use client"
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Calendar, X } from 'lucide-react'
-import { IContractDetail, IInvoiceForm } from '@/types/Property'
+import { IInvoiceForm } from '@/types/Property';
+import Button from "@/components/ui/Button";
 import { useWatch, useFieldArray, useForm } from "react-hook-form";
 
 interface InvoiceGeneratorProps {
@@ -18,6 +19,7 @@ export const InvoiceGenerator = ({
   defaultValue,
   action
 }: InvoiceGeneratorProps) => {
+  const [loading, setLoading] = useState(false);
   const {
     control,
     register,
@@ -34,7 +36,7 @@ export const InvoiceGenerator = ({
       monthlyRent: defaultValue?.monthlyRent,
       status: "",
       billingElements: defaultValue?.billingElements ?? [],
-      notes: "",
+      notes: action == "UPDATE" ? defaultValue?.notes : "",
     },
   });
   const startDate = useWatch({ name: "startDate", control });
@@ -51,16 +53,24 @@ export const InvoiceGenerator = ({
   };
 
   useEffect(() => {
-  if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
-    setValue("endDate", ""); // Réinitialise Period End
+    if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
+      setValue("endDate", ""); // Réinitialise Period End
+    }
+  }, [startDate, endDate, setValue, defaultValue]);
+  
+  const canNotGenerateInvoice = () => {
+    if(loading){
+      return true;
+    }
+    if(action == 'UPDATE'){
+      return defaultValue?.billingElements.every(item => item.status == true) ? true : false;
+    }
+    return false
   }
-}, [startDate, endDate, setValue]);
-  const today = new Date().toISOString().split("T")[0]; // format YYYY-MM-DD
-  
-  
 
   
   const handleSubmit2 = (data: IInvoiceForm) => {
+    setLoading(true);
     onCreate(data)
   }
   
@@ -102,7 +112,8 @@ export const InvoiceGenerator = ({
               type="text"
               {...register("tenant")}
               readOnly
-              className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg dark:text-white"
+              disabled
+              className="w-full px-3 py-2 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg dark:text-white"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -119,6 +130,8 @@ export const InvoiceGenerator = ({
                   type="date"
                   className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   {...register("startDate", { required: "The start date is required" })}
+                  disabled={action == "UPDATE"}
+                  readOnly={action == "UPDATE"}
                   min={defaultValue?.startDate}
                 />
               </div>
@@ -140,6 +153,8 @@ export const InvoiceGenerator = ({
                   className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   {...register("endDate", { required: "The end date is required" })}
                   min={getMinEndDate()}
+                  disabled={action == "UPDATE"}
+                  readOnly={action == "UPDATE"}
                 />
               </div>
               {errors.endDate && (
@@ -191,12 +206,11 @@ export const InvoiceGenerator = ({
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-900 dark:bg-blue-800 text-white rounded-lg hover:bg-blue-800 dark:hover:bg-blue-700 w-full sm:w-auto"
-          >
-            Generate Invoice
-          </button>
+          <Button variant='neutral' disable={canNotGenerateInvoice()} isSubmitBtn={true} fullWidth={false} loading={loading}>
+            {
+              action == "CREATE" ? "Generate Invoice" : "Update Invoice"
+            }
+          </Button>
         </div>
       </form>
     </div>
@@ -208,9 +222,9 @@ export const InvoiceGenerator = ({
 
 const BillingElementField = ({ index, item, register, errors, defaultValue, control, action }: { index: number, item: any, register: any, errors: any, defaultValue: any, control: any, action: "CREATE" | "UPDATE" }) => {
   const status = useWatch({ name: `billingElements.${index}.status`, control });
-  
   const isChecked = status === true;
-
+  // console.log('Checkable ?', action == 'UPDATE' && defaultValue.status == true)
+  console.log('-->BillingElementField', item)
   const today = new Date().toISOString().split("T")[0];
 
   return (
@@ -219,7 +233,8 @@ const BillingElementField = ({ index, item, register, errors, defaultValue, cont
       <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 mr-8">
         <input
           type="checkbox"
-          disabled={action == 'UPDATE'}
+          disabled={action == 'UPDATE' && item.status == true}
+          readOnly={action == 'UPDATE' && item.status == true}
           className="rounded border-gray-300 dark:border-gray-600"
           {...register(`billingElements.${index}.status`)}
         />
@@ -248,6 +263,7 @@ const BillingElementField = ({ index, item, register, errors, defaultValue, cont
             step="0.01"
             placeholder="0.00"
             disabled={action == "UPDATE"}
+            readOnly={action == "UPDATE"}
             className={`w-full pl-14 pr-4 py-2 border rounded-lg dark:text-white "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 ${errors.billingElements?.[index]?.amount ? "border-red-500" : ""}
               ${action == "UPDATE" ? "dark:text-white bg-gray-200 dark:bg-gray-600 cursor-not-allowed border-gray-200 dark:border-gray-600" : ""}  
             `}
@@ -264,8 +280,10 @@ const BillingElementField = ({ index, item, register, errors, defaultValue, cont
           <input
             type="date"
             max={today}
-            min={defaultValue?.startDate}
-            className={`w-full sm:w-44 px-4 py-2 border rounded-lg ${errors.billingElements?.[index]?.paidDate ? "border-red-500" : ""}`}
+            // min={defaultValue?.startDate}
+            disabled={action == "UPDATE" && item.status == true}
+            readOnly={action == "UPDATE" && item.status == true}
+            className={`w-full sm:w-44 px-4 py-2 border rounded-lg ${errors.billingElements?.[index]?.paidDate ? "border-red-500" : ""} ${item.status == true ? "dark:text-white bg-gray-200 dark:bg-gray-600 cursor-not-allowed border-gray-200 dark:border-gray-600" : ""}`}
             {...register(`billingElements.${index}.paidDate`, {
               required: isChecked ? "Please enter the paid date" : false,
             })}

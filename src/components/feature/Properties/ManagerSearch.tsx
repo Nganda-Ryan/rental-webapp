@@ -15,9 +15,7 @@ export const ManagerSearch = ({
 }: ManagerSearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedManager, setSelectedManager] = useState<any>(null);
-  const [step, setStep] = useState<"search" | "permissions" | "invite">(
-    "search",
-  );
+  const [step, setStep] = useState<"search" | "permissions" | "invite">("search");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [searchFilter, setSearchFilter] = useState<keyof typeof searchOptions>("name");
@@ -68,6 +66,7 @@ export const ManagerSearch = ({
     email: "Email",
     phone: "Phone Number",
   };
+
   const handleManagerSelect = (manager: any) => {
     setSelectedManager(manager);
     setStep("permissions");
@@ -100,7 +99,7 @@ export const ManagerSearch = ({
   };
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[75vh] overflow-y-auto">
+    <div className="rounded-lg w-full max-h-[75vh] overflow-y-auto max-w-2xl mx-auto bg-white dark:bg-gray-800">
       <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <h2 className="text-lg font-semibold dark:text-white">
@@ -108,10 +107,7 @@ export const ManagerSearch = ({
             {step === "permissions" && "Set Permissions"}
             {step === "invite" && "Send Invitation"}
           </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
             <X size={20} className="dark:text-gray-400" />
           </button>
         </div>

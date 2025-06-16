@@ -67,7 +67,7 @@ export const LessorRequestForm = ({
     }
   };
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-94 sm:max-w-2xl  sm:min-w-[500px] max-h-[75vh] overflow-y-auto">
+    <div className="rounded-lg w-full max-h-[75vh] overflow-y-auto max-w-3xl mx-auto bg-white dark:bg-gray-800">
       <div className="p-6 border-b border-gray-200">
         <div className="flex justify-between items-center">
           <div>
@@ -111,7 +111,7 @@ export const LessorRequestForm = ({
                   <img
                     src={rectoPreview}
                     alt="Property"
-                    className="w-40 h-40 object-cover"
+                    className="w-40 h-25 object-cover"
                   /> 
                   : 
                   <FileText size={24} className="text-gray-400 mb-2" />
@@ -150,7 +150,7 @@ export const LessorRequestForm = ({
                   <img
                     src={versoPreview}
                     alt="Property"
-                    className="w-40 h-40 object-cover"
+                    className="w-40 h-25 object-cover"
                   /> 
                   : 
                   <FileText size={24} className="text-gray-400 mb-2" />
@@ -185,7 +185,7 @@ export const LessorRequestForm = ({
                   <img
                     src={selfiePreview}
                     alt="Property"
-                    className="w-40 h-40 object-cover"
+                    className="w-40 h-25 object-cover"
                   /> 
                   : 
                   <Camera size={24} className="text-gray-400 mb-2" />

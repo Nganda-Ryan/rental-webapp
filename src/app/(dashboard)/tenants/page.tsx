@@ -7,24 +7,49 @@ import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
 import Overlay from '@/components/Overlay'
 import { ProfileApplication_T } from '@/types/requestTypes'
 import { requestLessorProfile } from '@/actions/requestAction'
-import useLocalStorage from '@/hooks/useLocalStorage'
+import useLocalStorage from '@/hooks/useLocalStorage';
+import toast from 'react-hot-toast';
+import { ProcessingModal } from '@/components/Modal/ProcessingModal'
 
 const TenantDashboard = () => {
   const [showLessorRequestForm, setShowLessorRequestForm] = useState(false);
   const [profileList, setProfileList] = useLocalStorage("selectedProfile", [] as string []);
   const [isClient, setIsClient] = useState(false);
-
-  console.log('-->profileList', profileList);
-  const handleSubmitRequest = (async (data: any) => {
-    const application = data as ProfileApplication_T;
-    const result =  await requestLessorProfile(application);
-    console.log('-->result', result)
-  });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+
+  
+  const handleSubmitRequest = (async (data: any) => {
+    try {
+        setShowLessorRequestForm(false);
+        setIsLoading(true);
+        const application = data as ProfileApplication_T;
+        const result =  await requestLessorProfile(application);
+        if(result.data){
+            setIsLoading(false)
+            toast.success("Request submitted successfully", { position: 'bottom-right' });
+        } else if(result.error){
+            setIsLoading(false)
+            console.log('TenantDashBoard.handleSubmitRequest.result.error', result.error);
+            toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+        }
+        console.log('-->result', result)
+    } catch (error) {
+        console.log("TenantDashBoard.handleSubmitRequest.error", error);
+        toast.error("Something went wrong during the process. Try again or contact the administrator")
+    } finally {
+        setIsLoading(false)
+    }
+    
+  });
   if (!isClient) return null;
+  const loadingMessage = 'Submitting request...';
+
+
   return (
     <DefaultLayout>
         <Breadcrumb pageName='Dashboard' previousPage={false}/>
@@ -85,6 +110,9 @@ const TenantDashboard = () => {
                     onClose={() => setShowLessorRequestForm(false)}
                     onSubmit={(data) => {handleSubmitRequest(data)}}
                 />
+            </Overlay>
+            <Overlay isOpen={isLoading} onClose={() => {}}>
+                <ProcessingModal message={loadingMessage} />
             </Overlay>
             
         </div>

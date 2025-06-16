@@ -10,6 +10,14 @@
 }
 
 @layer components {
+  .input-base {
+  @apply border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 
+            rounded text-base focus:outline-none focus:ring-0 focus:border-gray-500 w-full px-3 py-2.5 pr-3;
+    }
+
+  /* .text-base {
+    @apply text-sm font-medium text-gray-700 dark:text-gray-400
+  } */
 }
 
 @layer utilities {
@@ -29,6 +37,25 @@
 
     .inbox-height {
         @apply h-[calc(100vh_-_8.125rem)] lg:h-[calc(100vh_-_5.625rem)];
+    }
+
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    textarea:-webkit-autofill,
+    select:-webkit-autofill {
+        box-shadow: 0 0 0px 1000px white inset !important;
+        -webkit-text-fill-color: #111827 !important; /* text-gray-900 */
+        transition: background-color 5000s ease-in-out 0s;
+    }
+
+    .dark input:-webkit-autofill,
+    .dark input:-webkit-autofill:hover,
+    .dark input:-webkit-autofill:focus,
+    .dark textarea:-webkit-autofill,
+    .dark select:-webkit-autofill {
+        box-shadow: 0 0 0px 1000px #111827 inset !important; /* bg-gray-900 */
+        -webkit-text-fill-color: #f9fafb !important; /* text-gray-100 */
     }
 }
 

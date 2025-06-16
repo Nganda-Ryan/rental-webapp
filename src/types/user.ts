@@ -16,9 +16,7 @@ export interface ICreateUserParam {
     "gender":string,
     "lastname":string,
     "firstname":string,
-    "username": string,
     "password": string,
-    "userId":string,
     "role":string,
     "addressData": AddressDataType
 }
@@ -73,3 +71,38 @@ export interface SeachUserParams {
   limit?: number;
   page?: number;
 }
+
+export type ManagerRole = "ADMIN" | "SUPPORT";
+export type AllRole = "ALL" | "ADMIN" | "SUPPORT" | "LANDLORD" | "MANAGER" | "RENTER"
+
+export type FormValues = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  gender: string;
+  city: string;
+  street: string;
+  country: string;
+  password: string;
+  role: string;
+};
+
+export interface IUser {
+  id: string;
+  profileId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  profile: string[];
+  gender: string;
+  city: string;
+  street: string;
+  country: string;
+  avatarUrl: string;
+  status: string;
+  NIU: string;
+}
+
+export type UserStatus = 'ACTIVE' | 'PENDING' | 'INACTIVE' | 'ALL'

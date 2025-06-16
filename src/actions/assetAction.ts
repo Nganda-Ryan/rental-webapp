@@ -1,9 +1,8 @@
 "use server";
 
 import axios, { AxiosInstance, isAxiosError } from "axios";
-import { CreatePropertyType, IContractForm, IInvoice, IPropertyVerification, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
+import { CreatePropertyType, IContractForm, IInvoice, IPropertyVerification, IUpdateInvoiceParam, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
 import { verifySession } from "@/lib/session";
-import { uploadFile } from "@/lib/fileUpload";
 import { getExtension } from "@/lib/utils";
 
 
@@ -40,6 +39,14 @@ export async function createAsset(asset: CreatePropertyType, coverFile: any) {
     }
   } catch (error: any) {
     console.log('-->createAsset.error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
@@ -80,7 +87,15 @@ export async function createContract(contract: IContractForm) {
       contract: response.data
     }
   } catch (error: any) {
-    console.log('-->createContract.error', error)
+    console.log('-->createContract.error', error);
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
@@ -116,6 +131,14 @@ export async function getAsset(assetCode: string): Promise<any> {
     }
   } catch (error: any) {
     console.log('-->error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
@@ -151,6 +174,14 @@ export async function searchAsset(params: SeachPropertyParams, profile: string) 
     }
   } catch (error: any) {
     console.log('-->error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
@@ -234,6 +265,14 @@ export async function createInvoice(invoice: IInvoice) {
     }
   } catch (error: any) {
     console.log('-->createContract.error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
@@ -241,6 +280,62 @@ export async function createInvoice(invoice: IInvoice) {
     }
   }
 }
+
+
+export async function updateInvoice(invoice: IUpdateInvoiceParam) {
+  try {
+    const session = await verifySession();
+    const userProfile = session.Profiles.find((p: any) => p.RoleCode === 'LANDLORD');
+    console.log('-->Session:', userProfile);
+
+    const token = session.accessToken;
+
+    const payload = {
+      ...invoice,
+      profilCode: userProfile?.Code,
+    };
+
+    console.log(payload);
+
+    const response = await axios.put(
+      `${process.env.CONTRACT_INVOICE_WORKER_ENDPOINT}/api/v1/Contract/Invoice`,
+      {
+        Invoice: payload,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log('-->result', response);
+
+    return {
+      code: 200,
+      error: null,
+      data: response.data,
+    };
+  } catch (error: any) {
+    console.log('-->updateInvoice.error', error);
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? 'unknown',
+      error: error.response?.data?.message ?? 'An unexpected error occurred',
+      data: null,
+    };
+  }
+}
+
+
 
 export async function searchInvoice(params: SeachInvoiceParams) {
   try {
@@ -266,6 +361,54 @@ export async function searchInvoice(params: SeachInvoiceParams) {
     }
   } catch (error: any) {
     console.log('-->error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
+export async function terminateLease(contractCode: string) {
+  try {
+    const session = await verifySession();
+    const token = session.accessToken;
+
+    const response = await axios.delete(`${process.env.CONTRACT_INVOICE_WORKER_ENDPOINT}/api/v1/Contract`, {
+      data: {
+        Contract: {
+          Code: contractCode
+        }
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    });
+
+    return {
+      code: null,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",

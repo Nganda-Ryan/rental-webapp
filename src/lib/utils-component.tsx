@@ -1,30 +1,101 @@
+import { ManagerRole } from "@/types/user"
 import { CheckCircle, Clock, ExternalLink, XCircle } from "lucide-react"
 
 export const getStatusIcon = (status: string) => {
-    if(status.toUpperCase() == 'DRAFT' || status.toUpperCase() == 'DRAFTING'){
-      return <div className="w-fit flex items-center justify-end flex-nowrap gap-1 px-2 py-1 bg-gray-100 rounded-xl text-gray-600 text-xs font-medium me-2 dark:bg-gray-700 dark:text-gray-400 border border-gray-400">
-        <span><ExternalLink size={15} className="text-gray-600 dark:text-gray-400" /></span>
-        <span className='text-xs'>{status}</span>
+  const baseClass =
+    "w-fit flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium lowercase me-2 border";
+
+  const statusKey = status.toUpperCase();
+
+  if (["DRAFT", "DRAFTING"].includes(statusKey)) {
+    return (
+      <div className={`${baseClass} bg-gray-100 text-gray-600 border-gray-400 dark:bg-gray-700 dark:text-gray-400`}>
+        <ExternalLink size={14} className="text-inherit" />
+        <span>{status.toLowerCase()}</span>
       </div>
-    } else if(status.toUpperCase() == 'PENDING' || status.toUpperCase() == 'PENDING_APPROVAL'){
-      return <div className="w-fit flex items-center justify-end flex-nowrap gap-1 px-2 py-1 bg-yellow-100 rounded-xl text-yellow-600 text-xs font-medium me-2 dark:bg-gray-700 dark:text-yellow-400 border border-yellow-400">
-        <span><Clock size={15} className="text-yellow-600 dark:text-yellow-400" /></span>
-        <span className='text-xs'>{status}</span>
+    );
+  }
+
+  if (["PENDING", "PENDING_APPROVAL"].includes(statusKey)) {
+    return (
+      <div className={`${baseClass} bg-yellow-100 text-yellow-600 border-yellow-400 dark:bg-gray-700 dark:text-yellow-400`}>
+        <Clock size={14} className="text-inherit" />
+        <span>{status.toLowerCase()}</span>
       </div>
-    }
-    else if (status.toUpperCase() == 'APPROVED' || status.toUpperCase() == 'APPROVED' || status.toUpperCase() == 'RENTED' || status.toUpperCase() == 'ACTIVE' || status.toUpperCase() == 'PAID'){
-      return <div className="w-fit flex items-center justify-end flex-nowrap gap-1 px-2 py-1 bg-green-100 rounded-xl text-green-600 text-xs font-medium me-2 dark:bg-gray-700 dark:text-green-400 border border-green-400">
-        <span><CheckCircle size={15} className="text-green-600 dark:text-green-400" /></span>
-        <span className='text-xs'>{status}</span>
+    );
+  }
+
+  if (["APPROVED", "RENTED", "ACTIVE", "PAID", "AVAILABLE"].includes(statusKey)) {
+    return (
+      <div className={`${baseClass} bg-green-100 text-green-600 border-green-400 dark:bg-gray-700 dark:text-green-400`}>
+        <CheckCircle size={14} className="text-inherit" />
+        <span>{status.toLowerCase()}</span>
       </div>
-    } else if(status.toUpperCase() == 'CANCELED' || status.toUpperCase() == 'CANCEL' || status.toUpperCase() == 'REJECTED' || status.toUpperCase() == 'UNPAID'){
-      return <div className="w-fit flex items-center justify-end flex-nowrap gap-1 px-2 py-1 bg-red-100 rounded-xl text-red-600 text-xs font-medium me-2 dark:bg-gray-700 dark:text-red-400 border border-red-400">
-        <span><XCircle size={15} className="text-red-600 dark:text-red-400" /></span>
-        <span className='text-xs'>{status}</span>
+    );
+  }
+
+  if (["CANCELED", "CANCEL", "REJECTED", "UNPAID", "INACTIVE"].includes(statusKey)) {
+    return (
+      <div className={`${baseClass} bg-red-100 text-red-600 border-red-400 dark:bg-gray-700 dark:text-red-400`}>
+        <XCircle size={14} className="text-inherit" />
+        <span>{status.toLowerCase()}</span>
       </div>
-    }
-    return <div className="w-fit flex items-center justify-end flex-nowrap gap-1 px-2 py-1 bg-gray-100 rounded-xl text-gray-600 text-xs font-medium me-2 dark:bg-gray-700 dark:text-gray-400 border border-gray-400">
-      <span><ExternalLink size={15} className="text-gray-600 dark:text-gray-400" /></span>
-      <span className='text-xs'>{status}</span>
+    );
+  }
+
+  // fallback
+  return (
+    <div className={`${baseClass} bg-gray-100 text-gray-600 border-gray-400 dark:bg-gray-700 dark:text-gray-400`}>
+      <ExternalLink size={14} className="text-inherit" />
+      <span>{status.toLowerCase()}</span>
     </div>
-}
+  );
+};
+
+export const getRoleBadge = (role: string) => {
+  const baseClass = "py-1 px-2 rounded-xl text-sm capitalize";
+
+  switch (role.toUpperCase()) {
+    case "ADMIN":
+      return (
+        <span className={`${baseClass} bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100`}>
+          {role.toLowerCase()}
+        </span>
+      );
+
+    case "SUPPORT":
+      return (
+        <span className={`${baseClass} bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100`}>
+          {role.toLowerCase()}
+        </span>
+      );
+
+    case "MANAGER":
+      return (
+        <span className={`${baseClass} bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100`}>
+          {role.toLowerCase()}
+        </span>
+      );
+
+    case "LANDLORD":
+      return (
+        <span className={`${baseClass} bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100`}>
+          {role.toLowerCase()}
+        </span>
+      );
+
+    case "RENTER":
+      return (
+        <span className={`${baseClass} bg-blue-100 text-blue-800 dark:text-blue-800`}>
+          {role.toLowerCase()}
+        </span>
+      );
+
+    default:
+      return (
+        <span className={`${baseClass} bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100`}>
+          {role.toLowerCase()}
+        </span>
+      );
+  }
+};

@@ -8,6 +8,7 @@ export interface ButtonProps {
     onClick?: (e: any) => void;
     isSubmitBtn: boolean;
     fullWidth?: boolean;
+    loading?: boolean;
 }
 
 export const VARIANTS = {

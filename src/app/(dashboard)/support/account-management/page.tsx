@@ -1,154 +1,179 @@
 "use client"
-import React, { useState } from 'react'
-import { Search, Mail, Phone, UserX, UserCheck } from 'lucide-react'
-import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable' 
-import { UserDetailView } from '@/components/feature/Support/UserDetailView' 
-import { RejectionModal } from '@/components/feature/Support/RejectionModal' 
-import DefaultLayout from '@/components/Layouts/DefaultLayout'
-import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
-type UserRole = 'lessor' | 'tenant' | 'manager' | 'support'
-type UserStatus = 'active' | 'pending' | 'inactive'
-import { useRouter } from 'next/navigation'
+import React, { useEffect, useState } from 'react';
+import {
+  Search,
+  Mail,
+  UserPlus,
+  Phone,
+  Trash2,
+  UserX,
+  UserCheck,
+} from 'lucide-react';
+import { NewSupportUserForm } from '@/components/feature/Support/NewSupportUserForm'; 
+import DefaultLayout from '@/components/Layouts/DefaultLayout';
+import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
+import Overlay from '@/components/Overlay';
+import { AllRole, FormValues, ICreateUserParam, IUser, ManagerRole, SeachUserParams, UserStatus } from '@/types/user';
+import { CLIENT_PROFILES, PROFILE_MANAGER, USERS_STATUS } from '@/constant';
+import { createUser, searchUser } from '@/actions/userAction';
+import { getRoleBadge, getStatusIcon } from '@/lib/utils-component';
+import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
+import Nodata from '@/components/error/Nodata';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import { SuccessModal } from '@/components/Modal/SucessModal';
+import Loading from '@/components/error/Loading';
 
-interface User {
-  id: string
-  name: string
-  email: string
-  phone: string
-  role: UserRole
-  status: UserStatus
-  joinDate: string
-  verifiedDate?: string
-}
-const AccountManagement = () => {
-  const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all')
-  const [selectedStatus, setSelectedStatus] = useState<UserStatus | 'all'>('all',)
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
-  const [showRejectionModal, setShowRejectionModal] = useState(false)
-  const [selectedUserForAction, setSelectedUserForAction] = useState<string | null>(null)
+
+
+
+const SupportUsers = () => {
+  const [showNewUserForm, setShowNewUserForm] = useState(false);
+  const [userList, setUserList] = useState<IUser[]>([]);
+  const [selectedRole, setSelectedRole] = useState<AllRole>('ALL');
+  const [successMessage, setSuccessMessage] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<UserStatus>('ALL')
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isFetchingUser, setIsFetchingUser] = useState(true);
   const router = useRouter();
 
-  const users: User[] = [
-    {
-      id: 'USR001',
-      name: 'John Smith',
-      email: 'john.smith@example.com',
-      phone: '(555) 123-4567',
-      role: 'lessor',
-      status: 'active',
-      joinDate: '2023-01-15',
-      verifiedDate: '2023-01-20',
-    },
-    {
-      id: 'USR002',
-      name: 'Sarah Johnson',
-      email: 'sarah.j@example.com',
-      phone: '(555) 234-5678',
-      role: 'tenant',
-      status: 'active',
-      joinDate: '2023-02-01',
-    },
-    {
-      id: 'USR003',
-      name: 'Mike Wilson',
-      email: 'mike.w@example.com',
-      phone: '(555) 345-6789',
-      role: 'lessor',
-      status: 'pending',
-      joinDate: '2023-07-01',
-    },
-    {
-      id: 'USR004',
-      name: 'Emma Davis',
-      email: 'emma.d@example.com',
-      phone: '(555) 456-7890',
-      role: 'support',
-      status: 'active',
-      joinDate: '2023-03-15',
-      verifiedDate: '2023-03-15',
-    },
-  ]
-  const getRoleBadge = (role: UserRole) => {
-    const colors = {
-      lessor: 'bg-blue-100 text-blue-800',
-      tenant: 'bg-purple-100 text-purple-800',
-      manager: 'bg-orange-100 text-orange-800',
-      support: 'bg-gray-100 text-gray-800',
+  useEffect(() => {
+
+    getUserList();
+  }, []);
+
+  const getUserList = async () => {
+    try {
+      setIsFetchingUser(true);
+      const payload: SeachUserParams = {
+        orderBy: "U.NIU",
+        term: "",
+        orderMode: 'desc',
+        offset: 0,
+        limit: 1000,
+        page: 1,
+      } 
+
+      const result = await searchUser(payload);
+      if(result.data){
+        const rawItems = (result.data.body.items ?? []) as any[];
+        const usersByCode = rawItems.reduce((acc: Record<string, IUser>, item: any) => {
+          const code = item.UserCode;
+
+          if (!acc[code]) {
+            acc[code] = {
+              id: item.user.Code,
+              profileId: code,
+              firstName: item.user.Firstname,
+              lastName: item.user.Lastname,
+              email: item.user.Email,
+              phone: item.user.Phone,
+              profile: [item.RoleCode],
+              gender: item.user.Gender,
+              city: item.user.Address.City,
+              street: item.user.Address.Street,
+              country: item.user.Address.Country,
+              avatarUrl: item.user.AvatarUrl,
+              status: item.user.Status,
+              NIU: item.user.NIU,
+            };
+          } else {
+            if (!acc[code].profile.includes(item.RoleCode)) {
+              acc[code].profile.push(item.RoleCode);
+            }
+          }
+
+          return acc;
+        }, {});
+
+        console.log('-->usersByCode', usersByCode);
+        let _userList = Object.values(usersByCode);
+        _userList = _userList.filter((item: IUser) => !item.profile.includes("ADMIN") || !item.profile.includes("SUPPORT"));
+        setUserList(_userList);
+  
+      
+      } else if(result.error){
+        if(result.code == 'SESSION_EXPIRED'){
+            router.push('/signin');
+            return;
+        }
+        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+      }
+    } catch (error) {
+      console.log('SupportUsers.getUserList.error', error);
+      toast.error("Something went wrong during the process. Try again or contact the administrator", { position: 'bottom-right' });
+    } finally {
+      setIsFetchingUser(false);
     }
-    return colors[role]
+    
+
   }
-  const getStatusBadge = (status: UserStatus) => {
-    const colors = {
-      active: 'bg-green-100 text-green-800',
-      pending: 'bg-yellow-100 text-yellow-800',
-      inactive: 'bg-red-100 text-red-800',
-    }
-    return colors[status]
-  }
-  const columns = [
+
+  
+
+  
+  // const filteredUsers = userList.filter((user) => selectedRole === 'ALL' || user.profile.includes(selectedRole))
+  
+  const usersTableColumn = [
     {
-      key: 'name',
-      label: 'User',
-      priority: 'high' as const,
-      render: (value: string, row: User) => (
-        <div>
-          <div className="font-medium text-gray-900">{value}</div>
-          <div className="text-sm text-gray-500">ID: {row.id}</div>
-        </div>
+      key: 'userId',
+      label: 'USER',
+      priority: "medium" as "medium",
+      render: (_: any, user: IUser) => (
+          <div className="text-gray-800 text-sm dark:text-gray-100">
+            <div className="font-bold">{user.lastName} {user.firstName}</div>
+            <div>NUI : {user.NIU}</div>
+          </div>
       ),
     },
     {
       key: 'contact',
-      label: 'Contact',
-      priority: 'medium' as const,
-      render: (_: any, row: User) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-1 text-gray-500">
-            <Mail size={14} />
-            {row.email}
-          </div>
-          <div className="flex items-center gap-1 text-gray-500">
-            <Phone size={14} />
-            {row.phone}
-          </div>
+      label: 'CONTACT',
+      priority: "medium" as "medium",
+      render: (_: any, user: IUser) => (
+      <div className="text-sm sm:text-base text-gray-800 dark:text-gray-100">
+        <div className="flex flex-row flex-nowrap items-center gap-2 sm:justify-start justify-end">
+          <Mail size={14} /> {user.email}
         </div>
+        <div className="flex flex-row flex-nowrap items-center gap-2 sm:justify-start justify-end">
+          <Phone size={14} /> {user.phone}
+        </div>
+      </div>
       ),
     },
     {
       key: 'role',
       label: 'Role',
-      priority: 'high' as const,
-      render: (value: UserRole) => (
-        <span className={`px-2 py-1 text-xs rounded-full ${getRoleBadge(value)}`}>
-          {value.charAt(0).toUpperCase() + value.slice(1)}
-        </span>
+      priority: "medium" as "medium",
+      render: (_: any, user: IUser) => (
+      <span className="text-sm text-gray-800 dark:text-gray-100">
+        {user.profile.map(role => (<span key={role} className='px-0.5'>{getRoleBadge(role)}</span>))}
+      </span>
       ),
     },
     {
       key: 'status',
       label: 'Status',
-      priority: 'medium' as const,
-      render: (value: UserStatus) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${getStatusBadge(value)}`}
-        >
-          {value.charAt(0).toUpperCase() + value.slice(1)}
-        </span>
+      priority: "medium" as "medium",
+      render: (_: any, user: IUser) => (
+      <span className="text-sm text-gray-800 dark:text-gray-100">
+        {getStatusIcon(user.status)}
+      </span>
       ),
     },
     {
-      key: 'actions',
-      label: 'Actions',
-      priority: 'low' as const,
-      render: (_: any, row: User) => (
+        key: 'actions',
+        label: 'Actions',
+        priority: "high" as "high",
+        render: (_: any, user: IUser) => (
         <div className="flex gap-2">
-          {row.status === 'active' ? (
+          {user.status === 'ACTIVE' ? (
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                setSelectedUserForAction(row.id)
-                setShowRejectionModal(true)
+                handleDesactivateUser(user);
               }}
+              title="Desactivate the user"
               className="text-sm text-red-600 hover:text-red-800 flex items-center gap-1 flex-nowrap"
             >
               <UserX size={16} />
@@ -158,8 +183,9 @@ const AccountManagement = () => {
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                // Handle activation
+                handleActivateUser(user);
               }}
+              title="Activate the user"
               className="text-sm text-green-600 hover:text-green-800 flex items-center gap-1"
             >
               <UserCheck size={16} />
@@ -167,27 +193,71 @@ const AccountManagement = () => {
             </button>
           )}
         </div>
-      ),
+
+        ),
     },
   ]
-  const filteredUsers = users.filter((user) => {
-    if (user.role === 'support') return false
-    if (selectedRole !== 'all' && user.role !== selectedRole) return false
-    if (selectedStatus !== 'all' && user.status !== selectedStatus) return false
-    return true
-  })
 
-
-  const handleAccountSelected = (id: string) => {
-    setSelectedUserId(id);
-    router.push('/support/account-management/detail')
+  const handleDesactivateUser = async (user: IUser) => {
+    console.log("-->handleDesactivateUser.user", user);
   }
+
+
+  const handleActivateUser = async (user: IUser) => {
+    console.log("-->handleActivateUser.user", user);
+  }
+
+  const handleSelectUSer = (userId: IUser) => {
+    console.log('handleSelectUSer.userId', userId);
+    // router.push(`/support/account-management/${userId}`)
+  }
+  const handleNewUserSubmit = async (data: FormValues) => {
+    console.log('New support user data:', data.country)
+    try {
+      const payload: ICreateUserParam = {
+        "email": data.email,
+        "phone": data.phone,
+        "gender": data.gender,
+        "lastname": data.lastName,
+        "firstname":data.firstName,
+        "password": data.password,
+        "role": data.role,
+        "addressData": {
+          city: data.city,
+          street: data.street,
+          country: data.country
+        }
+      }
+      const result = await createUser(payload);
+
+      if(result?.data){
+        setSuccessMessage("Admin created successfully");
+        setShowSuccessModal(true)
+      } else if (result?.error) {
+        console.log('SupportUser.handleNewUser.result.error', result.error);
+        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+      }
+    } catch (error) {
+      console.log("SupportUser.handleNewUser.error", error);
+      toast.error("Something went wrong during the process. Try again or contact the administrator", { position: 'bottom-right' });
+    } finally {
+      if(showSuccessModal){
+        await getUserList();
+      }
+      setShowNewUserForm(false);
+    }
+    
+
+    
+  };
+
 
   return (
     <DefaultLayout>
       <Breadcrumb previousPage={false} pageName="Account Management" />
-      <div className="w-full">
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+
+        <div className="w-full">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -202,49 +272,67 @@ const AccountManagement = () => {
           <select
             className="px-4 py-2 border border-gray-200 rounded-lg"
             value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value as UserRole | 'all')}
+            onChange={(e) => setSelectedRole((e.target.value as any))}
           >
-            <option value="all">All Roles</option>
-            <option value="lessor">Lessors</option>
-            <option value="tenant">Tenants</option>
-            <option value="manager">Managers</option>
+            {
+              CLIENT_PROFILES.map(profile => (
+                <option key={profile.value} value={profile.value}>{profile.label}</option>
+              ))
+            }
           </select>
           <select
             className="px-4 py-2 border border-gray-200 rounded-lg"
             value={selectedStatus}
             onChange={(e) =>
-              setSelectedStatus(e.target.value as UserStatus | 'all')
+              setSelectedStatus(e.target.value as UserStatus)
             }
           >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="pending">Pending</option>
-            <option value="inactive">Inactive</option>
+            {
+              USERS_STATUS.map(role => (
+                <option key={role.value} value={role.value}>{role.label}</option>
+              ))
+            }
           </select>
         </div>
-        <ResponsiveTable
-          columns={columns}
-          data={filteredUsers}
-          keyField="id"
-          onRowClick={(row) => handleAccountSelected(row.id)}
-        />
-        <RejectionModal
-          isOpen={showRejectionModal}
-          onClose={() => {
-            setShowRejectionModal(false)
-            setSelectedUserForAction(null)
-          }}
-          onConfirm={(reason) => {
-            console.log('Deactivating user with reason:', reason)
-            setShowRejectionModal(false)
-            setSelectedUserForAction(null)
-          }}
-          title="Deactivate User Account"
-          message="Are you sure you want to deactivate this user account? Please provide a reason for deactivation."
-        />
-      </div>
+
+
+          <div className="bg-transparent md:bg-white md:dark:bg-gray-800 rounded-lg md:shadow-sm overflow-hidden">
+            {
+              !isFetchingUser ? 
+                userList.length > 0 && isFetchingUser == false ? (
+                  <ResponsiveTable
+                    columns={usersTableColumn}
+                    data={userList.slice(0, 100)}
+                    onRowClick={(user: IUser) => handleSelectUSer(user)}
+                    keyField="id"
+                    paginate={10}
+                  />
+                  ) : (
+                  <Nodata message="No user to display" />
+                )
+                : 
+              <Loading />
+            }
+          </div>
+          
+
+
+          <Overlay isOpen={showNewUserForm} onClose={() => setShowNewUserForm(false)}>
+            <NewSupportUserForm
+                isOpen={showNewUserForm}
+                onClose={() => setShowNewUserForm(false)}
+                onSubmit={handleNewUserSubmit}
+              />
+          </Overlay>
+          <Overlay isOpen={showSuccessModal} onClose={() => setShowSuccessModal(false)}>
+            <SuccessModal
+                onClose={() => setShowSuccessModal(false)}
+                message={successMessage}
+            />
+          </Overlay>
+        </div>
     </DefaultLayout>
   )
 }
 
-export default AccountManagement;
+export default SupportUsers;

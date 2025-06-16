@@ -12,8 +12,8 @@ import {
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
 import { useParams } from 'next/navigation';
-import { createInvoice, getContract, searchInvoice } from '@/actions/assetAction';
-import { IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, SeachInvoiceParams } from '@/types/Property';
+import { createInvoice, getContract, searchInvoice, terminateLease, updateInvoice } from '@/actions/assetAction';
+import { IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, IUpdateInvoiceParam, SeachInvoiceParams } from '@/types/Property';
 import { getStatusIcon } from '@/lib/utils-component';
 import Button from '@/components/ui/Button';
 import Overlay from '@/components/Overlay';
@@ -24,13 +24,18 @@ import ContractDetailSkeleton from '@/components/skeleton/ContractDetailSkeleton
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
 import { useRouter } from 'next/navigation';
 import { formatDateToText } from '@/lib/utils';
+import { ActionConfirmationModal } from '@/components/Modal/ActionConfirmationModal';
+import Nodata from '@/components/error/Nodata';
 
 const ContractDetail = () => {
     const [contract, setContract] = useState<IContractDetail>();
     const [formDefaultInvoice, setFormDefaultInvoice] = useState<IInvoiceForm>();
     const [tempFormDefaultInvoice, setTempFormDefaultInvoice] = useState<IInvoiceForm>();
+    const [isTerminatingContract, setIsTerminatingContract] = useState(false);
     const [invoiceTableData, setInvoiceTableData] = useState<IInvoiceForm[]>([]);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showActionModal, setShowActionModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
     const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [action, setAction] = useState<"CREATE" | "UPDATE">("CREATE");
@@ -42,13 +47,14 @@ const ContractDetail = () => {
             
             try {
                 const result = await getContract(params.contractId as string);
+                console.log('-->result', result)
                 if(result.data){
                     const _contract: IContractDetail = {
                         id: result.data.body.contractData.Code,
-                        billingElements: result.data.body.contractData.billingItems.map((item:any) => ({
+                        billingElements: result.data.body.contractData.billingItems ? result.data.body.contractData.billingItems.map((item:any) => ({
                             code: item.Code,
                             label: item.ItemCode
-                        })),
+                        })) : [],
                         endDate: result.data.body.contractData.EndDate,
                         monthlyRent: result.data.body.contractData.asset.Price,
                         currency: result.data.body.contractData.Currency,
@@ -78,6 +84,7 @@ const ContractDetail = () => {
                         notes: _contract.notes,
                         currency: _contract.currency,
                         billingElements: _contract.billingElements.map(item => ({
+                            id: "",
                             code: item.label,
                             label: item.label,
                             amount: 0,
@@ -89,7 +96,7 @@ const ContractDetail = () => {
                     
                     const getInvoiceResult = await searchInvoice(getInvoiceParam);
                     if(getInvoiceResult.data){
-                        console.log('-->getInvoiceResult', getInvoiceResult)
+                        console.log('-->getInvoiceResult', getInvoiceResult.data.body.items)
                         const _invoiceTableData: IInvoiceForm[] = getInvoiceResult.data.body.items.map((inv: any, index: number) => {
                             return {
                                 id: inv.Code,
@@ -99,9 +106,10 @@ const ContractDetail = () => {
                                 endDate: inv.EndDate.split("T")[0],
                                 tenant: _contract.tenant.name,
                                 monthlyRent: _contract.monthlyRent,
-                                notes: inv.notes,
+                                notes: inv.Notes,
                                 currency: _contract.currency,
                                 billingElements: inv.items.map((item: any) => ({
+                                    id: item.Code,
                                     code: item.ItemCode,
                                     label: item.ItemCode,
                                     amount: item.Amount,
@@ -121,7 +129,8 @@ const ContractDetail = () => {
                         setContract(_contract);
                         setInvoiceTableData(_invoiceTableData);
 
-                        console.log('-->_formDefaultInvoice', _formDefaultInvoice);
+                        // console.log('-->_formDefaultInvoice', _formDefaultInvoice);
+                        // console.log('-->_invoiceTableData', _invoiceTableData);
                     }
                 } else {
                     console.log('ContractDetail.useEffect.catch.error', result);
@@ -147,7 +156,7 @@ const ContractDetail = () => {
     }, [showInvoiceGenerator, tempFormDefaultInvoice]);
 
 
-    const successMessage = "Invoice generated successfully!";
+
     const today = new Date().toISOString().split("T")[0];
     const invoiceColumns = [
         {
@@ -201,41 +210,68 @@ const ContractDetail = () => {
             ),
         },
     ]
-    const handleCreateInvoice = async (data: IInvoiceForm) => {
+    const handleUpsertInvoice = async (data: IInvoiceForm) => {
         try {
-            const invoicePayload: IInvoice = {
-                contractCode: contract?.id ?? "",
-                endDate: data.endDate,
-                startDate: data.startDate,
-                notes: data.notes,
-                profilCode: "", //lessor profile
-                userId: contract?.tenant.userCode ?? "", //renter
-                items: data.billingElements.map(item => ({
-                    amount: String(item.amount),
-                    isPaid: item.status,
-                    itemCode: item.label,
-                    notes: "",
-                    paidDate: item.paidDate
-                })),
-            }
-            const result = await createInvoice(invoicePayload);
-            console.log('-->result', result)
-            if(result.data){
-                setShowSuccessModal(true)
-            } else if(result.error){
-                toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            if(action == "CREATE"){
+                const invoicePayload: IInvoice = {
+                    contractCode: contract?.id ?? "",
+                    endDate: data.endDate,
+                    startDate: data.startDate,
+                    notes: data.notes,
+                    profilCode: "", //lessor profile
+                    userId: contract?.tenant.userCode ?? "", //renter
+                    items: data.billingElements.map(item => ({
+                        amount: String(item.amount),
+                        isPaid: item.status,
+                        itemCode: item.label,
+                        notes: "",
+                        paidDate: item.paidDate
+                    })),
+                }
+                const result = await createInvoice(invoicePayload);
+                console.log('-->result', result)
+                if(result.data){
+                    setSuccessMessage("Invoice created successfully");
+                    setShowSuccessModal(true)
+                } else if(result.error){
+                    toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+                }
+            } else {
+                const payload: IUpdateInvoiceParam = {
+                    code: data.id,
+                    contractCode: contract?.id ?? "",
+                    notes: data.notes,
+                    profilCode: "",
+                    userId: contract?.tenant.userCode ?? "",
+                    items: data.billingElements.map(item => ({
+                        "itemCode": item.code,
+                        "code": item.id,
+                        "isPaid": item.status,
+                        "paidDate": item.paidDate
+                    })),
+                }
+                const result = await updateInvoice(payload);
+                if(result.data){
+                    setSuccessMessage("Invoice updated successfully");
+                    setShowSuccessModal(true)
+                } else if(result.error){
+                    toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+                }
             }
         } catch (error) {
             toast.error("Something went wrong during the process. Try again or contact the administrator", { position: 'bottom-right' });
-            console.log('-->ContractDetailPage.handleCreateInvoice.error', error);
+            console.log('-->ContractDetailPage.handleUpsertInvoice.error', error);
         } finally {
+            if(contract){
+                fetchInvoice(contract);
+            }
             setShowInvoiceGenerator(false)
         }
         
         
     }
-
     const handleClickUpdateInvoice = (data: IInvoiceTableData) => {
+        // console.log('-->data', data);
         if(invoiceTableData && invoiceTableData.length > 0){
             const foundInvoice = invoiceTableData.find(inv => inv.id == data.id);
             if (!foundInvoice) {
@@ -247,6 +283,7 @@ const ContractDetail = () => {
                 id: foundInvoice.id ?? "",
                 billingElements: invoiceTableData[0].billingElements
             }
+            console.log('-->_invoice', _invoice);
 
             setFormDefaultInvoice(_invoice);
             setAction("UPDATE");
@@ -255,6 +292,102 @@ const ContractDetail = () => {
     }
     const handleSelectInvoice = (id: string) => {
         console.log('handleSelectInvoice', handleSelectInvoice)
+    }
+    const handleClickTerminateLease = async () => {
+        setShowActionModal(true)
+    }
+
+    const handleConfirmTerminateLease = async () => {
+        try {
+            setIsTerminatingContract(true);
+            if(contract){
+                const result  = await terminateLease(contract.id);
+                if(result.data) {
+                    toast.success("Lease terminated", { position: 'bottom-right' });
+                    contract.status = "INACTIVE"
+                } else if(result.error){
+                    if(result.code == 'SESSION_EXPIRED'){
+                        router.push('/signin');
+                        return;
+                    }
+                    toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+                }
+            }
+        } catch (error) {
+            
+        } finally {
+            setIsTerminatingContract(false);
+            setShowActionModal(false);
+        }
+    }
+
+
+    const fetchInvoice = async (_contract: IContractDetail) => {
+        try {
+            const getInvoiceParam: SeachInvoiceParams = {
+                orderBy: "Item.CreatedAt",
+                orderMode: "desc",
+                contractCodes: [_contract.id]
+            };
+            const _formDefaultInvoice: IInvoiceForm = {
+                id: _contract.id,
+                tenant: _contract.tenant.name,
+                tableId: "",
+                startDate: _contract.startDate,
+                endDate: "",
+                monthlyRent: _contract.monthlyRent,
+                status: _contract.status,
+                notes: _contract.notes,
+                currency: _contract.currency,
+                billingElements: _contract.billingElements.map(item => ({
+                    id: "",
+                    code: item.label,
+                    label: item.label,
+                    amount: 0,
+                    paidDate: today,
+                    status: false,
+                }))
+            }
+            
+            
+            const getInvoiceResult = await searchInvoice(getInvoiceParam);
+            if(getInvoiceResult.data){
+                const _invoiceTableData: IInvoiceForm[] = getInvoiceResult.data.body.items.map((inv: any, index: number) => {
+                    return {
+                        id: inv.Code,
+                        tableId: "INV"+(index+1),
+                        status: inv.StatusCode,
+                        startDate: inv.StartDate.split("T")[0],
+                        endDate: inv.EndDate.split("T")[0],
+                        tenant: _contract.tenant.name,
+                        monthlyRent: _contract.monthlyRent,
+                        notes: inv.Notes,
+                        currency: _contract.currency,
+                        billingElements: inv.items.map((item: any) => ({
+                            id: item.Code,
+                            code: item.ItemCode,
+                            label: item.ItemCode,
+                            amount: item.Amount,
+                            paidDate: item.PaidDate ? item.PaidDate.split("T")[0] : "",
+                            status: item.IsPaid == 1 ? true : false,
+                        }))
+                    }
+                });
+
+                const recentInvoice = _invoiceTableData.length > 0 && _invoiceTableData[0];
+                
+                if(recentInvoice){
+                    _formDefaultInvoice.startDate = recentInvoice.endDate;
+                }
+                setFormDefaultInvoice(_formDefaultInvoice);
+                setTempFormDefaultInvoice(_formDefaultInvoice);
+                setInvoiceTableData(_invoiceTableData);
+            } else if(getInvoiceResult.error){
+                toast.error(getInvoiceResult.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            }
+        } catch (error) {
+            console.log('ContractDetailPage.fetchInvoice.error', error);
+        }
     }
 
 
@@ -392,7 +525,7 @@ const ContractDetail = () => {
                                                     keyField="id"
                                                 />
                                                 ) : (
-                                                <p className="text-gray-500 dark:text-gray-400 text-sm">No invoices available</p>
+                                                <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No invoices available</p>
                                             )}
                                         </div>
                                     </div>
@@ -401,11 +534,19 @@ const ContractDetail = () => {
                                     {/* ACTIONS */}
                                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
                                         <h3 className="font-medium mb-4 text-gray-800 dark:text-gray-100 ">Quick Actions</h3>
-                                        <div className="space-y-3">
+                                        <div className="space-y-3 mb-3">
                                             <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={false} isSubmitBtn={false}>
                                                 <DollarSign size={16} /> Create Invoice
                                             </Button>
                                         </div>
+                                        {
+                                            contract?.status == "ACTIVE" && 
+                                            (<div className="space-y-3">
+                                                <Button onClick={handleClickTerminateLease} variant='danger' disable={false} isSubmitBtn={false} loading={isTerminatingContract}>
+                                                    <DollarSign size={16} /> Terminate Lease
+                                                </Button>
+                                            </div>)
+                                        }
                                     </div>
                                     
                                 </div>
@@ -415,7 +556,7 @@ const ContractDetail = () => {
                             <Overlay isOpen={showInvoiceGenerator} onClose={() => setShowInvoiceGenerator(false)}>
                                 <InvoiceGenerator
                                     onClose={() => setShowInvoiceGenerator(false)}
-                                    onCreate={(data: IInvoiceForm) => {handleCreateInvoice(data)}}
+                                    onCreate={(data: IInvoiceForm) => {handleUpsertInvoice(data)}}
                                     defaultValue={formDefaultInvoice}
                                     action={action}
                                 />
@@ -426,8 +567,18 @@ const ContractDetail = () => {
                                     message={successMessage}
                                 />
                             </Overlay>
+                            <Overlay isOpen={showActionModal} onClose={() => setShowActionModal(false)}>
+                                <ActionConfirmationModal
+                                    onClose={() => setShowActionModal(false)}
+                                    onConfirm={handleConfirmTerminateLease}
+                                    title="Terminate the contract"
+                                    type='APPROVED'
+                                    showCommentInput={false}
+                                    message={`Are you sure you want to terminate lease #${contract.id} ?`}
+                                />
+                            </Overlay>
                         </> : <div>
-                            NO DATA AVAILABLE
+                            <Nodata />
                         </div>
                     }
                 </div> 

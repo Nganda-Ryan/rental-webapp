@@ -46,7 +46,16 @@ export async function getRequests(params: GetRequestsParams = {}): Promise<any> 
       data: response.data
     }
   } catch (error: any) {
-    console.log('-->error', error)
+    console.log('-->userAction.createUser.error', error)
+    
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
@@ -76,6 +85,15 @@ export async function geRequestDetail(requestId: string): Promise<any> {
       data: response.data
     }
   } catch (error: any) {
+    
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
@@ -109,6 +127,15 @@ export async function verifyRequest(verifInfo: VerifyRequestType, requestType: s
     }
   } catch (error: any) {
     console.log('-->error',error?.response?.data)
+    
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
@@ -129,11 +156,11 @@ export async function requestLessorProfile(application: ProfileApplication_T){
     console.log('-->selfiePath', selfiePath);
 
     const uploadedIdCardRecto = await uploadFile(application.idCardRecto, idCardRectoPath);
-    if(uploadedIdCardRecto.error) return {error: "error while uploading ID CARD RECTO", code:uploadedIdCardRecto.code, filePath: null}
+    if(uploadedIdCardRecto.error) return {error: "error while uploading ID CARD RECTO", code:uploadedIdCardRecto.code, data: null}
     const uploadedIdCardVerso = await uploadFile(application.idCardVerso, idCardVersoPath);
-    if(uploadedIdCardVerso.error) return {error: "error while uploading ID CARD VERSO", code:uploadedIdCardVerso.code, filePath: null}
+    if(uploadedIdCardVerso.error) return {error: "error while uploading ID CARD VERSO", code:uploadedIdCardVerso.code, data: null}
     const uploadedSelfie = await uploadFile(application.selfie, selfiePath);
-    if(uploadedSelfie.error) return {error: "error while uploading SELFIE", code:uploadedSelfie.code, filePath: null}
+    if(uploadedSelfie.error) return {error: "error while uploading SELFIE", code:uploadedSelfie.code, data: null}
 
     const payload = {
       "description":application.description,
@@ -167,13 +194,26 @@ export async function requestLessorProfile(application: ProfileApplication_T){
       }
     )
     // console.log('-->response', response);
-    return response.data;
+    return {
+      code: null,
+      error: null,
+      data: response.data
+    }
   } catch (error: any) {
     console.log('-->requestLessorProfile.error', error)
+    
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
-      user: null
+      data: null
     }
   }
 }
@@ -237,6 +277,15 @@ export async function requestPropertyVerification(application: IPropertyVerifica
     }
   } catch (error: any) {
     console.log('-->requestLessorProfile.error', error)
+    
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",

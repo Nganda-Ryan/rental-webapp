@@ -22,7 +22,7 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Overlay from "@/components/Overlay";
 import InvoiceGenerator from "@/components/feature/Properties/InvoiceGenerator";
 import { useParams } from 'next/navigation';
-import { createContract, createInvoice, getAsset, searchInvoice } from "@/actions/assetAction";
+import { createContract, createInvoice, getAsset, searchInvoice, terminateLease } from "@/actions/assetAction";
 import { AssetData, AssetDataDetailed, IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, SeachInvoiceParams } from "@/types/Property";
 import { getStatusIcon } from "@/lib/utils-component";
 import { PropertySkeletonPageSection1 } from "@/components/skeleton/pages/PropertySkeletonPage";
@@ -30,6 +30,7 @@ import Button from "@/components/ui/Button";
 import toast from 'react-hot-toast';
 import { ResponsiveTable } from "@/components/feature/Support/ResponsiveTable";
 import { formatDateToText } from "@/lib/utils";
+import { ActionConfirmationModal } from "@/components/Modal/ActionConfirmationModal";
 
 
 
@@ -57,6 +58,7 @@ const PropertyDetail = () => {
     const [isContractFormOpen, setContractFormOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isAttachPropertiesModalOpen, setIsAttachPropertiesModalOpen] = useState(false);
+    const [isTerminatingContract, setIsTerminatingContract] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
@@ -64,163 +66,15 @@ const PropertyDetail = () => {
     const [tempInvoiceFormDefaultValue, setTempInvoiceFormDefaultValue] = useState<IInvoiceForm>();
     const [invoiceTableData, setInvoiceTableData] = useState<IInvoiceForm[]>([]);
     const [showShareLink, setShowShareLink] = useState(false);
+    const [showActionModal, setShowActionModal] = useState(false);
     const [activeContract, setActiveContract] = useState<IContractDetail>();
     const params = useParams();
     const router = useRouter();
 
     useEffect(() => {
-        const getUnits = (items:any[]): AssetData [] => {
-            return items.map(item => {
-                return {
-                    Code: item.Code,
-                    Title: item.Title,
-                    Price: item.Price,
-                    Currency: item.Currency,
-                    CoverUrl: item.CoverUrl,
-                    StatusCode: item.StatusCode,
-                    IsActive: item.IsActive, // 1 ou 0
-                    TypeCode: item.TypeCode,
-                    IsVerified: item.IsVerified, // 1 ou 0
-                    Address: {
-                        Code: item.Address.Code,
-                        City: item.Address.City,
-                        Country: item.Address.Country,
-                        Street: item.Address.Street,
-                    },
-                }
-            });
-        }
-        const fetchData = async () => {
-            try {
-                const result = await getAsset(params.id as string);
-                console.log('-->Result', result);
-                if(result?.data?.body?.assetData) {
-                    const item = result.data.body.assetData;
-                    const assetData = {
-                        Code: item.Code,
-                        Title: item.Title,
-                        Price: item.Price,
-                        Currency: item.Currency,
-                        CoverUrl: item.CoverUrl,
-                        StatusCode: item.StatusCode,
-                        IsActive: item.IsActive, // 1 ou 0
-                        TypeCode: item.TypeCode,
-                        IsVerified: item.IsVerified, // 1 ou 0
-                        Permission: result.data.body.ConfigPermissionList.map((item:any) => (item.Code)),
-                        whoIs: result.data.body.whoIs,
-                        BillingItems: result.data.body.billingItems.map((item: any) => (item.ItemCode)),
-                        Units: getUnits(item.assets),
-                        Address: {
-                            Code: item.Address.Code,
-                            City: item.Address.City,
-                            Country: item.Address.Country,
-                            Street: item.Address.Street,
-                        },
-                    }
+        
 
-                    if(item.contracts && item.contracts.length > 0){
-                        const _rawActiveContract = item.contracts.find((contract: any) => (contract.status == 'ACTIVE')) ?? item.contracts[0];
-                        const _activeContract: IContractDetail = {
-                            id: _rawActiveContract.Code,
-                            billingElements: _rawActiveContract.billingItems.map((item:any) => ({
-                                code: item.Code,
-                                label: item.ItemCode
-                            })),
-                            endDate: _rawActiveContract.EndDate,
-                            monthlyRent: _rawActiveContract.asset.Price,
-                            currency: _rawActiveContract.Currency,
-                            notes: "",
-                            startDate: _rawActiveContract.StartDate,
-                            status: _rawActiveContract.StatusCode,
-                            tenant: {
-                                name: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
-                                email: _rawActiveContract.renter.user.Email,
-                                phone: _rawActiveContract.renter.user.Phone,
-                                userCode: _rawActiveContract.renter.user.Code,
-                            }
-                        };
-                        const _invoiceformDefaultValue: IInvoiceForm = {
-                            id: _activeContract.id,
-                            tenant: _activeContract.tenant.name,
-                            tableId: "",
-                            startDate: _activeContract.startDate,
-                            endDate: "",
-                            monthlyRent: _activeContract.monthlyRent,
-                            status: _activeContract.status,
-                            notes: _activeContract.notes,
-                            currency: _activeContract.currency,
-                            billingElements: _activeContract.billingElements.map((item: any) => ({
-                                code: item.label,
-                                label: item.label,
-                                amount: 0,
-                                paidDate: today,
-                                status: false,
-                            }))
-                        };
-                        const _contractTableData = item.contracts.map((contract: any) => ({
-                            id: contract.Code,
-                            tenant: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
-                            startDate: contract.StartDate,
-                            endDate: contract.EndDate,
-                            status: contract.StatusCode,
-                            monthlyRent: assetData.Price,// + ' ' + assetData.Currency,
-                        })) as IContractColumn[];
-
-                        
-
-                        const getInvoiceParam: SeachInvoiceParams = {
-                            orderBy: "Item.CreatedAt",
-                            orderMode: "desc",
-                            assetCodes: [assetData.Code]
-                        };
-                    
-                        const getInvoiceResult = await searchInvoice(getInvoiceParam);
-                        if(getInvoiceResult.data){
-                            console.log('-->getInvoiceResult', getInvoiceResult)
-                            const _invoiceTableData: IInvoiceForm[] = getInvoiceResult.data.body.items.map((inv: any, index: number) => {
-                                return {
-                                    id: inv.Code,
-                                    tableId: "INV"+(index+1),
-                                    status: inv.StatusCode,
-                                    startDate: inv.StartDate.split("T")[0],
-                                    endDate: inv.EndDate.split("T")[0],
-                                    tenant: "",
-                                    monthlyRent: assetData.Price,
-                                    notes: inv.notes,
-                                    currency: assetData.Currency,
-                                    billingElements: inv.items.map((item: any) => ({
-                                        code: item.ItemCode,
-                                        label: item.ItemCode,
-                                        amount: item.Amount,
-                                        paidDate: item.PaidDate ? item.PaidDate.split("T")[0] : "",
-                                        status: item.IsPaid == 1 ? true : false,
-                                    }))
-                                }
-                            });
-
-                            const recentInvoice = _invoiceTableData.length > 0 && _invoiceTableData[0];
-                            
-                            if(recentInvoice){
-                                _invoiceformDefaultValue.startDate = recentInvoice.endDate;
-                            }
-                        }
-
-                        setActiveContract(_activeContract);
-                        setInvoiceFormDefaultValue(_invoiceformDefaultValue);
-                        setTempInvoiceFormDefaultValue(_invoiceformDefaultValue);
-                        setContractTableData(_contractTableData);
-                    }
-                    
-                    setAsset(assetData)
-                }
-            } catch (error) {
-                console.log(error)
-            } finally {
-                setIsReady(true);
-            }
-        }
-
-        fetchData();
+        init();
     }, [params.id, today]);
 
     useEffect(() => {
@@ -231,86 +85,6 @@ const PropertyDetail = () => {
     }, [showInvoiceGenerator, tempInvoiceFormDefaultValue]);
     
 
-
-    const contracts = [
-        {
-          id: 'CTR001',
-          tenant: 'John Smith',
-          unit: '4B',
-          startDate: '2023-01-15',
-          endDate: '2024-01-14',
-          monthlyRent: '$2,500',
-          billingElements: [
-            {
-                name: 'Lease',
-                amount: 1800,
-                frequency: 'Monthly',
-            }, 
-            {
-                name: 'Utilities',
-                amount: 150,
-                frequency: 'Monthly',
-            },
-            {
-                name: 'Parking',
-                amount: 100,
-                frequency: 'Monthly',
-            }
-        ],
-          status: 'Active',
-          nextInvoiceDate: '2023-08-01',
-        },
-        {
-            id: 'CTR002',
-            tenant: 'Sarah Johnson',
-            unit: '2A',
-            startDate: '2023-03-01',
-            endDate: '2024-02-29',
-            monthlyRent: '$1,800',
-            billingElements: [
-                {
-                    name: 'Lease',
-                    amount: 1800,
-                    frequency: 'Monthly',
-                }, 
-                {
-                    name: 'Utilities',
-                    amount: 150,
-                    frequency: 'Monthly',
-                },
-                {
-                    name: 'Parking',
-                    amount: 100,
-                    frequency: 'Monthly',
-                }
-            ],
-            status: 'Active',
-            nextInvoiceDate: '2023-08-01',
-        },
-    ]
-
-    const invoices = [
-        {
-            id: 'INV001',
-            contractId: 'CTR001',
-            tenant: 'John Smith',
-            date: '2023-07-01',
-            period: 'July 2023',
-            amount: '$2,500',
-            status: 'Paid',
-            elements: ['Lease', 'Utilities', 'Parking'],
-        },
-        {
-            id: 'INV002',
-            contractId: 'CTR002',
-            tenant: 'Sarah Johnson',
-            date: '2023-07-01',
-            period: 'July 2023',
-            amount: '$1,800',
-            status: 'Pending',
-            elements: ['Lease', 'Utilities'],
-        },
-    ];
 
     const contractColumns = [
         {
@@ -329,8 +103,8 @@ const PropertyDetail = () => {
             priority: 'medium' as const,
             render: (_: any, contract: IContractColumn) => (
             <div className="text-sm text-gray-800 dark:text-gray-100">
-                <div>From {contract.startDate}</div>
-                <div className="text-gray-600 dark:text-gray-300">to {contract.endDate}</div>
+                <div><span className="font-bold">From</span> {formatDateToText(contract.startDate)}</div>
+                <div className="text-gray-600 dark:text-gray-300"><span className="font-bold">to</span> {formatDateToText(contract.endDate)}</div>
             </div>
             ),
         },
@@ -339,7 +113,7 @@ const PropertyDetail = () => {
             label: 'Monthly Rent',
             priority: 'high' as const,
             render: (_: any, contract: IContractColumn) => (
-            <div className="font-medium text-gray-800 dark:text-gray-100">
+            <div className="text-sm text-gray-800 dark:text-gray-100">
                 {`${contract.monthlyRent} ${asset?.Currency ?? ''}`}
             </div>
             ),
@@ -407,41 +181,6 @@ const PropertyDetail = () => {
             ),
         },
     ]
-    const units = [
-        {
-        id: '1',
-        name: 'Room 101',
-        type: 'Modern Studio',
-        status: 'Occupied',
-        image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-        beds: 1,
-        baths: 1,
-        sqft: 450,
-        rent: '$1,200',
-        currentTenant: {
-            name: 'John Smith',
-            since: 'Jan 2023',
-            until: 'Dec 2023',
-        },
-        amenities: ['Air Conditioning', 'Balcony', 'Kitchen'],
-        maintenanceHistory: [
-            {
-            date: 'Jul 15, 2023',
-            type: 'Regular Maintenance',
-            description: 'AC Service',
-            status: 'Completed',
-            },
-        ],
-        occupancyHistory: [
-            {
-            tenant: 'John Smith',
-            startDate: 'Jan 2023',
-            endDate: 'Dec 2023',
-            status: 'Current',
-            },
-        ],
-        },
-    ]
  
     const tenantRequests = [
         {
@@ -505,6 +244,7 @@ const PropertyDetail = () => {
         } catch (error) {
             
         } finally {
+            await fetchAssetDetail();
             setContractFormOpen(false);
         }
         
@@ -512,7 +252,7 @@ const PropertyDetail = () => {
     };
     const handleSelectedContract = (contractId: string) => {
         console.log("Selected contract ID:", contractId);
-        router.push(`/landlord/properties/ASkswDWMB1748465484436/contracts/${contractId}`)
+        router.push(`/landlord/properties/contracts/${contractId}`)
     }
     const handleCreateInvoice = async (data: IInvoiceForm) => {
         try {
@@ -548,6 +288,7 @@ const PropertyDetail = () => {
         
     }
     const handleClickUpdateInvoice = (data: IInvoiceTableData) => {
+        console.log('handleClickUpdateInvoice')
         if(invoiceTableData && invoiceTableData.length > 0){
             const foundInvoice = invoiceTableData.find(inv => inv.id == data.id);
             if (!foundInvoice) {
@@ -559,10 +300,134 @@ const PropertyDetail = () => {
                 id: foundInvoice.id ?? "",
                 billingElements: invoiceTableData[0].billingElements
             }
+            console.log('-->_invoice', _invoice);
+            // setInvoiceFormDefaultValue(_invoice);
+            // setAction("UPDATE");
+            // setShowInvoiceGenerator(true);
+        }
+    }
+    const handleSelectInvoice = (id: string) => {
+        console.log('handleSelectInvoice', handleSelectInvoice)
+    }
+    const handleClickTerminateLease = async () => {
+        setShowActionModal(true)
+    }
+    const handleConfirmTerminateLease = async () => {
+        try {
+            setIsTerminatingContract(true);
+            if(activeContract){
+                const result  = await terminateLease(activeContract.id);
+                if(result.error){
+                    if(result.code == 'SESSION_EXPIRED'){
+                        router.push('/signin');
+                        return;
+                    }
+                    toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+                }
+            }
+        } catch (error) {
+            
+        } finally {
+            await init();
+            setIsTerminatingContract(false);
+            setShowActionModal(false);
+            toast.success("Lease terminated", { position: 'bottom-right' });
+        }
+    }
 
-            setInvoiceFormDefaultValue(_invoice);
-            setAction("UPDATE");
-            setShowInvoiceGenerator(true);
+    
+    const getUnits = (items:any[]): AssetData [] => {
+        return items.map(item => {
+            return {
+                Code: item.Code,
+                Title: item.Title,
+                Price: item.Price,
+                Currency: item.Currency,
+                CoverUrl: item.CoverUrl,
+                StatusCode: item.StatusCode,
+                IsActive: item.IsActive, // 1 ou 0
+                TypeCode: item.TypeCode,
+                IsVerified: item.IsVerified, // 1 ou 0
+                Address: {
+                    Code: item.Address.Code,
+                    City: item.Address.City,
+                    Country: item.Address.Country,
+                    Street: item.Address.Street,
+                },
+            }
+        });
+    }
+    const fetchAssetDetail = async () => {
+        try {
+            const result = await getAsset(params.id as string);
+            console.log('-->result', result)
+            if(result?.data?.body?.assetData) {
+                console.log('-->result', result);
+                const item = result.data.body.assetData;
+                const assetData: AssetDataDetailed  = {
+                    Code: item.Code,
+                    Title: item.Title,
+                    Price: item.Price,
+                    Currency: item.Currency,
+                    CoverUrl: item.CoverUrl,
+                    StatusCode: item.StatusCode,
+                    IsActive: item.IsActive, // 1 ou 0
+                    TypeCode: item.TypeCode,
+                    IsVerified: item.IsVerified, // 1 ou 0
+                    Permission: result.data.body.ConfigPermissionList.map((item:any) => (item.Code)),
+                    whoIs: result.data.body.whoIs,
+                    BillingItems: result.data.body.billingItems.map((item: any) => (item.ItemCode)),
+                    Units: getUnits(item.assets),
+                    Address: {
+                        Code: item.Address.Code,
+                        City: item.Address.City,
+                        Country: item.Address.Country,
+                        Street: item.Address.Street,
+                    },
+                }
+
+                if(item.contracts && item.contracts.length > 0){
+                    const _rawActiveContract = item.contracts.find((contract: any) => (contract.status == 'ACTIVE')) ?? item.contracts[0];
+                    const _activeContract: IContractDetail = {
+                        id: _rawActiveContract.Code,
+                        billingElements: [],
+                        endDate: _rawActiveContract.EndDate,
+                        monthlyRent: _rawActiveContract.asset.Price,
+                        currency: _rawActiveContract.Currency,
+                        notes: "",
+                        startDate: _rawActiveContract.StartDate,
+                        status: _rawActiveContract.StatusCode,
+                        tenant: {
+                            name: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
+                            email: _rawActiveContract.renter.user.Email,
+                            phone: _rawActiveContract.renter.user.Phone,
+                            userCode: _rawActiveContract.renter.user.Code,
+                        }
+                    };
+                    const _contractTableData = item.contracts.map((contract: any) => ({
+                        id: contract.Code,
+                        tenant: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
+                        startDate: contract.StartDate,
+                        endDate: contract.EndDate,
+                        status: contract.StatusCode,
+                        monthlyRent: assetData.Price,// + ' ' + assetData.Currency,
+                    })) as IContractColumn[];
+
+                    setActiveContract(_activeContract);
+                    setContractTableData([..._contractTableData].reverse());
+                }
+                setAsset(assetData)
+            } else if(result.error){
+                if(result.code == 'SESSION_EXPIRED'){
+                    router.push('/signin');
+                    return;
+                }
+                toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            }
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsReady(true);
         }
     }
 
@@ -587,7 +452,158 @@ const PropertyDetail = () => {
         return can == undefined ? true : !can;
     }
     const canCreateContract = (): boolean => {
-        return contractTableData.some(contract => (contract.status == 'ACTIVE'));
+        if(asset) {
+            const hasPermission = asset.Permission.includes("GenerateContract");
+            if(hasPermission){
+               return !contractTableData.some(contract => (contract.status == 'ACTIVE'));
+            }
+        }
+        return false;
+    }
+
+    const init = async () => {
+        try {
+            const result = await getAsset(params.id as string);
+            console.log('-->result', result);
+            if(result?.data?.body?.assetData) {
+                const item = result.data.body.assetData;
+                const assetData: AssetDataDetailed  = {
+                    Code: item.Code,
+                    Title: item.Title,
+                    Price: item.Price,
+                    Currency: item.Currency,
+                    CoverUrl: item.CoverUrl,
+                    StatusCode: item.StatusCode,
+                    IsActive: item.IsActive, // 1 ou 0
+                    TypeCode: item.TypeCode,
+                    IsVerified: item.IsVerified, // 1 ou 0
+                    Permission: result.data.body.ConfigPermissionList.map((item:any) => (item.Code)),
+                    whoIs: result.data.body.whoIs,
+                    BillingItems: result.data.body.billingItems.map((item: any) => (item.ItemCode)),
+                    Units: getUnits(item.assets),
+                    Address: {
+                        Code: item.Address.Code,
+                        City: item.Address.City,
+                        Country: item.Address.Country,
+                        Street: item.Address.Street,
+                    },
+                }
+
+                if(item.contracts && item.contracts.length > 0){
+                    console.log('-->item.contracts', item.contracts);
+                    const _rawActiveContract = item.contracts.find((contract: any) => (contract.StatusCode == 'ACTIVE')) ?? item.contracts[0];
+                    const _activeContract: IContractDetail = {
+                        id: _rawActiveContract.Code,
+                        billingElements: [],
+                        endDate: _rawActiveContract.EndDate,
+                        monthlyRent: _rawActiveContract.asset.Price,
+                        currency: _rawActiveContract.Currency,
+                        notes: "",
+                        startDate: _rawActiveContract.StartDate,
+                        status: _rawActiveContract.StatusCode,
+                        tenant: {
+                            name: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
+                            email: _rawActiveContract.renter.user.Email,
+                            phone: _rawActiveContract.renter.user.Phone,
+                            userCode: _rawActiveContract.renter.user.Code,
+                        }
+                    };
+                    const _invoiceformDefaultValue: IInvoiceForm = {
+                        id: _activeContract.id,
+                        tenant: _activeContract.tenant.name,
+                        tableId: "",
+                        startDate: _activeContract.startDate,
+                        endDate: "",
+                        monthlyRent: _activeContract.monthlyRent,
+                        status: _activeContract.status,
+                        notes: _activeContract.notes,
+                        currency: _activeContract.currency,
+                        billingElements: _activeContract.billingElements.map((item: any) => ({
+                            id: "",
+                            code: item.label,
+                            label: item.label,
+                            amount: 0,
+                            paidDate: today,
+                            status: false,
+                        }))
+                    };
+                    const _contractTableData = item.contracts.map((contract: any) => ({
+                        id: contract.Code,
+                        tenant: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
+                        startDate: contract.StartDate,
+                        endDate: contract.EndDate,
+                        status: contract.StatusCode,
+                        monthlyRent: assetData.Price,// + ' ' + assetData.Currency,
+                    })) as IContractColumn[];
+
+
+                    console.log('-->_contractTableData', _contractTableData);
+                    
+
+                    const getInvoiceParam: SeachInvoiceParams = {
+                        orderBy: "Item.CreatedAt",
+                        orderMode: "desc",
+                        assetCodes: [assetData.Code]
+                    };
+                
+                    const getInvoiceResult = await searchInvoice(getInvoiceParam);
+                    if(getInvoiceResult.data){
+                        console.log('-->getInvoiceResult', getInvoiceResult)
+                        const _invoiceTableData: IInvoiceForm[] = getInvoiceResult.data.body.items.map((inv: any, index: number) => {
+                            return {
+                                id: inv.Code,
+                                tableId: "INV"+(index+1),
+                                status: inv.StatusCode,
+                                startDate: inv.StartDate.split("T")[0],
+                                endDate: inv.EndDate.split("T")[0],
+                                tenant: "",
+                                monthlyRent: assetData.Price,
+                                notes: inv.notes,
+                                currency: assetData.Currency,
+                                billingElements: inv.items.map((item: any) => ({
+                                    code: item.ItemCode,
+                                    label: item.ItemCode,
+                                    amount: item.Amount,
+                                    paidDate: item.PaidDate ? item.PaidDate.split("T")[0] : "",
+                                    status: item.IsPaid == 1 ? true : false,
+                                }))
+                            }
+                        });
+                        setInvoiceTableData(_invoiceTableData);
+
+                        const recentInvoice = _invoiceTableData.length > 0 && _invoiceTableData[0];
+                        
+                        if(recentInvoice){
+                            _invoiceformDefaultValue.startDate = recentInvoice.endDate;
+                        }
+                    } else if(getInvoiceResult.error){
+                        if(getInvoiceResult.code == 'SESSION_EXPIRED'){
+                            router.push('/signin');
+                            return;
+                        }
+                        toast.error(getInvoiceResult.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+                    }
+
+                    console.log('_activeContract', _activeContract);
+
+                    setActiveContract(_activeContract);
+                    setInvoiceFormDefaultValue(_invoiceformDefaultValue);
+                    setTempInvoiceFormDefaultValue(_invoiceformDefaultValue);
+                    setContractTableData([..._contractTableData].reverse());
+                }
+                setAsset(assetData)
+            } else if(result.error){
+                if(result.code == 'SESSION_EXPIRED'){
+                    router.push('/signin');
+                    return;
+                }
+                toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            }
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsReady(true);
+        }
     }
 
     return (
@@ -659,22 +675,26 @@ const PropertyDetail = () => {
 
                                 
                                 {/* CONTRACT */}
-                                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                                    <div className="flex items-center justify-between mb-6">
+                                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
+                                    <div className="flex items-center justify-between mx-3 mb-3">
                                     <h2 className="text-xl font-semibold flex items-center gap-2">
                                         <FileText size={20} className="text-gray-400" />
                                         Lease Contracts
                                     </h2>
                                     </div>
-                                    {contracts.length > 0 ? (
+                                    {contractTableData.length > 0 ? (
                                         <ResponsiveTable
                                             columns={contractColumns}
-                                            data={contractTableData}
+                                            data={contractTableData.slice(0, 3)}
                                             onRowClick={(contract) => handleSelectedContract(contract.id)}
                                             keyField="id"
+                                            showMore={asset && contractTableData.length > 3 ? {
+                                                url: `/landlord/properties/${asset?.Code}/contracts`,
+                                                label: 'Show more contracts'
+                                            } : undefined}
                                         />
                                         ) : (
-                                        <p className="text-gray-500 dark:text-gray-400 text-sm">No lease contracts available</p>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No lease contracts available</p>
                                     )}
                                 </div>
 
@@ -740,83 +760,28 @@ const PropertyDetail = () => {
                                 </div> */}
 
                                 {/* BILLING STATEMENT */}
-                                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h2 className="text-xl font-semibold flex items-center gap-2 text-gray-800 dark:text-white">
-                                        <FileText size={20} className="text-gray-400 dark:text-gray-300" />
-                                        Billing Management
+                                {/* CONTRACT */}
+                                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
+                                    <div className="flex items-center justify-between mx-3 mb-3">
+                                        <h2 className="text-xl font-semibold flex items-center gap-2">
+                                            <FileText size={20} className="text-gray-400" />
+                                            Invoice history
                                         </h2>
                                     </div>
-
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between items-center mb-4">
-                                        <h3 className="font-medium text-gray-700 dark:text-gray-200">Invoice History</h3>
-                                        <select className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg">
-                                            <option value="all">All Time</option>
-                                            <option value="month">This Month</option>
-                                            <option value="quarter">This Quarter</option>
-                                            <option value="year">This Year</option>
-                                        </select>
-                                        </div>
-
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full">
-                                                <thead className="bg-gray-50 dark:bg-gray-700">
-                                                <tr>
-                                                    {[
-                                                    "Invoice ID",
-                                                    "Tenant",
-                                                    "Date",
-                                                    "Period",
-                                                    "Amount",
-                                                    "Status",
-                                                    "Actions"
-                                                    ].map((heading) => (
-                                                    <th
-                                                        key={heading}
-                                                        className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 text-nowrap"
-                                                    >
-                                                        {heading}
-                                                    </th>
-                                                    ))}
-                                                </tr>
-                                                </thead>
-
-                                                <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                                                {invoices.map((invoice) => (
-                                                    <tr key={invoice.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                    <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.id}</td>
-                                                    <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.tenant}</td>
-                                                    <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.date}</td>
-                                                    <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.period}</td>
-                                                    <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-100">{invoice.amount}</td>
-                                                    <td className="px-4 py-2">
-                                                        <span
-                                                        className={`px-2 py-1 text-xs rounded-full ${
-                                                            invoice.status === "Paid"
-                                                            ? "bg-green-100 text-green-800 dark:bg-green-200 dark:text-green-900"
-                                                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-200 dark:text-yellow-900"
-                                                        }`}
-                                                        >
-                                                        {invoice.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-2">
-                                                        <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => {}}
-                                                            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                        >
-                                                            View
-                                                        </button>
-                                                        </div>
-                                                    </td>
-                                                    </tr>
-                                                ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
+                                    {invoiceTableData.length > 0 ? (
+                                        <ResponsiveTable
+                                            columns={invoiceColumns}
+                                            data={invoiceTableData.slice(0, 3)}
+                                            onRowClick={(inv) => handleSelectInvoice(inv.id)}
+                                            keyField="id"
+                                            showMore={asset && invoiceTableData.length > 3 ? {
+                                                url: `/landlord/properties/${asset?.Code}/invoices`,
+                                                label: 'Show more invoices'
+                                            } : undefined}
+                                        />
+                                        ) : (
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No invoices available</p>
+                                    )}
                                 </div>
                                 
                             </div>
@@ -835,14 +800,14 @@ const PropertyDetail = () => {
                                         <Button onClick={handleShareLink} variant='neutral' disable={asset?.IsVerified == 0} isSubmitBtn={false}>
                                             <Share2 size={16} /> Invite Tenant
                                         </Button>
-                                        {
-                                            contractTableData.length == 0 && <Button onClick={handleCreateContract} variant='neutral' disable={asset?.IsVerified == 0} isSubmitBtn={false}>
-                                            <FileText size={16} /> Create a contract
-                                        </Button>
-                                        }
                                         { asset?.StatusCode == "DRAFT" && <Button onClick={handleVerificationFormOpen} variant='neutral' disable={false} isSubmitBtn={false}>
                                             <FileText size={16} /> Verify Property
                                         </Button>}
+                                        {asset?.TypeCode === "CPLXMOD" && (
+                                            <Button onClick={() => setIsAttachPropertiesModalOpen(true)} variant='neutral' disable={!(asset?.whoIs == "OWNER" && asset?.IsVerified == 1)} isSubmitBtn={false}>
+                                                <Building2 size={16} /> Attach Properties
+                                            </Button>
+                                        )}
                                         <Button variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false}>
                                             <Building2 size={16} /> Edit Property
                                         </Button>
@@ -851,22 +816,25 @@ const PropertyDetail = () => {
                                         </Button>
                                     </>
                                 }
-                                <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={canCreateInvoice()} isSubmitBtn={false}>
-                                    <DollarSign size={16} /> Create Invoice
-                                </Button>
-                                
+                                {
+                                    canCreateContract() && <Button onClick={handleCreateContract} variant='neutral' disable={false} isSubmitBtn={false}>
+                                        <FileText size={16} /> Create a contract
+                                    </Button>
+                                }
                                 
                                 {
-                                    asset?.whoIs == "OWNER" && 
-                                    (
-                                        <>
-                                            {asset?.TypeCode === "CPLXMOD" && (
-                                                <Button onClick={() => setIsAttachPropertiesModalOpen(true)} variant='neutral' disable={!(asset?.whoIs == "OWNER" && asset?.IsVerified == 1)} isSubmitBtn={false}>
-                                                    <Building2 size={16} /> Attach Properties
-                                                </Button>
-                                            )}
-                                        </>
-                                    )
+                                    canCreateInvoice() &&
+                                    <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={false} isSubmitBtn={false}>
+                                        <DollarSign size={16} /> Create Invoice
+                                    </Button>
+                                }
+                                {
+                                    asset?.whoIs == "OWNER" && activeContract?.status == "ACTIVE" && 
+                                    (<div className="space-y-3">
+                                        <Button onClick={handleClickTerminateLease} variant='danger' disable={false} isSubmitBtn={false} loading={isTerminatingContract}>
+                                            <DollarSign size={16} /> Terminate Lease
+                                        </Button>
+                                    </div>)
                                 }
                             </div>
                             {showShareLink && (
@@ -1000,6 +968,16 @@ const PropertyDetail = () => {
                     <SuccessModal
                         onClose={() => setShowSuccessModal(false)}
                         message={successMessage}
+                    />
+                </Overlay>
+                <Overlay isOpen={showActionModal} onClose={() => setShowActionModal(false)}>
+                    <ActionConfirmationModal
+                        onClose={() => setShowActionModal(false)}
+                        onConfirm={handleConfirmTerminateLease}
+                        title="Terminate the contract"
+                        type='APPROVED'
+                        showCommentInput={false}
+                        message={`Are you sure you want to terminate lease #${activeContract?.id} ?`}
                     />
                 </Overlay>
             </div>

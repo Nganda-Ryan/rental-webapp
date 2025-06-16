@@ -5,6 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Select } from '@/components/ui/Select'; 
 import { SeachUserParams } from "@/types/user";
 import { searchUser } from "@/actions/userAction";
+import Button from "@/components/ui/Button";
 
 interface TenantContractFormProps {
   onClose: () => void;
@@ -34,7 +35,6 @@ export const TenantContractForm = ({
     control,
     register,
     handleSubmit,
-    setValue,
     watch,
     formState: { errors },
   } = useForm({
@@ -61,14 +61,14 @@ export const TenantContractForm = ({
 
   const startDate = watch("startDate");
   const today = new Date().toISOString().split("T")[0]; // format YYYY-MM-DD
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingUser, setIsFetchingUser] = useState(false);
+  const [isCreatingContract, setIsCreatingContract] = useState(false);
   
   
   useEffect(() => {
-    console.log(1)
     const fetchData = async () => {
       try {
-        setIsLoading(true);
+        setIsFetchingUser(true);
         const params: SeachUserParams = {
           orderBy: 'U.Email',
           orderMode: 'desc',
@@ -93,7 +93,7 @@ export const TenantContractForm = ({
       } catch (error) {
         console.log('-->error', error)
       } finally {
-        setIsLoading(false);
+        setIsFetchingUser(false);
       }
     };
 
@@ -102,17 +102,20 @@ export const TenantContractForm = ({
   
 
 
-
+  const handleSubmit2 = (data: any) => {
+    setIsCreatingContract(true);
+    onSubmit(data)
+  }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto sm:min-w-171.5">
+    <div className="rounded-lg w-full max-h-[80vh] overflow-y-auto max-w-2xl mx-auto bg-white dark:bg-gray-800">
       <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold dark:text-white">
             Create Tenant Contract
           </h2>
         </div>
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit(handleSubmit2)} className="p-6 space-y-6">
           <div>
             <div className="flex flex-col">
               <label className="mb-1 text-sm text-gray-700 dark:text-gray-300">Tenant</label>
@@ -132,6 +135,7 @@ export const TenantContractForm = ({
                         setSelectedTenant(selectedOption || null);
                       }}
                       placeholder="Select a tenant"
+                      isLoading={isFetchingUser}
                     />
                     {error && (
                       <p className="mt-1 text-sm text-red-500">{error.message}</p>
@@ -231,12 +235,11 @@ export const TenantContractForm = ({
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              Create Contract
-            </button>
+            <Button variant='neutral' disable={isCreatingContract} isSubmitBtn={true} fullWidth={false} loading={isCreatingContract}>
+              {
+                isCreatingContract == true ? "Creating Contract..." : "Create Contract"
+              }
+            </Button>
           </div>
         </form>
       </div>

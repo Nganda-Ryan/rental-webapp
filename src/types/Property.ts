@@ -216,6 +216,7 @@ export interface IInvoiceForm {
   notes: string;
   currency: string;
   billingElements: Array<{
+    id: string,
     code: string,
     label: string,
     amount: number,
@@ -246,4 +247,19 @@ export interface IInvoiceTableData {
   status: string;
   startDate: string;
   endDate: string;
+}
+
+
+export interface IUpdateInvoiceParam {
+  "profilCode": string,
+  "userId": string,
+  "contractCode": string,
+  "code": string,
+  "notes": string,
+  "items": Array<{
+    "itemCode": string,
+    "code": string,
+    "isPaid": boolean,
+    "paidDate": string
+  }>
 }
