@@ -1,21 +1,11 @@
 "use client"
-import React, { useState, Fragment, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Calendar,
-  CheckCircle,
-  XCircle,
-  Clock,
-  ExternalLink,
   Mail,
   Phone,
-  ChevronLeft,
-  ChevronRight,
-  Fingerprint,
-  User,
-  MapPin,
   Building2,
-  Building,
   Search,
 } from 'lucide-react'
 import { ActionConfirmationModal } from '@/components/Modal/ActionConfirmationModal'
@@ -24,13 +14,9 @@ import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
 import Overlay from '@/components/Overlay'
 import { GetRequestsParams } from '@/types/requestTypes'
 import { getRequests, verifyRequest } from '@/actions/requestAction'
-import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast'
-import { ProcessingModal } from '@/components/Modal/ProcessingModal'
-import RenderMobileCardSkeleton from '@/components/skeleton/RenderMobileCardSkeleton'
-import RenderDesktopTableSkeleton from '@/components/skeleton/RenderDesktopTableSkeleton'
-import Image from 'next/image'
-import { getStatusIcon } from "@/lib/utils-component";
+import { ProcessingModal } from '@/components/Modal/ProcessingModal';
+import { getStatusBadge } from "@/lib/utils-component";
 import { SkeletonTable } from '@/components/skeleton/SkeletonTable'
 import Nodata from '@/components/error/Nodata'
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable'
@@ -177,14 +163,14 @@ const Page = () => {
     {
       key: 'asset',
       label: 'Property Information',
-      priority: 'high' as const,
+      priority: 'medium' as const,
       render: (_: any, row: VerificationRequest) => (
-        <div className="space-y-1">
-          <div className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-1">
+        <div className="text-sm text-gray-700 dark:text-gray-300">
+          <div className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
             <Building2 size={14} />
-            {row.asset}
+            {row.asset.replace('Verification of ', "")}
           </div>
-          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
             <Calendar size={14} />
             {formatDateToText(row.submissionDate)}
           </div>
@@ -194,17 +180,17 @@ const Page = () => {
     {
       key: 'creator',
       label: 'Property Owner',
-      priority: 'high' as const,
+      priority: 'low' as const,
       render: (_: any, row: VerificationRequest) => (
         <div className="space-y-1">
-          <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <div className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
             {row.creator.name}
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <div className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
             <Mail size={14} />
             {row.creator.email}
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <div className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
             <Phone size={14} />
             {row.creator.phone}
           </div>
@@ -214,10 +200,10 @@ const Page = () => {
     {
       key: 'status',
       label: 'REQUEST STATUS',
-      priority: 'high' as const,
+      priority: 'medium' as const,
       render: (_: any, row: VerificationRequest) => (
         <div className="space-y-1">
-          {getStatusIcon(row.status)}
+          {getStatusBadge(row.status)}
         </div>
       ),
     },
@@ -249,26 +235,26 @@ const Page = () => {
     <DefaultLayout>
       <Breadcrumb previousPage={false} pageName="Property Verification Requests" />
 
+      <div className="mb-6">
+        <div className="relative w-full md:w-96">
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
+            size={20}
+          />
+          <input
+            type="text"
+            placeholder="Search lessors..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+          />
+        </div>
+      </div>
       {
         isReady ?
         <>
           {requestList.length > 0 ?
             <div className="w-full">
-              <div className="mb-6">
-                <div className="relative w-full md:w-96">
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
-                    size={20}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search lessors..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
-                  />
-                </div>
-              </div>
               
               <ResponsiveTable
                 columns={columns}

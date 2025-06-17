@@ -24,7 +24,7 @@ import InvoiceGenerator from "@/components/feature/Properties/InvoiceGenerator";
 import { useParams } from 'next/navigation';
 import { createContract, createInvoice, getAsset, searchInvoice, terminateLease } from "@/actions/assetAction";
 import { AssetData, AssetDataDetailed, IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, SeachInvoiceParams } from "@/types/Property";
-import { getStatusIcon } from "@/lib/utils-component";
+import { getStatusBadge } from "@/lib/utils-component";
 import { PropertySkeletonPageSection1 } from "@/components/skeleton/pages/PropertySkeletonPage";
 import Button from "@/components/ui/Button";
 import toast from 'react-hot-toast';
@@ -124,7 +124,7 @@ const PropertyDetail = () => {
             priority: 'high' as const,
             render: (_: any, contract: IContractColumn) => (
                 <>
-                    {getStatusIcon(contract.status)}
+                    {getStatusBadge(contract.status)}
                 </>
             ),
         }
@@ -157,7 +157,7 @@ const PropertyDetail = () => {
             priority: "medium" as "medium",
             render: (_: any, invoice: IInvoiceForm) => (
             <>
-                {getStatusIcon(invoice.status == "DRAFT" ? "UNPAID" : invoice.status)}
+                {getStatusBadge(invoice.status == "DRAFT" ? "UNPAID" : invoice.status)}
             </>
             ),
         },
@@ -658,7 +658,7 @@ const PropertyDetail = () => {
                                             </div>
                                         </div>
                                         <span>
-                                            {getStatusIcon(asset?.StatusCode ?? 'DRAFT')}
+                                            {getStatusBadge(asset?.StatusCode ?? 'DRAFT')}
                                         </span>
                                     </div>
                                     <div className="grid grid-cols-4 gap-4 py-4 border-t border-gray-100 dark:border-gray-700">

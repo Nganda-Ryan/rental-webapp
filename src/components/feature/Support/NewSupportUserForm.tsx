@@ -14,7 +14,7 @@ import PhoneInput from 'react-phone-input-2';
 import { getNames, getCode } from 'country-list';
 import { Controller, useForm } from 'react-hook-form';
 import Button from '@/components/ui/Button';
-import { PROFILE_MANAGER } from '@/constant';
+import { MANAGER_PROFILE_OBJ_LIST } from '@/constant';
 import { FormValues, ManagerRole } from '@/types/user';
 interface NewSupportUserFormProps {
   isOpen: boolean
@@ -75,7 +75,7 @@ export const NewSupportUserForm = ({
             Role Assignment
           </h3>
           <div className="grid sm:grid-cols-2 gap-4">
-            {PROFILE_MANAGER.map((role) => (
+            {MANAGER_PROFILE_OBJ_LIST.map((role) => (
               <button
                 key={role.value}
                 type="button"

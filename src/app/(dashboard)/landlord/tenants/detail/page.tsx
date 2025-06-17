@@ -64,7 +64,7 @@ const Page = () => {
       },
     ],
   };
-  const getStatusIcon = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "Completed":
         return <CheckCircle2 size={16} className="text-green-500" />;
@@ -210,7 +210,7 @@ const Page = () => {
                         <p className="text-sm text-gray-500">{request.date}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                        {getStatusIcon(request.status)}
+                        {getStatusBadge(request.status)}
                         <span
                         className={`text-sm ${request.status === "Completed" ? "text-green-600" : "text-orange-600"}`}
                         >

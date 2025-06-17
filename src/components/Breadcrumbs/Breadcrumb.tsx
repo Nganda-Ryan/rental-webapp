@@ -64,7 +64,7 @@ const Breadcrumb = ({ pageName, previousPage }: BreadcrumbProps) => {
   }, [pathname]); // Dépendance au chemin d'URL
   
   return (
-    <div className="mb-10 flex gap-3 sm:flex-row items-end justify-between flex-wrap">
+    <div className="mb-5 md:mb-7 flex gap-3 sm:flex-row items-end justify-between flex-wrap">
       <div className="flex flex-nowrap gap-3 justify-center items-center">
         { previousPage && <ArrowLeft size={24} onClick={() => router.back()}/>}
         <h1 className="text-xl md:text-2xl font-bold">{pageName}</h1>

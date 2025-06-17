@@ -29,7 +29,7 @@ import toast from 'react-hot-toast';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal';
 import Link from 'next/link';
 import ProfileVerificationDetailSkeleton from '@/components/skeleton/pages/ProfileVerificationDetailSkeleton';
-import { getStatusIcon } from "@/lib/utils-component";
+import { getStatusBadge } from "@/lib/utils-component";
 
 interface ModalAction {
   type: 'APPROVED' | 'DECLINED'
@@ -160,7 +160,7 @@ const LessorDetailView = () => {
                   <div className="flex-1">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                       <h2 className="text-2xl font-semibold dark:text-white">{requestDetails.name}</h2>
-                      {getStatusIcon(requestDetails.status)}
+                      {getStatusBadge(requestDetails.status)}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -216,7 +216,7 @@ const LessorDetailView = () => {
                         </div>
                       </div>
                       <span className="hidden sm:flex justify-end items-center text-sm capitalize gap-1">
-                        {getStatusIcon(doc.status)}
+                        {getStatusBadge(doc.status)}
                       </span>
                     </div>
                   ))}

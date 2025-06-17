@@ -141,7 +141,7 @@ const Applications = () => {
     },
   ]
   
-  const getStatusIcon = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Pending':
         return <Clock size={16} className="text-orange-500" />
@@ -206,7 +206,7 @@ const Applications = () => {
                             <span
                                 className={`px-2 py-1 rounded-full text-xs flex items-center gap-1 ${getStatusClass(application.status)}`}
                             >
-                                {getStatusIcon(application.status)}
+                                {getStatusBadge(application.status)}
                                 {application.status}
                             </span>
                         </div>
@@ -259,7 +259,7 @@ const Applications = () => {
                         </td>
                         <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                            {getStatusIcon(application.status)}
+                            {getStatusBadge(application.status)}
                             <span
                             className={`px-2 py-1 text-xs rounded-full ${getStatusClass(application.status)}`}
                             >

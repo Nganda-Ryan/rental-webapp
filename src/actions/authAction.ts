@@ -11,6 +11,7 @@ import { FirebaseError } from "firebase/app";
 import { getCloudflareUser } from "@/database/userService";
 import { SessionPayload } from "@/types/authTypes";
 import { cookies } from 'next/headers'
+import { PROFILE_LIST } from "@/constant";
 
 
 
@@ -213,11 +214,16 @@ export async function signUpAction(_payload: any){
 export async function getProfile(){
   const cookie = (await cookies()).get('session')?.value;
   const session = await decrypt(cookie);
-  const rolePriority = ['ADMIN', 'SUPPORT', 'LANDLORD', 'MANAGER', 'RENTER'];
+  const rolePriority = PROFILE_LIST;
   const sortedRoles = [...(session?.roles || [])].sort(
     (a, b) => rolePriority.indexOf(a) - rolePriority.indexOf(b)
   );
-  return sortedRoles;
+  return {
+    roles: sortedRoles,
+    userId: session?.Code,
+    activeRole: sortedRoles[0],
+    expiresAt: session?.expiresAt
+  };
 }
 
 

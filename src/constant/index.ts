@@ -1,19 +1,4 @@
-export const PROFILE_LIST = [
-    {
-        label: "All Roles",
-        value: "ALL"
-    },
-    {
-        label: "Admin",
-        value: "ADMIN"
-    },
-    {
-        label: "Support",
-        value: "SUPPORT"
-    }
-];
-
-export const CLIENT_PROFILES = [
+export const CLIENT_PROFILE_OBJ_LIST = [
     {
         label: "All Profiles",
         value: "ALL"
@@ -30,8 +15,8 @@ export const CLIENT_PROFILES = [
         label: "Manager",
         value: "MANAGER"
     }
-]
-export const PROFILE_MANAGER = [
+];
+export const MANAGER_PROFILE_OBJ_LIST = [
     {
         label: "Admin",
         value: "ADMIN"
@@ -56,6 +41,8 @@ export const USERS_STATUS = [
         label: "Inactive",
         value: "INACTIVE"
     }
-]
+];
+
+export const PROFILE_LIST = ['ADMIN', 'SUPPORT', 'LANDLORD', 'MANAGER', 'RENTER'];
 
 export const PROFILE_CLIENT = [];

@@ -14,7 +14,7 @@ import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
 import { useParams } from 'next/navigation';
 import { createInvoice, getContract, searchInvoice, terminateLease, updateInvoice } from '@/actions/assetAction';
 import { IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, IUpdateInvoiceParam, SeachInvoiceParams } from '@/types/Property';
-import { getStatusIcon } from '@/lib/utils-component';
+import { getStatusBadge } from '@/lib/utils-component';
 import Button from '@/components/ui/Button';
 import Overlay from '@/components/Overlay';
 import InvoiceGenerator from '@/components/feature/Properties/InvoiceGenerator';
@@ -186,7 +186,7 @@ const ContractDetail = () => {
             priority: "medium" as "medium",
             render: (_: any, invoice: IInvoiceForm) => (
             <>
-                {getStatusIcon(invoice.status == "DRAFT" ? "UNPAID" : invoice.status)}
+                {getStatusBadge(invoice.status == "DRAFT" ? "UNPAID" : invoice.status)}
             </>
             ),
         },
@@ -419,7 +419,7 @@ const ContractDetail = () => {
                                                 </div>
                                             </div>
                                             <span className={`px-3 py-1 rounded-full text-sm`}>
-                                                {getStatusIcon(contract?.status ?? "DRAFT")}
+                                                {getStatusBadge(contract?.status ?? "DRAFT")}
                                             </span>
                                         </div>
                                         {/* Financial Information */}

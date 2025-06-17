@@ -7,7 +7,7 @@ const Skeleton = ({ className = '' }: { className?: string }) => (
   <div className={`h-4 bg-gray-300 dark:bg-gray-600 rounded ${className} animate-pulse`} />
 );
 
-const RenderDesktopTableSkeleton = ({ columnsCount, rowsCount = 5 }: Props) => {
+const RenderDesktopTableSkeleton = ({ columnsCount, rowsCount = 6 }: Props) => {
   return (
     <div className="hidden lg:block bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
       <table className="w-full">

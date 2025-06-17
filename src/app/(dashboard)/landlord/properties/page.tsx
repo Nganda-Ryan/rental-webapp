@@ -18,7 +18,6 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 
 const PropertiesPage = () => {
-  const [isPropertyFormOpen, setPropertyFormOpen] = useState(false);
   const [assetList,setAssetList] = useState<AssetData[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [offSet, setOffSet] = useState(0);

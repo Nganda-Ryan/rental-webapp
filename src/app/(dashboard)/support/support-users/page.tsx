@@ -6,21 +6,24 @@ import {
   UserPlus,
   Phone,
   Trash2,
+  UserX,
+  UserCheck,
 } from 'lucide-react';
 import { NewSupportUserForm } from '@/components/feature/Support/NewSupportUserForm'; 
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
 import Overlay from '@/components/Overlay';
-import { AllRole, FormValues, ICreateUserParam, IUser, ManagerRole, SeachUserParams } from '@/types/user';
-import { PROFILE_MANAGER } from '@/constant';
+import { AllRole, FormValues, ICreateUserParam, IUser, SeachUserParams } from '@/types/user';
+import { MANAGER_PROFILE_OBJ_LIST } from '@/constant';
 import { createUser, searchUser } from '@/actions/userAction';
-import { getRoleBadge } from '@/lib/utils-component';
+import { getRoleBadge, getStatusBadge } from '@/lib/utils-component';
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
 import Nodata from '@/components/error/Nodata';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { SuccessModal } from '@/components/Modal/SucessModal';
-import Loading from '@/components/error/Loading';
+import { SkeletonTable } from '@/components/skeleton/SkeletonTable';
+import Button from '@/components/ui/Button';
 
 
 
@@ -98,7 +101,7 @@ const SupportUsers = () => {
       label: 'USER',
       priority: "medium" as "medium",
       render: (_: any, user: IUser) => (
-          <div className="text-gray-800 text-sm dark:text-gray-100">
+          <div className="text-sm text-gray-700 dark:text-gray-300">
             <div className="font-bold">{user.lastName} {user.firstName}</div>
             <div>NUI : {user.NIU}</div>
           </div>
@@ -110,22 +113,22 @@ const SupportUsers = () => {
       priority: "medium" as "medium",
       render: (_: any, user: IUser) => (
       <div className="text-sm sm:text-base text-gray-800 dark:text-gray-100">
-        <div className="flex flex-row flex-nowrap items-center gap-2 sm:justify-start justify-end">
+        <div className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
           <Mail size={14} /> {user.email}
         </div>
-        <div className="flex flex-row flex-nowrap items-center gap-2 sm:justify-start justify-end">
+        <div className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
           <Phone size={14} /> {user.phone}
         </div>
       </div>
       ),
     },
     {
-      key: 'role',
-      label: 'Role',
+      key: 'status',
+      label: 'Status',
       priority: "medium" as "medium",
       render: (_: any, user: IUser) => (
       <div className="text-sm text-gray-800 dark:text-gray-100">
-        {getRoleBadge(user.profile[0])}
+        {getStatusBadge(user.status)}
       </div>
       ),
     },
@@ -134,21 +137,31 @@ const SupportUsers = () => {
         label: 'Actions',
         priority: "high" as "high",
         render: (_: any, user: IUser) => (
-            <button 
-              onClick={(e) => {e.stopPropagation(); handleDeleteUser(user);}}
-              className="px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200 
-              bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 
-              dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800 dark:active:bg-blue-700"
-            >
-              <Trash2 size={14}/>
-            </button>
+            <div className="flex items-center justify-end md:justify-start gap-2">
+          {user.status === 'ACTIVE' ? (
+            <Button onClick={(e) => { e.stopPropagation(); handleDesactivateUser(user);}} variant='outline-danger' disable={false} isSubmitBtn={false} fullWidth={false}>
+              <UserX size={16} />
+              Deactivate
+            </Button>
+          ) : (
+            <Button onClick={(e) => { e.stopPropagation(); handleActivateUser(user);}} variant='outline-success' disable={false} isSubmitBtn={false} fullWidth={false}>
+              <UserCheck size={16} />
+              Activate
+            </Button>
+          )}
+        </div>
 
         ),
     },
   ]
 
-  const handleDeleteUser = async (user: IUser) => {
-    console.log("-->user", user);
+  const handleDesactivateUser = async (user: IUser) => {
+    console.log("-->handleDesactivateUser.user", user);
+  }
+
+
+  const handleActivateUser = async (user: IUser) => {
+    console.log("-->handleActivateUser.user", user);
   }
 
 
@@ -201,17 +214,12 @@ const SupportUsers = () => {
       <Breadcrumb previousPage={false} pageName="Support User" />
 
         <div className="w-full">
-          <div className="flex justify-end items-center mb-6">
-            <button onClick={() => setShowNewUserForm(true)} className="bg-[#2A4365] text-white px-4 py-2 rounded-lg flex items-center gap-2">
-              <UserPlus size={20} />
-              Add Support User
-            </button>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+            {/* Input avec icône search */}
             <div className="flex-1 relative">
               <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={20}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                size={18}
               />
               <input
                 type="text"
@@ -219,20 +227,38 @@ const SupportUsers = () => {
                 className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <select
-              className="px-4 py-2 border border-gray-200 rounded-lg"
-              value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value as any)}
-            >
-              <option value="all">All Roles</option>
-              {PROFILE_MANAGER.map(profile => (
-                <option key={profile.value} value={profile.value}>{profile.label}</option>
-              ))}
-            </select>
+
+            <div className='flex gap-4'>
+              {/* Select role, avec largeur fixe pour ne pas être trop large */}
+              <div className="w-full sm:w-auto">
+                <select
+                  className="w-full sm:w-[160px] px-4 py-2 border border-gray-200 rounded-lg"
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value as any)}
+                >
+                  <option value="all">All Roles</option>
+                  {MANAGER_PROFILE_OBJ_LIST.map(profile => (
+                    <option key={profile.value} value={profile.value}>{profile.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Bouton aligné correctement */}
+              <div className="w-full sm:w-auto flex justify-end">
+                <button
+                  onClick={() => setShowNewUserForm(true)}
+                  className="bg-[#2A4365] text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto"
+                >
+                  <UserPlus size={18} />
+                  Add Support User
+                </button>
+              </div>
+            </div>
           </div>
 
 
-          <div className="bg-transparent md:bg-white md:dark:bg-gray-800 rounded-lg md:shadow-sm overflow-hidden">
+
+          <div className="bg-transparent md:bg-white md:dark:bg-gray-800 rounded-lg md:shadow-sm overflow-hidden mb-5">
             {
               !isFetchingUser ? 
                 userList.length > 0 && isFetchingUser == false ? (
@@ -247,7 +273,7 @@ const SupportUsers = () => {
                   <Nodata message="No user to display" />
                 )
                 : 
-              <Loading />
+              <SkeletonTable />
             }
           </div>
           

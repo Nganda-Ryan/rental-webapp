@@ -5,7 +5,7 @@ import {
   Calendar,
   Mail,
   Phone,
-  Fingerprint,
+  Search,
   User,
 } from 'lucide-react'
 import { ActionConfirmationModal } from '@/components/Modal/ActionConfirmationModal'
@@ -16,7 +16,7 @@ import { GetRequestsParams } from '@/types/requestTypes'
 import { getRequests, verifyRequest } from '@/actions/requestAction';
 import toast from 'react-hot-toast';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal'
-import { getStatusIcon } from "@/lib/utils-component";
+import { getStatusBadge } from "@/lib/utils-component";
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable'
 import Nodata from '@/components/error/Nodata'
 import { SkeletonTable } from '@/components/skeleton/SkeletonTable'
@@ -167,22 +167,18 @@ const LessorVerification = () => {
     {
       key: 'lessor',
       label: 'Lessor Information',
-      priority: 'high' as const,
+      priority: 'medium' as const,
       render: (_: any, row: VerificationRequest) => (
-        <div className="space-y-1">
-          <div className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-1">
+        <div className="text-sm text-gray-700 dark:text-gray-300">
+          <div className='font-medium text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1'>
             <User size={14} />
             {row.lessor.name}
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-            <Fingerprint size={14} />
-            {row.NUI}
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <div className="text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
             <Mail size={14} />
             {row.lessor.email}
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <div className="text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
             <Phone size={14} />
             {row.lessor.phone}
           </div>
@@ -190,32 +186,32 @@ const LessorVerification = () => {
       ),
     },
     {
-      key: 'status',
-      label: 'REQUEST STATUS',
-      priority: 'high' as const,
-      render: (_: any, row: VerificationRequest) => (
-        <div className="space-y-1">
-          {getStatusIcon(row.status)}
-        </div>
-      ),
-    },
-    {
       key: 'submissionDate',
       label: 'Submitted',
-      priority: 'medium' as const,
+      priority: 'low' as const,
       render: (_: any, row: VerificationRequest) => (
-        <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
           <Calendar size={14} />
           {formatDateToText(row.submissionDate)}
         </div>
       ),
     },
     {
+      key: 'status',
+      label: 'REQUEST STATUS',
+      priority: 'low' as const,
+      render: (_: any, row: VerificationRequest) => (
+        <div className="space-y-1 flex items-center justify-end md:justify-start ">
+          {getStatusBadge(row.status)}
+        </div>
+      ),
+    },
+    {
       key: 'actions',
       label: 'Actions',
-      priority: 'high' as const,
+      priority: "high" as "high",
       render: (_: any, row: VerificationRequest) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center justify-end md:justify-start ">
           <Button variant={row.status === 'PENDING' ? 'danger' : 'outline-danger'} disable={row.status !== 'PENDING'} isSubmitBtn={false} fullWidth={true} onClick={(e) => {e.stopPropagation(); handleAction('DECLINED', row.id); }}>
             Reject
           </Button>
@@ -238,11 +234,24 @@ const LessorVerification = () => {
   return (
     <DefaultLayout>
       <Breadcrumb previousPage={false} pageName="Lessor Verification Requests" />
+      <div className="flex flex-col sm:flex-row gap-4 mb-2 md:mb-7">
+        <div className="flex-1 relative">
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
+            size={20}
+          />
+          <input
+            type="text"
+            placeholder="Search users..."
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
       {
         isReady ?
         <>
           {requestList.length > 0 ?
-            <div className="w-full">
+            <div className="w-full mb-10">
               <ResponsiveTable
                 columns={columns}
                 data={requestList}

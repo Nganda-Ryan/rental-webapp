@@ -35,6 +35,8 @@ export const ResponsiveTable = ({
   const [page, setPage] = useState(1)
   const highPriorityColumns = columns.filter((col) => col.priority === 'high')
   const mediumPriorityColumns = columns.filter((col) => col.priority === 'medium')
+  const lowPriorityColumns = columns.filter((col) => col.priority === 'low')
+
   const tableBodyRef = useRef(null);
   useEffect(() => {
     tableBodyRef.current && autoAnimate(tableBodyRef.current, { duration: 300 });
@@ -53,12 +55,12 @@ export const ResponsiveTable = ({
           <div
             key={row[keyField]}
             onClick={() => onRowClick?.(row)}
-            className="bg-white dark:bg-gray-800 rounded p-5 shadow-sm border my-2 space-y-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-500 ease-in-out"
+            className="bg-white dark:bg-gray-800 rounded p-5 shadow-sm border dark:border-gray-600 my-2 space-y-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-500 ease-in-out"
           >
             <div className="space-y-2">
               {highPriorityColumns.map((col) => (
-                <div key={col.key} className="flex justify-between items-center">
-                  <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                <div key={col.key} className="flex justify-between items-start mb-4">
+                  <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
                     {col.label} :
                   </span>
                   <span className="text-sm text-right text-gray-900 dark:text-white">
@@ -71,7 +73,7 @@ export const ResponsiveTable = ({
             <div className="space-y-2">
               {mediumPriorityColumns.map((col) => (
                 <div key={col.key} className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
                     {col.label} :
                   </span>
                   <span className="text-sm text-right text-gray-800 dark:text-gray-200">
@@ -80,6 +82,21 @@ export const ResponsiveTable = ({
                 </div>
               ))}
             </div>
+            {lowPriorityColumns.length > 0 && <hr className="border-t border-gray-200 dark:border-gray-700" />}
+            {lowPriorityColumns.length > 0 && (
+              <div className="space-y-2">
+                {lowPriorityColumns.map((col) => (
+                  <div key={col.key} className="flex justify-between items-start">
+                    <span className="text-sm text-gray-500 dark:text-gray-300">
+                      {col.label} :
+                    </span>
+                    <span className="text-sm text-right text-gray-700 dark:text-gray-200">
+                      {col.render ? col.render(row[col.key], row) : row[col.key]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -92,7 +109,7 @@ export const ResponsiveTable = ({
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider"
                 >
                   {column.label}
                 </th>
@@ -126,7 +143,7 @@ export const ResponsiveTable = ({
           >
             Previous
           </button>
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+          <span className="text-sm text-gray-700 dark:text-gray-200">
             Page {page} / {totalPages}
           </span>
           <button

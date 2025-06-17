@@ -90,7 +90,7 @@ export const LoginForm = () => {
         <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
         <p className="mt-2 text-gray-600">Please sign in to your account</p>
       </div>
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+      <form onSubmit={handleSubmit} className="sm:mt-8 space-y-6">
         <div className="space-y-4">
           <div>
             <div className="mt-1 relative">
