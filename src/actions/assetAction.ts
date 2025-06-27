@@ -150,7 +150,7 @@ export async function getAsset(assetCode: string): Promise<any> {
 export async function searchAsset(params: SeachPropertyParams, profile: string) {
   try {
     const session = await verifySession();
-    console.log('-->session', session);
+    // console.log('-->session', session);
     const apiClient: AxiosInstance = axios.create({
         baseURL: process.env.SEARCH_WORKER_ENDPOINT,
         headers: {

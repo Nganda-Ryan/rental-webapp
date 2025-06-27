@@ -22,7 +22,7 @@ import { SuccessModal } from '@/components/Modal/SucessModal';
 import toast from 'react-hot-toast';
 import ContractDetailSkeleton from '@/components/skeleton/ContractDetailSkeleton';
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 import { formatDateToText } from '@/lib/utils';
 import { ActionConfirmationModal } from '@/components/Modal/ActionConfirmationModal';
 import Nodata from '@/components/error/Nodata';

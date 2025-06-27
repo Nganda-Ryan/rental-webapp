@@ -9,7 +9,7 @@ import {
   FileText,
   DollarSign,
 } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 import { ManagerSearch } from "@/components/feature/Properties/ManagerSearch";
 import { VerificationForm } from "@/components/feature/Properties/VerificationForm";
 import { DeletePropertyModal } from "@/components/feature/Properties/DeletePropertyModal";

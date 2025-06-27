@@ -20,10 +20,12 @@ import { getRoleBadge, getStatusBadge } from '@/lib/utils-component';
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
 import Nodata from '@/components/error/Nodata';
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 import { SuccessModal } from '@/components/Modal/SucessModal';
 import { SkeletonTable } from '@/components/skeleton/SkeletonTable';
 import Button from '@/components/ui/Button';
+import { MANAGER_PROFILE_LIST } from '@/constant'
+import { useAuth } from '@/context/AuthContext'
 
 
 
@@ -36,6 +38,7 @@ const SupportUsers = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isFetchingUser, setIsFetchingUser] = useState(true);
   const router = useRouter();
+  const { isAuthorized, loadingProfile } = useAuth();
 
   useEffect(() => {
 
@@ -203,11 +206,11 @@ const SupportUsers = () => {
       }
       setShowNewUserForm(false);
     }
-    
-
-    
   };
 
+  if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
+    return <div>Unauthorized</div>;
+  }
 
   return (
     <DefaultLayout>

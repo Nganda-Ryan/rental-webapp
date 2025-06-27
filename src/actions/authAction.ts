@@ -1,7 +1,7 @@
 "use server";
 
 
-import { createSession, decrypt, deleteSession } from "@/lib/session";
+import { createSession, decrypt, deleteSession, verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { signIn, signUp } from "@/lib/auth";
 import { loginSchema, signUpSchema } from "@/lib/validations";
@@ -72,7 +72,7 @@ export async function login(formData: FormData) {
     console.log('--->redirectMap[activeRole]', redirectMap[activeRole])
     return {
       error: null,
-      user: firebaseResult.user,
+      user: firebaseResult.user.uid,
       code: "redirect",
       redirectTo: redirectMap[activeRole] ?? '/'
     }
@@ -174,8 +174,7 @@ export async function signUpAction(_payload: any){
       .filter((p: any) => p.IsActive)
       .map((p: any) => p.RoleCode);
     
-      const rolePriority = ['ADMIN', 'SUPPORT', 'LANDLORD', 'RENTER'];
-      const activeRole = rolePriority.find(role => roles.includes(role)) ?? roles[0];
+      const activeRole = PROFILE_LIST.find(role => roles.includes(role)) ?? roles[0];
     
       const sessionInfo = {
         ...cfUserInfo,
@@ -212,18 +211,38 @@ export async function signUpAction(_payload: any){
 }
 
 export async function getProfile(){
-  const cookie = (await cookies()).get('session')?.value;
-  const session = await decrypt(cookie);
-  const rolePriority = PROFILE_LIST;
-  const sortedRoles = [...(session?.roles || [])].sort(
-    (a, b) => rolePriority.indexOf(a) - rolePriority.indexOf(b)
-  );
-  return {
-    roles: sortedRoles,
-    userId: session?.Code,
-    activeRole: sortedRoles[0],
-    expiresAt: session?.expiresAt
-  };
+  try {
+    const session = await verifySession();
+    const rolePriority = PROFILE_LIST;
+    const sortedRoles = [...(session?.roles || [])].sort(
+      (a, b) => rolePriority.indexOf(a) - rolePriority.indexOf(b)
+    );
+    return {
+      data: {
+        roles: sortedRoles,
+        userId: session?.Code,
+        activeRole: sortedRoles[0],
+        expiresAt: session?.expiresAt
+      },
+      error: null,
+      code: null
+    };
+  } catch (error: any) {
+    console.log('-->error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
 }
 
 

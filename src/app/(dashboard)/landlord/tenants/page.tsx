@@ -4,7 +4,7 @@ import { TenantCard } from '@/components/Cards/TenantCard';
 import { TenantFilters } from '@/components/Filters/TenantFilters';
 import DefaultLayout from '@/components/Layouts/DefaultLayout'
 import { FileText, History, Mail, MessageSquare, MoreHorizontal, MoreVertical, Phone, Plus, Search, SlidersHorizontal } from 'lucide-react';
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@bprogress/next/app'
 import React, { useState } from 'react'
 
 const Page = () => {

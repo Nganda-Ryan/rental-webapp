@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@bprogress/next/app'
 import {
   Calendar,
   Mail,
@@ -22,6 +22,8 @@ import Nodata from '@/components/error/Nodata'
 import { SkeletonTable } from '@/components/skeleton/SkeletonTable'
 import { formatDateToText } from '@/lib/utils'
 import Button from '@/components/ui/Button'
+import { MANAGER_PROFILE_LIST } from '@/constant'
+import { useAuth } from '@/context/AuthContext'
 
 interface VerificationRequest {
   id: string
@@ -52,6 +54,7 @@ const LessorVerification = () => {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [isReady, setIsReady] = useState(false);
   const router = useRouter();
+  const { isAuthorized, loadingProfile } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -229,7 +232,9 @@ const LessorVerification = () => {
   }
 
   
-
+  if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
+    return <div>Unauthorized</div>;
+  }
   
   return (
     <DefaultLayout>

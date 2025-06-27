@@ -6,7 +6,7 @@ import { useFormStatus } from 'react-dom';
 import toast from 'react-hot-toast';
 import Overlay from '../Overlay';
 import { ProcessingModal } from '../Modal/ProcessingModal';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 
 interface FormError {
   username: string | null;

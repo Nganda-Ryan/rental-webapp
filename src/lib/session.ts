@@ -8,6 +8,8 @@ import { SessionPayload } from "@/types/authTypes";
 const secretKey = process.env.AUTH_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
 
+const MAX_REFRESH_WINDOW_MS = 30 * 60 * 1000;
+
 
 
 export async function createSession(userInfo: SessionPayload) {
@@ -74,16 +76,28 @@ export async function decrypt(session: string | undefined = "") {
     return null;
   }
 }
-
 export const verifySession = cache(async () => {
   const cookie = (await cookies()).get('session')?.value;
-  const session = await decrypt(cookie);
+  const session = cookie ? await decrypt(cookie) : null;
 
-  // console.log('-->session', session);
+  const now = new Date();
+  const expiresAt = session?.expiresAt ? new Date(session.expiresAt) : null;
 
-  if (!session || (session.expiresAt && new Date(session.expiresAt) < new Date())) {
+  
+  if (!session || !expiresAt) {
     redirect('/signin');
   }
 
-  return session;
+  
+  if (expiresAt > now) {
+    return session;
+  }
+
+  
+  const expiredSinceMs = now.getTime() - expiresAt.getTime();
+  const withinGracePeriod = expiredSinceMs <= 30 * 60 * 1000;
+
+  
+
+  redirect('/signin');
 });

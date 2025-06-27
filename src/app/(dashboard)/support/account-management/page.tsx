@@ -14,17 +14,18 @@ import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
 import Overlay from '@/components/Overlay';
 import { AllRole, FormValues, ICreateUserParam, IUser, ManagerRole, SeachUserParams, UserStatus } from '@/types/user';
-import { CLIENT_PROFILE_OBJ_LIST, MOBILE_DATA_STYLE_BOLD, MOBILE_DATA_STYLE_NORMAL, MANAGER_PROFILE_OBJ_LIST, USERS_STATUS } from '@/constant';
+import { CLIENT_PROFILE_OBJ_LIST, MANAGER_PROFILE_LIST, MANAGER_PROFILE_OBJ_LIST, USERS_STATUS } from '@/constant';
 import { createUser, searchUser } from '@/actions/userAction';
 import { getRoleBadge, getStatusBadge } from '@/lib/utils-component';
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
 import Nodata from '@/components/error/Nodata';
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 import { SuccessModal } from '@/components/Modal/SucessModal';
 import Loading from '@/components/error/Loading';
 import { SkeletonTable } from '@/components/skeleton/SkeletonTable';
 import Button from '@/components/ui/Button';
+import { useAuth } from '@/context/AuthContext';
 
 
 
@@ -38,11 +39,15 @@ const SupportUsers = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isFetchingUser, setIsFetchingUser] = useState(true);
   const router = useRouter();
+  const { isAuthorized, loadingProfile } = useAuth();
 
   useEffect(() => {
 
     getUserList();
   }, []);
+
+  
+  
 
   const getUserList = async () => {
     try {
@@ -238,11 +243,12 @@ const SupportUsers = () => {
     
   };
 
-
+  if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
+    return <div>Unauthorized</div>;
+  }
   return (
     <DefaultLayout>
       <Breadcrumb previousPage={false} pageName="Account Management" />
-
         <div className="w-full">
           <div className="flex flex-col sm:flex-row gap-4 mb-2 md:mb-7">
             <div className="flex-1 relative">

@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@bprogress/next/app'
 import {
   Calendar,
   Mail,
@@ -22,6 +22,8 @@ import Nodata from '@/components/error/Nodata'
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable'
 import Button from '@/components/ui/Button'
 import { formatDateToText } from '@/lib/utils'
+import { MANAGER_PROFILE_LIST } from '@/constant'
+import { useAuth } from '@/context/AuthContext'
 
 interface VerificationRequest {
   id: string
@@ -38,7 +40,6 @@ interface VerificationRequest {
 }
 
 const Page = () => {
-  const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
   const [requestList, setRequestList] = useState<VerificationRequest[]>([])
   const [actionModal, setActionModal] = useState<{
@@ -50,12 +51,10 @@ const Page = () => {
     isOpen: false,
     lessorId: null,
   })
-  const [offSet, setOffSet] = useState(0);
-  const [term, setTerme] = useState<string>('');
-  const [orderMode, setOrderMode] = useState<string>('asc');
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
-    const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const { isAuthorized, loadingProfile } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,7 +64,7 @@ const Page = () => {
           orderBy: 'CreatedAt',
           orderMode: 'desc',
           limit: 1000,
-          offset: offSet,
+          offset: 0,
           type: 'VASSET',
         };
 
@@ -97,7 +96,7 @@ const Page = () => {
     };
 
     fetchData();
-  }, [offSet])
+  }, [])
 
 
   const router = useRouter()
@@ -229,6 +228,9 @@ const Page = () => {
     router.push(`/support/properties-verification/${id}`)
   }
 
+  if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
+    return <div>Unauthorized</div>;
+  }
   
   
   return (

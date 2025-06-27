@@ -3,7 +3,7 @@ import "@/css/satoshi.css";
 import localFont from 'next/font/local'
 import "@/css/style.css";
 import { ToasterProvider } from "../components/ui/toaster";
-
+import BarProvider from "@/context/BarContext";
 
 export default function RootLayout({
   children,
@@ -14,10 +14,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning={true} className="">
-      <ToasterProvider />
-        <div className={`dark:bg-boxdark-2 dark:text-bodydark min-h-screen bg-blue-sky`}>
-          {children}
-        </div>
+        <BarProvider>
+          <ToasterProvider />
+          <div className={`dark:bg-boxdark-2 dark:text-bodydark min-h-screen bg-blue-sky`}>
+            {children}
+          </div>
+        </BarProvider>
       </body>
     </html>
   );

@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import 'react-phone-input-2/lib/style.css';
 import Overlay from '../Overlay';
 import { ProcessingModal } from '../Modal/ProcessingModal';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 
 const countryOptions = getNames()
 .map((name) => ({

@@ -44,5 +44,6 @@ export const USERS_STATUS = [
 ];
 
 export const PROFILE_LIST = ['ADMIN', 'SUPPORT', 'LANDLORD', 'MANAGER', 'RENTER'];
+export const MANAGER_PROFILE_LIST = ['ADMIN', 'SUPPORT'];
 
 export const PROFILE_CLIENT = [];

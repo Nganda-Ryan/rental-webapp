@@ -24,6 +24,8 @@ import {
 } from 'recharts'
 import DefaultLayout from '@/components/Layouts/DefaultLayout'
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
+import { useAuth } from '@/context/AuthContext'
+import { MANAGER_PROFILE_LIST } from '@/constant'
 interface StatCardProps {
   title: string
   value: string | number
@@ -53,6 +55,7 @@ const StatCard = ({ title, value, change, icon, color }: StatCardProps) => (
   </div>
 )
 const SystemOverview = () => {
+  const { isAuthorized, loadingProfile } = useAuth();
   const userGrowthData = [
     {
       month: 'Jan',
@@ -147,6 +150,9 @@ const SystemOverview = () => {
       icon: <Home size={16} className="text-purple-500" />,
     },
   ]
+  if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
+    return <div>Unauthorized</div>;
+  }
   return (
     <DefaultLayout>
       <Breadcrumb previousPage={false} pageName="System Overview" />

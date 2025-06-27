@@ -15,7 +15,7 @@ import Overlay from '@/components/Overlay';
 import { SuccessModal } from '@/components/Modal/SucessModal';
 import { createAsset } from '@/actions/assetAction';
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal';
 
 interface PropertyFormProps {

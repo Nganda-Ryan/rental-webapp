@@ -53,6 +53,7 @@ export type SessionPayload = {
   Phone: string;
   Status: string;
   AvatarUrl: string;
+  userId: string;
   IsVerified: number;
   expiresAt: Date
   Profiles: Profile[];

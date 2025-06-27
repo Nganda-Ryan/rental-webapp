@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { Search, Plus, Clock, CheckCircle, XCircle } from 'lucide-react';
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
 const Applications = () => {
   const [selectedApplication, setSelectedApplication] = useState<string | null>(
     null,

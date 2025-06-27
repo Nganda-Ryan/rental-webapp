@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@bprogress/next/app'
 import { useEffect, useState, ReactElement } from "react";
 
 interface BreadcrumbProps {

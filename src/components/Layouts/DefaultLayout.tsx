@@ -12,7 +12,7 @@ export default function DefaultLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <>
-      <AuthProvider>
+      {/* <AuthProvider> */}
         {/* <!-- ===== Page Wrapper Start ===== --> */}
         <div className="flex">
           {/* <!-- ===== Sidebar Start ===== --> */}
@@ -36,7 +36,7 @@ export default function DefaultLayout({
           {/* <!-- ===== Content Area End ===== --> */}
         </div>
         {/* <!-- ===== Page Wrapper End ===== --> */}
-      </AuthProvider>
+      {/* </AuthProvider> */}
     </>
   );
 }
