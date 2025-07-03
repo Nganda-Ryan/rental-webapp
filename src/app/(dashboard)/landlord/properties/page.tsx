@@ -12,6 +12,8 @@ import { AssetData } from "@/types/Property";
 import { searchAsset } from "@/actions/assetAction";
 import PropertySkeletonCard from "@/components/skeleton/PropertySkeletonCard";
 import { useAuth } from "@/context/AuthContext";
+import { PROFILE_LANDLORD_LIST } from "@/constant";
+import toast from "react-hot-toast";
 
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -21,7 +23,7 @@ const PropertiesPage = () => {
   const [assetList,setAssetList] = useState<AssetData[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [offSet, setOffSet] = useState(0);
-  const auth = useAuth();
+  const { isAuthorized, loadingProfile, activeProfile } = useAuth();
 
   const router = useRouter();
   useEffect(() => {
@@ -33,7 +35,7 @@ const PropertiesPage = () => {
           limit: 1000,
           offset: offSet,
         };
-        const result = await searchAsset(params, auth.activeProfile);
+        const result = await searchAsset(params, activeProfile);
         console.log('API result:', result);
         if(result.data && result.data.body.items.length > 0) {
           const datas = result.data.body.items.map((item: any) => {
@@ -57,7 +59,13 @@ const PropertiesPage = () => {
           });
           console.log('-->datas', datas);
           setAssetList(datas)
+        }  else if(result.error){
+        if(result.code == 'SESSION_EXPIRED'){
+            router.push('/signin');
+            return;
         }
+        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+      }
       } catch (error) {
         console.log('-->error', error)
       } finally {
@@ -92,6 +100,10 @@ const PropertiesPage = () => {
   const handleNewAsset = () => {
     // setPropertyFormOpen(true);
     router.push('/landlord/properties/new')
+  }
+
+  if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+    return <div>Unauthorized</div>;
   }
   return (
     <DefaultLayout>

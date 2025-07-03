@@ -86,7 +86,7 @@ const PropertyDetail = () => {
 
     useEffect(() => {
         init();
-    }, [params.id, today]);
+    }, [params.unitId, today]);
 
     useEffect(() => {
         if(showInvoiceGenerator == false){
@@ -192,68 +192,6 @@ const PropertyDetail = () => {
             ),
         },
     ];
-    const unitColumns = [
-        {
-            key: 'unit',
-            label: 'Unit',
-            priority: "medium" as "medium",
-            render: (_: any, unit: AssetData) => (
-                <div className="flex flex-col text-gray-800 text-sm dark:text-gray-100">
-                    <span className="font-medium">{capitalize(unit.Title)}</span>
-                    <span className="text-xs text-gray-600 dark:text-gray-100 ml-1">{capitalize(unit.TypeCode)}</span>
-                </div>
-            ),
-        },
-        {
-            key: 'status',
-            label: 'Status',
-            priority: "low" as "low",
-            render: (_: any, unit: AssetData) => (
-                <div className="text-sm text-gray-800 dark:text-gray-100">
-                    {getStatusBadge(unit.StatusCode)}
-                </div>
-            ),
-        },
-        {
-            key: 'price',
-            label: 'Rent',
-            priority: "medium" as "medium",
-            render: (_: any, unit: AssetData) => (
-                <span className="text-sm">
-                    {formatNumberWithSpaces(unit.Price)} {unit.Currency}
-                </span>
-            ),
-        },
-        {
-            key: 'actions',
-            label: 'Actions',
-            priority: "high" as "high",
-            render: (_: any, unit: AssetData) => (
-                <div className="flex gap-2 ">
-                    <Button
-                        variant="neutral"
-                        isSubmitBtn={false}
-                        fullWidth={false}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/landlord/properties/${params.id}/edit-unit?unitId=${unit.Code}`)
-                        }}
-                    >
-                        Edit
-                    </Button>
-                    {/* <Button
-                        variant="outline-danger"
-                        isSubmitBtn={false}
-                        fullWidth={false}
-                        onClick={() => router.push(`/landlord/properties/${params.id}/units/${unit.Id}`)}
-                    >
-                        Delete
-                    </Button> */}
-                </div>
-
-            ),
-        },
-    ]
  
     const tenantRequests = [
         {
@@ -320,7 +258,7 @@ const PropertyDetail = () => {
         
     };
     const handleSelectedContract = (contractId: string) => {
-        router.push(`/landlord/properties/${params.id}/contracts/${contractId}`)
+        router.push(`/landlord/properties/${params.unitId}/contracts/${contractId}`)
     }
     const handleCreateInvoice = async (data: IInvoiceForm) => {
         try {
@@ -370,10 +308,7 @@ const PropertyDetail = () => {
     const handleSelectInvoice = (id: string) => {
         console.log('handleSelectInvoice', handleSelectInvoice)
     }
-    const handleSelectUnit = (unitId: string) => {
-        console.log('handleSelectUnit.unitId', unitId)
-        router.push(`/landlord/properties/${params.id}/units/${unitId}`)
-    }
+    
     const handleClickTerminateLease = async () => {
         setShowActionModal(true)
     }
@@ -568,7 +503,7 @@ const PropertyDetail = () => {
 
     const init = async () => {
         try {
-            const result = await getAsset(params.id as string);
+            const result = await getAsset(params.unitId as string);
             console.log('-->result', result);
             if(result?.data?.body?.assetData) {
                 const item = result.data.body.assetData;
@@ -747,8 +682,9 @@ const PropertyDetail = () => {
     }
     return (
         <DefaultLayout>
-            <Breadcrumb previousPage pageName={`Property - ${capitalize(asset?.Title ?? "")}`} />
-
+            <Breadcrumb previousPage pageName="Property/Unit" />
+            
+            
             <div className="w-full mt-7">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {
@@ -806,37 +742,11 @@ const PropertyDetail = () => {
                                     </div>
                                 </div>
 
-
-                                {/* UNITS */}
-                                {
-                                    asset?.TypeCode == ASSET_TYPE_COMPLEXE && asset?.Units.length && <div className="md:bg-white dark:md:bg-gray-800 rounded-lg shadow-sm pt-3">
-                                        <div className="flex items-center justify-between mx-3 mb-3">
-                                            <h2 className="text-xl font-semibold flex items-center gap-2">
-                                                <FileText size={20} className="text-gray-400" />
-                                                Units
-                                            </h2>
-                                        </div>
-                                        {asset.Units.length > 0 ? (
-                                            <ResponsiveTable
-                                                columns={unitColumns}
-                                                data={asset.Units.slice(0, 3)}
-                                                onRowClick={(unit) => handleSelectUnit(unit.Code)}
-                                                keyField="Id"
-                                                showMore={asset && asset?.Units.length > 3 ? {
-                                                    url: `/landlord/properties/${asset?.Code}/units`,
-                                                    label: 'Show more units'
-                                                } : undefined}
-                                            />
-                                            ) : (
-                                            <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No invoices available</p>
-                                        )}
-                                    </div>
-                                }
                                 {
                                     asset?.TypeCode != ASSET_TYPE_COMPLEXE && <>
                                         {/* BILLING STATEMENT */}
-                                        <div className="md:bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
-                                            <div className="flex items-center justify-between mx-3 mb-3 ">
+                                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
+                                            <div className="flex items-center justify-between mx-3 mb-3">
                                                 <h2 className="text-xl font-semibold flex items-center gap-2">
                                                     <FileText size={20} className="text-gray-400" />
                                                     Invoice history
@@ -859,7 +769,7 @@ const PropertyDetail = () => {
                                         </div>
                                         
                                         {/* CONTRACT */}
-                                        <div className="md:bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
+                                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
                                             <div className="flex items-center justify-between mx-3 mb-3">
                                             <h2 className="text-xl font-semibold flex items-center gap-2">
                                                 <FileText size={20} className="text-gray-400" />
@@ -911,7 +821,7 @@ const PropertyDetail = () => {
                                                         <Building2 size={16} /> Attach Properties
                                                     </Button>
                                                 )}
-                                                <Button variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false} onClick={() => router.push(`/landlord/properties/edit?propertyId=${params.id}`)}>
+                                                <Button variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false} onClick={() => router.push(`/landlord/properties/${params.id}/edit-unit?unitId=${params.unitId}`)}>
                                                     <Building2 size={16} /> Edit Property
                                                 </Button>
                                                 {asset?.IsVerified == 1 && <Button onClick={() => setIsManagerSearchOpen(true)} variant='neutral' disable={canAttachManager()} isSubmitBtn={false}>
@@ -1016,7 +926,7 @@ const PropertyDetail = () => {
                                                         variant="danger"
                                                         fullWidth={false}
                                                     >
-                                                        Cancel
+                                                        Cancel Invitation
                                                     </Button>
                                                 </div>
                                             }
@@ -1025,52 +935,6 @@ const PropertyDetail = () => {
                                         </div>
                                     </div>
                                 }
-
-                                {/* TENANT REQUESTS */}
-                                {/* <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm mt-4">
-                                    <div className="flex items-center gap-2 mb-4">
-                                    <Users size={20} className="text-gray-400" />
-                                    <h3 className="font-medium">Tenant Requests</h3>
-                                    </div>
-                                    <div className="space-y-4">
-                                    {tenantRequests.map((request) => (
-                                        <div
-                                            key={request.id}
-                                            className="border border-gray-100 rounded-lg p-4"
-                                        >
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div>
-                                                <h4 className="font-medium dark:text-gray-300">{request.name}</h4>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">{request.email}</p>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">{request.phone}</p>
-                                            </div>
-                                            <div className="flex flex-col items-end">
-                                            <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                                                {request.status}
-                                            </span>
-                                            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                {request.submitted}
-                                            </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2 mt-3">
-                                            <button
-                                            className="px-3 py-1 text-sm bg-[#2A4365] text-white rounded-lg hover:bg-blue-800"
-                                            onClick={() => {
-                                                setSelectedTenant(request);
-                                                setContractFormOpen(true);
-                                            }}
-                                            >
-                                                Accept
-                                            </button>
-                                            <button className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
-                                                Decline
-                                            </button>
-                                        </div>
-                                        </div>
-                                    ))}
-                                    </div>
-                                </div> */}
                             </div> : 
                             <PropertySkeletonPageSection2 />
                         }

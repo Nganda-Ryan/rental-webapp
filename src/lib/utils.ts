@@ -19,3 +19,14 @@ export function formatDateToText(dateString: string): string {
     year: 'numeric',
   });
 }
+
+export function capitalize(str: string): string {
+  const trimmed = str.trim();
+  if (!trimmed) return '';
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+}
+
+
+export function formatNumberWithSpaces(num: number): string {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}

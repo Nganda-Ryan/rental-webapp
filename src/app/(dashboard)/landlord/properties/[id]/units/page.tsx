@@ -14,7 +14,7 @@ const Page = () => {
   }
   return (
     <DefaultLayout>
-      <Breadcrumb previousPage pageName="Locatif" />
+      <Breadcrumb previousPage pageName="Locatif/Units" />
         <Nodata />
 
     </DefaultLayout>

@@ -1,227 +1,271 @@
-import React, { useState } from "react";
-import { Search, X, Check, Mail, ChevronDown } from "lucide-react";
-interface Permission {
-  id: string;
-  name: string;
-  description: string;
-}
+"use client";
+
+import React, { useEffect, useRef, useState } from "react";
+import { Search, X, Check, Mail, ChevronDown, User, Fingerprint, Phone, MailIcon } from "lucide-react";
+import { searchUser } from "@/actions/userAction";
+import { IUser, IUserPermission, SeachUserParams } from "@/types/user";
+import { useRouter } from "@bprogress/next/app";
+import toast from "react-hot-toast";
+import autoAnimate from "@formkit/auto-animate";
+import ManagerCardSkeleton from "@/components/skeleton/ManagerCardSkeleton";
+import Button from "@/components/ui/Button";
 interface ManagerSearchProps {
   onClose: () => void;
-  onSelect: (manager: any) => void;
+  onSelect: (manager: {
+    userInfo: IUser,
+    permissions: string[];
+  }) => void;
+  permissionList: IUserPermission[];
 }
 export const ManagerSearch = ({
   onClose,
   onSelect,
+  permissionList
 }: ManagerSearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedManager, setSelectedManager] = useState<any>(null);
+  const [selectedManager, setSelectedManager] = useState<IUser>();
+  const router = useRouter();
   const [step, setStep] = useState<"search" | "permissions" | "invite">("search");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [searchFilter, setSearchFilter] = useState<keyof typeof searchOptions>("name");
-  const [isSearchFilterOpen, setIsSearchFilterOpen] = useState(false);
-  const permissions: Permission[] = [
-    {
-      id: "manage_tenants",
-      name: "Manage Tenants",
-      description: "Can add, edit, and remove tenants",
-    },
-    {
-      id: "manage_maintenance",
-      name: "Manage Maintenance",
-      description: "Can create and handle maintenance requests",
-    },
-    {
-      id: "view_finances",
-      name: "View Finances",
-      description: "Can view financial reports and transactions",
-    },
-    {
-      id: "manage_leases",
-      name: "Manage Leases",
-      description: "Can create and modify lease agreements",
-    },
-  ];
-  const managers = [
-    {
-      id: "MGR001",
-      name: "David Wilson",
-      email: "david.w@management.com",
-      phone: "(555) 234-5678",
-      properties: 12,
-      rating: 4.8,
-    },
-    {
-      id: "MGR002",
-      name: "Emma Thompson",
-      email: "emma.t@management.com",
-      phone: "(555) 345-6789",
-      properties: 8,
-      rating: 4.9,
-    },
-  ];
+  const [userList, setUserList] = useState<IUser[]>([]);
+  const [isFetchingUsers, setIsFetchingUsers] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [searchFilter, setSearchFilter] = useState<keyof typeof searchOptions>("firstName");
+
+
+  useEffect(() => {
+    init();
+  }, [])
+
+  
+  const listRef = useRef(null);
+  useEffect(() => {
+    listRef.current && autoAnimate(listRef.current, { duration: 300 });
+  }, []);
+  
   const searchOptions = {
-    id: "Manager ID",
-    name: "Name",
+    firstName: "firstName",
     email: "Email",
-    phone: "Phone Number",
+    NIU: "NIU",
   };
 
   const handleManagerSelect = (manager: any) => {
     setSelectedManager(manager);
     setStep("permissions");
   };
-  const handlePermissionToggle = (permissionId: string) => {
-    setSelectedPermissions((prev) =>
-      prev.includes(permissionId)
-        ? prev.filter((id) => id !== permissionId)
-        : [...prev, permissionId],
-    );
-  };
+
+  const handleFilterChange = (filter: keyof typeof searchOptions) => {
+    console.log('-->filter', filter);
+    setSearchFilter(filter);
+  }
+  
   const handleInvite = async () => {
     console.log("Inviting manager:", {
-      manager: selectedManager || {
-        email: inviteEmail,
-      },
+      manager: selectedManager,
       permissions: selectedPermissions,
     });
     onSelect({
-      ...selectedManager,
+      userInfo: selectedManager!,
       permissions: selectedPermissions,
     });
+    setIsSendingEmail(true);
     onClose();
   };
-  const filterManagers = (managers: any[]) => {
+
+  const hanlePermissionChange = async (e: string) => {
+    if(selectedPermissions.includes(e)) {
+      setSelectedPermissions(prevPermissionList => (prevPermissionList.filter(permission => permission !== e)));
+    } else {
+      setSelectedPermissions(prevPermissionList => [...prevPermissionList, e]);
+    }
+  }
+
+  const filterManagers = (managers: IUser[]) => {
     if (!searchQuery) return managers;
     return managers.filter((manager) =>
       manager[searchFilter].toLowerCase().includes(searchQuery.toLowerCase()),
     );
   };
   
+
+  const init = async () => {
+    try {
+      setIsFetchingUsers(true);
+      const params: SeachUserParams = {
+        orderBy: 'U.Firstname',
+        orderMode: 'asc',
+        limit: 1000,
+        offset: 0,
+      }; 
+      const result = await searchUser(params);
+      let _userList: IUser[] = [];
+      console.log("result", result);
+      if(result.data) {
+        if(result.data.body.count > 0){
+          _userList = result.data.body.items.filter((user: any) => (user.RoleCode == "RENTER"))
+          .map((user: any) => ({
+            id: user.Code,
+            profileId: "",
+            firstName: user.user.Firstname,
+            lastName: user.user.Lastname,
+            email: user.user.Email,
+            phone: user.user.Phone,
+            profile: user.user.Profiles,
+            gender: user.user.Gender,
+            city: user.user.Address.City,
+            street: user.user.Address.Street,
+            country: user.user.Address.Country,
+            avatarUrl: user.user.AvatarUrl,
+            status: user.Status,
+            NIU: user.user.NIU,
+          }))
+        }
+        setUserList(_userList);
+      }  else if(result.error){
+        if(result.code == 'SESSION_EXPIRED'){
+          router.push('/signin');
+          return;
+        }
+        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsFetchingUsers(false);
+    }
+  }
   return (
-    <div className="rounded-lg w-full max-h-[75vh] overflow-y-auto max-w-2xl mx-auto bg-white dark:bg-gray-800">
-      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h2 className="text-lg font-semibold dark:text-white">
-            {step === "search" && "Find Property Manager"}
-            {step === "permissions" && "Set Permissions"}
-            {step === "invite" && "Send Invitation"}
-          </h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-            <X size={20} className="dark:text-gray-400" />
-          </button>
-        </div>
-        <div className="p-4">
-          {step === "search" && (
-            <>
-              <div className="flex gap-2 mb-4">
-                <div className="relative flex-1">
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={20}
-                  />
+    <div className="rounded-lg w-full max-h-[75vh] min-h-[75vh] overflow-y-auto max-w-2xl mx-auto bg-white dark:bg-gray-800 flex flex-col">
+      <div className="bg-white dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h2 className="text-lg font-semibold dark:text-white">
+          {step === "search" && "Find Property Manager"}
+          {step === "permissions" && "Set Permissions"}
+          {step === "invite" && "Send Invitation"}
+        </h2>
+        <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <X size={20} className="dark:text-gray-400" />
+        </button>
+      </div>
+      <div className="p-4 h-full flex-1 flex flex-col">
+        {step === "search" && (
+          <>
+            <div className="flex gap-2 mb-4.5">
+              <div className="relative flex-1">
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type="text"
+                  placeholder={`Search by ${searchOptions[searchFilter]}...`}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            
+              <div className="relative">
+                <select 
+                  name="cars" 
+                  id="cars" 
+                  value={searchFilter}
+                  onChange={(e => handleFilterChange(e.target.value as keyof typeof searchOptions))}
+                  className="w-full py-2 min-w-25 pl-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="firstName">Name</option>
+                  <option value="email">Email</option>
+                  <option value="NIU">NIU</option>
+                </select>
+              </div>
+              
+            </div>
+            
+            <div className="space-y-4 overflow-y-hidden"  ref={listRef}>
+              {!isFetchingUsers ? 
+                filterManagers(userList).slice(0, 10).map((manager) => <ManagerCard key={manager.id} manager={manager} handleManagerSelect={handleManagerSelect} />) :
+                <div className="space-y-4">
+                  <ManagerCardSkeleton />
+                  <ManagerCardSkeleton />
+                  <ManagerCardSkeleton />
+                </div>
+              }
+            </div>
+          </>
+        )}
+        {(step === "permissions" || step === "invite") && (
+          <div className="gap-3 mt-6 relative flex flex-col flex-1">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {permissionList.length > 0 && permissionList.map((permission, index) => (
+                <label key={index} className="block">
                   <input
-                    type="text"
-                    placeholder={`Search by ${searchOptions[searchFilter]}...`}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    type="checkbox"
+                    value={permission.Code}
+                    className="peer hidden"
+                    onChange={(e) => hanlePermissionChange(e.target.value)}
                   />
-                </div>
-                <div className="relative">
-                  <button
-                    onClick={() => setIsSearchFilterOpen(!isSearchFilterOpen)}
-                    className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    {searchOptions[searchFilter]}
-                    <ChevronDown size={16} />
-                  </button>
-                  {isSearchFilterOpen && (
-                    <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1">
-                      {Object.entries(searchOptions).map(([key, value]) => (
-                        <button
-                          key={key}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700"
-                          onClick={() => {
-                            setSearchFilter(key as keyof typeof searchOptions);
-                            setIsSearchFilterOpen(false);
-                          }}
-                        >
-                          {value}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium dark:text-gray-300">
-                    Available Managers
-                  </h3>
-                  <button
-                    onClick={() => setStep("invite")}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800"
-                  >
-                    Invite New Manager
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                {filterManagers(managers).map((manager) => (
-                  <div
-                    key={manager.id}
-                    className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:border-blue-500 cursor-pointer"
-                    onClick={() => handleManagerSelect(manager)}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-medium dark:text-white">
-                          {manager.name}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          ID: {manager.id}
-                        </p>
-                      </div>
-                      <div className="bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-sm">
-                        {manager.rating} ★
-                      </div>
-                    </div>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <p>{manager.email}</p>
-                      <p>{manager.phone}</p>
-                      <p className="text-sm text-gray-500">
-                        Managing {manager.properties} properties
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-          {(step === "permissions" || step === "invite") && (
-            <div className="flex justify-end gap-3 mt-6">
-              <button
+                  <span className="flex items-center gap-2 p-2 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer
+                    peer-checked:bg-blue-100 peer-checked:text-gray-700 dark:peer-checked:bg-blue-950 dark:peer-checked:text-gray-200 peer-checked:border-blue-100 dark:peer-checked:border-blue-950">
+                    {permission.Title}
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            <div className="absolute bottom-0 right-0 left-0 space-x-3 flex justify-end">
+              <Button
                 onClick={() => setStep("search")}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                isSubmitBtn={false}
+                variant="outline-neutral"
+                fullWidth={false}
               >
                 Back
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleInvite}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                disabled={
-                  step === "invite"
-                    ? !inviteEmail || selectedPermissions.length === 0
-                    : selectedPermissions.length === 0
-                }
+                isSubmitBtn={false}
+                variant="info"
+                fullWidth={false}
+                loading={isSendingEmail}
               >
                 Send Invitation
-              </button>
+              </Button>
+
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
+const ManagerCard = ({manager, handleManagerSelect}: {manager: IUser, handleManagerSelect: (mng: IUser) => void}) => {
+  return <div
+    onClick={() => handleManagerSelect(manager)}
+    className="group border border-gray-200 dark:border-gray-700 rounded-lg p-2 bg-white dark:bg-gray-800 hover:shadow-sm transition-all cursor-pointer hover:border-blue-500"
+  >
+    <div className="flex items-center gap-4 mb-4">
+      <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
+        <User size={20} />
+      </div>
+      <div>
+        <h3 className="text-base font-semibold text-gray-800 dark:text-white leading-snug">
+          {manager.firstName} {manager.lastName}
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <Fingerprint size={14} /> ID: {manager.NIU}
+        </p>
+      </div>
+    </div>
+
+    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 pl-2.5">
+      <p className="flex items-center gap-2">
+        <MailIcon size={14} className="text-blue-500" />
+        {manager.email}
+      </p>
+      <p className="flex items-center gap-2">
+        <Phone size={14} className="text-green-500" />
+        {manager.phone}
+      </p>
+    </div>
+  </div>
+}

@@ -26,11 +26,7 @@ export async function uploadFile(file: File, filePath: string) {
   });
 
   try {
-    const result = await R2.send(command);
-    // console.log("Bucket:", bucket);
-    // console.log("Key:", filePath);
-    // console.log("ContentType:", file.type);
-    // console.log("Buffer size:", buffer.length);
+    await R2.send(command);
 
     return { error: null, filePath: filePath, code: null };
   } catch (error: any) {

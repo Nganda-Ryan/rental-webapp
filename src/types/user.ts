@@ -70,6 +70,7 @@ export interface SeachUserParams {
   offset?: number;
   limit?: number;
   page?: number;
+  role?: string;
 }
 
 export type ManagerRole = "ADMIN" | "SUPPORT";
@@ -103,6 +104,34 @@ export interface IUser {
   avatarUrl: string;
   status: string;
   NIU: string;
+  permissions?: string []
+  createdAt?: string;
 }
 
+export interface IUserPermission {
+  "Code": string,
+  "Title": string,
+  "Description": string,
+  "IsActive": number
+}
+
+export interface IInviteManagerRequest {
+  "profilCode": string,
+  "managerCode": string,
+  "assetCode": string,
+  "title":string,
+  "body": {
+    [key: string]: boolean;
+  },
+  "notes": string
+}
+
+export interface IProfileDetails {
+  Code: string,
+  Status: string,
+  RoleCode: string,
+  CreatedAt: string,
+  IsActive: number,
+  UserCode: string
+}
 export type UserStatus = 'ACTIVE' | 'PENDING' | 'INACTIVE' | 'ALL'

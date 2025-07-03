@@ -26,6 +26,8 @@ import { useRouter } from '@bprogress/next/app';
 import { formatDateToText } from '@/lib/utils';
 import { ActionConfirmationModal } from '@/components/Modal/ActionConfirmationModal';
 import Nodata from '@/components/error/Nodata';
+import { useAuth } from "@/context/AuthContext";
+import { PROFILE_LANDLORD_LIST } from "@/constant";
 
 const ContractDetail = () => {
     const [contract, setContract] = useState<IContractDetail>();
@@ -41,6 +43,7 @@ const ContractDetail = () => {
     const [action, setAction] = useState<"CREATE" | "UPDATE">("CREATE");
     const params = useParams();
     const router = useRouter();
+    const { isAuthorized, loadingProfile } = useAuth();
 
     useEffect(() => {
         const fetchContractData = async () => {
@@ -204,7 +207,7 @@ const ContractDetail = () => {
                                 bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 
                                 dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800 dark:active:bg-blue-700"
                     >
-                    Update
+                    {contract?.status && contract.status == "INACTIVE" ? "Details" : "Update"}
                 </button>
 
             ),
@@ -270,7 +273,7 @@ const ContractDetail = () => {
         
         
     }
-    const handleClickUpdateInvoice = (data: IInvoiceTableData) => {
+    const   handleClickUpdateInvoice = (data: IInvoiceTableData) => {
         // console.log('-->data', data);
         if(invoiceTableData && invoiceTableData.length > 0){
             const foundInvoice = invoiceTableData.find(inv => inv.id == data.id);
@@ -391,7 +394,9 @@ const ContractDetail = () => {
     }
 
 
-    
+    if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+        return <div>Unauthorized</div>;
+    }
     return (
         <DefaultLayout>
             <Breadcrumb previousPage pageName="Locatif" />
@@ -535,7 +540,7 @@ const ContractDetail = () => {
                                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
                                         <h3 className="font-medium mb-4 text-gray-800 dark:text-gray-100 ">Quick Actions</h3>
                                         <div className="space-y-3 mb-3">
-                                            <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={false} isSubmitBtn={false}>
+                                            <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={contract.status == "INACTIVE"} isSubmitBtn={false}>
                                                 <DollarSign size={16} /> Create Invoice
                                             </Button>
                                         </div>

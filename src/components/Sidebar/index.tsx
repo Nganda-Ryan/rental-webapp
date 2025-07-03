@@ -173,10 +173,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
           <Link href="/">
             <Image
-              width={50}
-              height={50}
-              src={"/images/logo/logo-git-avatar.png"}
+              width={200}
+              height={200}
+              src={"/images/logo.svg"}
               alt="Logo"
+              className="h-13 relative left-2"
             />
           </Link>
           <button
@@ -200,7 +201,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         </div>
 
         <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
-          <nav className="mt-5 px-4 py-4 lg:mt-9 lg:px-6">
+          <nav className="mt-5 px-4 py-4 lg:px-6">
             {!isReady ? (
               <div role="status">
                 <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">

@@ -24,9 +24,18 @@ export const getStatusBadge = (status: string) => {
     );
   }
 
-  if (["APPROVED", "RENTED", "ACTIVE", "PAID", "AVAILABLE"].includes(statusKey)) {
+  if (["APPROVED", "RENTED", "ACTIVE", "PAID"].includes(statusKey)) {
     return (
       <div className={`${baseClass} bg-green-100 text-green-600 dark:bg-gray-700 dark:text-green-400`}>
+        <CheckCircle size={14} className="text-inherit" />
+        <span>{status.toLowerCase()}</span>
+      </div>
+    );
+  }
+
+    if (["AVAILABLE"].includes(statusKey)) {
+    return (
+      <div className={`${baseClass} bg-blue-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400`}>
         <CheckCircle size={14} className="text-inherit" />
         <span>{status.toLowerCase()}</span>
       </div>

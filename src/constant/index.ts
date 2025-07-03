@@ -45,5 +45,40 @@ export const USERS_STATUS = [
 
 export const PROFILE_LIST = ['ADMIN', 'SUPPORT', 'LANDLORD', 'MANAGER', 'RENTER'];
 export const MANAGER_PROFILE_LIST = ['ADMIN', 'SUPPORT'];
+export const PROFILE_LANDLORD_LIST = ['LANDLORD'];
 
-export const PROFILE_CLIENT = [];
+
+//Property constants
+export const PROPERTY_TYPE_OBJ_CODE = [
+{
+    label: "Immeuble",
+    value: "CPLXMOD"
+  },
+  {
+    label: "Studio Moderne",
+    value: "STUDMOD"
+  },
+  {
+    label: "Chambre moderne",
+    value: "CHAMMOD"
+  },
+  {
+    label: "Appartement",
+    value: "APPART"
+  }
+]
+
+//user roles
+export const ROLE_MANAGER = "MANAGER";
+export const ROLE_LANDLORD = "LANDLORD";
+export const ROLE_RENTER = "RENTER";
+export const ROLE_ADMIN = "ADMIN";
+
+
+//genre
+export const GENDER_MALE = "MALE";
+export const GENDER_FEMAL = "FEMALE";
+
+
+//Asset Types
+export const ASSET_TYPE_COMPLEXE = "CPLXMOD"

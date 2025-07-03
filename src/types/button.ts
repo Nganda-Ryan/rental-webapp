@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 export interface ButtonProps {
     children: ReactNode;
     variant: Variant;
-    disable: boolean;
+    disable?: boolean;
     onClick?: (e: any) => void;
     isSubmitBtn: boolean;
     fullWidth?: boolean;

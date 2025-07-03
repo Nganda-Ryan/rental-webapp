@@ -214,6 +214,7 @@ export async function getProfile(){
   try {
     const session = await verifySession();
     const rolePriority = PROFILE_LIST;
+    console.log('-->session', session)
     const sortedRoles = [...(session?.roles || [])].sort(
       (a, b) => rolePriority.indexOf(a) - rolePriority.indexOf(b)
     );
@@ -221,6 +222,7 @@ export async function getProfile(){
       data: {
         roles: sortedRoles,
         userId: session?.Code,
+        Profiles: session?.Profiles,
         activeRole: sortedRoles[0],
         expiresAt: session?.expiresAt
       },

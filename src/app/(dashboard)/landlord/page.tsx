@@ -9,8 +9,15 @@ import {
 } from "lucide-react";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+import { useAuth } from "@/context/AuthContext";
+import { PROFILE_LANDLORD_LIST } from "@/constant";
 
 export default function Dashboard() {
+  
+  const { isAuthorized, loadingProfile } = useAuth();
+  if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+    return <div>Unauthorized</div>;
+  }
   return (
     <DefaultLayout>
       <Breadcrumb previousPage={false} pageName="Dashboard Overview" />

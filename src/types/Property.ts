@@ -57,6 +57,17 @@ export  interface CreatePropertyType {
   "items": SubProperty[]
 }
 
+export interface IUpdateAssetRequest {
+  "code": string,
+  "typeCode": string,
+  "title": string,
+  "notes": string,
+  "price": number,
+  "currency": string,
+  "coverUrl": string | File[],
+  "tag": string [] | string,
+  "addressData": AddressDataType,
+}
 
 
 export interface AssetFormValue {
@@ -102,6 +113,7 @@ export interface SeachInvoiceParams {
 
 export type AssetData = {
   Code: string;
+  Id?: string;
   Title: string
   Price: number;
   Currency: string;
@@ -131,7 +143,10 @@ export type AssetDataDetailed = {
   IsVerified: number; // 1 ou 0
   whoIs: string;
   BillingItems: string[]
-  Units: AssetData []
+  Units: AssetData [];
+  ParentCode?: string;
+  Notes?: string;
+  Tag?: string;
   Address: {
     Code: string;
     City: string;
@@ -214,6 +229,7 @@ export interface IInvoiceForm {
   monthlyRent: number;
   status: string;
   notes: string;
+  contractStatus?: string;
   currency: string;
   billingElements: Array<{
     id: string,

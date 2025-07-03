@@ -4,13 +4,16 @@ import { getProfile } from '@/actions/authAction';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from '@bprogress/next/app';
-import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 import LoadingPage from '@/components/Loading/LoadingPage';
+import { Profile } from '@/types/authTypes';
+
+
 
 interface AuthContextType {
   profileList: string [];
   activeProfile: string;
+  profilesDetails: Profile[];
   setProfileList: (value: string[]) => void;
   setActiveProfile: (value: string) => void;
   user: string,
@@ -18,16 +21,11 @@ interface AuthContextType {
   isAuthorized: (requiredRoles?: string[] | undefined) => boolean
 }
 
-interface User {
-  roles: string [],
-  userId: string,
-  activeRole: string,
-  expiresAt: Date | string
-}
 
 const AuthContext = createContext<AuthContextType>({
   activeProfile: "",
   profileList: [],
+  profilesDetails: [], 
   setProfileList: () => {},
   setActiveProfile: () => {},
   user: "",
@@ -38,9 +36,9 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profileList, setProfileList] = useLocalStorage("selectedProfile", [] as string []);
   const [activeProfile, setActiveProfile] = useLocalStorage("activeProfile", "");
+  const [profilesDetails, setProfilesDetails] = useState<Profile[]>([]);
   const [user, setUser] = useLocalStorage("user", "");
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const pathname = usePathname();
   const router = useRouter();
 
 
@@ -56,7 +54,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             activeRole: userInfo.activeRole ?? "",
             expiresAt: userInfo.expiresAt ?? ""
           }));
-          console.log('-->userInfo', userInfo);
+          setProfilesDetails(result.data.Profiles)
+          // console.log('-->userInfo', userInfo);
           const profiles = userInfo?.roles;
           if (profiles?.length > 0) {
             setProfileList(profiles);
@@ -92,12 +91,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-      <AuthContext.Provider value={{ profileList, activeProfile, setProfileList, setActiveProfile, user, loadingProfile, isAuthorized }}>
-        {/* <Overlay isOpen={true} onClose={() => {}}  >
-          
-        </Overlay> */}
+      <AuthContext.Provider value={{ profileList, activeProfile, setProfileList, setActiveProfile, user, loadingProfile, isAuthorized, profilesDetails }}>
         {loadingProfile ? <LoadingPage /> : children}
-        
       </AuthContext.Provider>
   );
 }

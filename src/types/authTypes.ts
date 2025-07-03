@@ -24,7 +24,7 @@ export type SignUpResult = {
   redirectTo: string | null;
 };
 
-type Profile = {
+export type Profile = {
   Code: string;
   UserCode: string;
   RoleCode: string;
