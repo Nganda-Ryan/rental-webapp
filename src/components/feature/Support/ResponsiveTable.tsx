@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import autoAnimate from '@formkit/auto-animate'
-import { ListCollapse } from 'lucide-react';
-
-
+import { ListCollapse, Search } from 'lucide-react';
 
 interface Column {
   key: string
@@ -23,6 +21,7 @@ interface ResponsiveTableProps {
   keyField: string
   showMore?: ShowMoreOption
   paginate?: number // nombre d'éléments par page
+  searchKey?: string // clé de recherche pour activer la barre de recherche
 }
 
 export const ResponsiveTable = ({
@@ -32,8 +31,11 @@ export const ResponsiveTable = ({
   keyField,
   showMore,
   paginate,
+  searchKey,
 }: ResponsiveTableProps) => {
   const [page, setPage] = useState(1)
+  const [searchTerm, setSearchTerm] = useState('')
+  
   const highPriorityColumns = columns.filter((col) => col.priority === 'high')
   const mediumPriorityColumns = columns.filter((col) => col.priority === 'medium')
   const lowPriorityColumns = columns.filter((col) => col.priority === 'low')
@@ -42,14 +44,49 @@ export const ResponsiveTable = ({
   useEffect(() => {
     tableBodyRef.current && autoAnimate(tableBodyRef.current, { duration: 300 });
   }, []);
-  const startIndex = paginate ? (page - 1) * paginate : 0
-  const endIndex = paginate ? startIndex + paginate : data.length
-  const paginatedData = paginate ? data.slice(startIndex, endIndex) : data
-  const totalPages = paginate ? Math.ceil(data.length / paginate) : 1
 
-  
+  // Fonction de filtrage des données
+  const filteredData = searchKey && searchTerm 
+    ? data.filter(row => {
+        const searchValue = row[searchKey];
+        if (searchValue === null || searchValue === undefined) return false;
+        return searchValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
+      })
+    : data;
+
+  // Réinitialiser la page lors d'une recherche
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
+
+  const startIndex = paginate ? (page - 1) * paginate : 0
+  const endIndex = paginate ? startIndex + paginate : filteredData.length
+  const paginatedData = paginate ? filteredData.slice(startIndex, endIndex) : filteredData
+  const totalPages = paginate ? Math.ceil(filteredData.length / paginate) : 1
+
   return (
     <div className="w-full">
+      {/* Barre de recherche - uniquement si searchKey est fournie */}
+      {searchKey && (
+        <div className="mb-4 relative">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
+            <input
+              type="text"
+              placeholder={`Rechercher...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 outline-none transition-all duration-200"
+            />
+          </div>
+          {searchTerm && (
+            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              {filteredData.length} résultat{filteredData.length !== 1 ? 's' : ''} trouvé{filteredData.length !== 1 ? 's' : ''}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Mobile View */}
       <div className="md:hidden space-y-2">
         {paginatedData.map((row) => (
@@ -134,6 +171,14 @@ export const ResponsiveTable = ({
           </tbody>
         </table>
       </div>
+
+      {/* Message si aucun résultat */}
+      {paginatedData.length === 0 && searchTerm && (
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          <Search className="mx-auto mb-2" size={48} />
+          <p>Aucun résultat trouvé pour &quot;{searchTerm}&quot;</p>
+        </div>
+      )}
 
       {paginate && totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 my-4">

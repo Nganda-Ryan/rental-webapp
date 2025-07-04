@@ -30,3 +30,7 @@ export function capitalize(str: string): string {
 export function formatNumberWithSpaces(num: number): string {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
+
+export const formatPrice = (price: number): string => {
+  return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+};

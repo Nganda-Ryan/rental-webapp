@@ -26,7 +26,7 @@ export const PropertySkeletonPageSection1 = () => {
   )
 }
 
-export const PropertySkeletonPageSection2 = () => {
+export const RightSideAction = () => {
   return (
     <div>
         <div className="space-y-6">
@@ -67,6 +67,24 @@ export const PropertySkeletonPageSection2 = () => {
                         </div>
                     ))}
                 </div>
+            </div>
+        </div>
+    </div>
+  )
+}
+
+export const RightSideAction2 = () => {
+  return (
+    <div>
+        <div className="space-y-6">
+            {/* Skeleton actions */}
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm space-y-3">
+                <div className="font-medium mb-4">
+                    Quick Actions
+                </div>
+                {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-8 bg-gray-200 dark:bg-gray-700 rounded" />
+                ))}
             </div>
         </div>
     </div>

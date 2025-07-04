@@ -26,11 +26,12 @@ import Loading from '@/components/error/Loading';
 import { SkeletonTable } from '@/components/skeleton/SkeletonTable';
 import Button from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
+import SectionWrapper from '@/components/Cards/SectionWrapper';
 
 
 
 
-const SupportUsers = () => {
+const Page = () => {
   const [showNewUserForm, setShowNewUserForm] = useState(false);
   const [userList, setUserList] = useState<IUser[]>([]);
   const [selectedRole, setSelectedRole] = useState<AllRole>('ALL');
@@ -73,6 +74,7 @@ const SupportUsers = () => {
               profileId: code,
               firstName: item.user.Firstname,
               lastName: item.user.Lastname,
+              name: item.user.Firstname + " " + item.user.Lastname,
               email: item.user.Email,
               phone: item.user.Phone,
               profile: [item.RoleCode],
@@ -250,57 +252,20 @@ const SupportUsers = () => {
     <DefaultLayout>
       <Breadcrumb previousPage={false} pageName="Account Management" />
         <div className="w-full">
-          <div className="flex flex-col sm:flex-row gap-4 mb-2 md:mb-7">
-            <div className="flex-1 relative">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
-                size={20}
-              />
-              <input
-                type="text"
-                placeholder="Search users..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="flex gap-4">
-              <select
-                className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg w-full sm:w-auto bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value as any)}
-              >
-                {CLIENT_PROFILE_OBJ_LIST.map((profile) => (
-                  <option key={profile.value} value={profile.value}>
-                    {profile.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg w-full sm:w-auto bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as UserStatus)}
-              >
-                {USERS_STATUS.map((role) => (
-                  <option key={role.value} value={role.value}>
-                    {role.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-
-
-          <div className="bg-transparent md:bg-white md:dark:bg-gray-800 rounded-lg md:shadow-sm overflow-hidden mb-5">
+          <div className="bg-transparent rounded-lg md:shadow-sm overflow-hidden mb-5">
             {
               !isFetchingUser ? 
                 userList.length > 0 && isFetchingUser == false ? (
-                  <ResponsiveTable
-                    columns={usersTableColumn}
-                    data={userList.slice(0, 100)}
-                    onRowClick={(user: IUser) => handleSelectUSer(user)}
-                    keyField="id"
-                    paginate={10}
-                  />
+                  // <SectionWrapper title=''>
+                    <ResponsiveTable
+                      columns={usersTableColumn}
+                      data={userList.slice(0, 100)}
+                      onRowClick={(user: IUser) => handleSelectUSer(user)}
+                      searchKey="name"
+                      keyField="id"
+                      paginate={10}
+                    />
+                  // </SectionWrapper>
                   ) : (
                   <Nodata message="No user to display" />
                 )
@@ -329,4 +294,4 @@ const SupportUsers = () => {
   )
 }
 
-export default SupportUsers;
+export default Page;

@@ -3,6 +3,7 @@ import DarkModeSwitcher from "./DarkModeSwitcher";
 import DropdownMessage from "./DropdownMessage";
 import DropdownUser from "./DropdownUser";
 import Image from "next/image";
+import logoImage from "../../../public/images/logo.svg";
 
 const Header = (props: {
   sidebarOpen: string | boolean | undefined;
@@ -55,14 +56,16 @@ const Header = (props: {
           </button>
           {/* <!-- Hamburger Toggle BTN --> */}
 
-          <Link className="block flex-shrink-0 xl:hidden" href="/">
+          {/* <Link className="block flex-shrink-0 xl:hidden" href="/">
             <Image
-              width={32}
-              height={32}
-              src={"/images/logo/logo-git-avatar.png"}
+              width={200}
+              height={200}
+              src={logoImage}
               alt="Logo"
+              className="h-13 w-auto relative left-2"
+              priority
             />
-          </Link>
+          </Link> */}
         </div>
 
         

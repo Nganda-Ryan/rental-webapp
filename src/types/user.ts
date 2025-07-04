@@ -100,6 +100,7 @@ export interface IUser {
   gender: string;
   city: string;
   street: string;
+  name?: string;
   country: string;
   avatarUrl: string;
   status: string;

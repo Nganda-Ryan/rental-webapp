@@ -28,11 +28,9 @@ import { useAuth } from '@/context/AuthContext'
 interface VerificationRequest {
   id: string
   NUI: string
-  lessor: {
-    name: string
-    email: string
-    phone: string
-  }
+  name: string
+  email: string
+  phone: string
   submissionDate: string
   status: string
 }
@@ -75,11 +73,9 @@ const LessorVerification = () => {
             return {
               id: item.Code,
               NUI: item.creator.user.NIU,
-              lessor: {
-                name: item.creator.user.Firstname + ' ' + item.creator.user.Lastname,
-                email: item.creator.user.Email,
-                phone: item.creator.user.Phone,
-              },
+              name: item.creator.user.Firstname + ' ' + item.creator.user.Lastname,
+              email: item.creator.user.Email,
+              phone: item.creator.user.Phone,
               submissionDate: item.SubmittedDate,
               status: item.StatusCode,
             }
@@ -175,15 +171,15 @@ const LessorVerification = () => {
         <div className="text-sm text-gray-700 dark:text-gray-300">
           <div className='font-medium text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1'>
             <User size={14} />
-            {row.lessor.name}
+            {row.name}
           </div>
           <div className="text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
             <Mail size={14} />
-            {row.lessor.email}
+            {row.email}
           </div>
           <div className="text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
             <Phone size={14} />
-            {row.lessor.phone}
+            {row.phone}
           </div>
         </div>
       ),
@@ -239,19 +235,7 @@ const LessorVerification = () => {
   return (
     <DefaultLayout>
       <Breadcrumb previousPage={false} pageName="Lessor Verification Requests" />
-      <div className="flex flex-col sm:flex-row gap-4 mb-2 md:mb-7">
-        <div className="flex-1 relative">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
-            size={20}
-          />
-          <input
-            type="text"
-            placeholder="Search users..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
+
       {
         isReady ?
         <>
@@ -262,6 +246,7 @@ const LessorVerification = () => {
                 data={requestList}
                 onRowClick={(request: VerificationRequest) => handleLandLordDetail(request.id)}
                 keyField="id"
+                searchKey='name'
                 paginate={10}
               />
 

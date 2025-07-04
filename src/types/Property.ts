@@ -143,7 +143,7 @@ export type AssetDataDetailed = {
   IsVerified: number; // 1 ou 0
   whoIs: string;
   BillingItems: string[]
-  Units: AssetData [];
+  Units?: AssetData [];
   ParentCode?: string;
   Notes?: string;
   Tag?: string;
@@ -279,3 +279,5 @@ export interface IUpdateInvoiceParam {
     "paidDate": string
   }>
 }
+
+export type AssetTypeCode = "CPLXMOD" | "STUDMOD" | "CHAMMOD" | "APPART"

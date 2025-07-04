@@ -1,14 +1,16 @@
-import { CheckCircle, Clock, ExternalLink, XCircle } from "lucide-react"
+import { AssetTypeCode } from "@/types/Property";
+import { CheckCircle, Clock, ExternalLink, XCircle, Building2, BedSingle, DoorOpen, Home, LucideIcon } from "lucide-react"
+
 
 export const getStatusBadge = (status: string) => {
   const baseClass =
-    "w-fit flex items-center gap-1 px-2 py-1 rounded-full text-sm lowercase me-2 capitalize";
+    "w-fit flex items-center gap-1 px-2 py-0.5 rounded-full text-sm lowercase me-2 capitalize";
 
   const statusKey = status.toUpperCase();
 
   if (["DRAFT", "DRAFTING"].includes(statusKey)) {
     return (
-      <div className={`${baseClass} bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400`}>
+      <div className={`${baseClass} bg-gray-100 text-gray-600 dark:bg-gray-700/20 dark:text-gray-400`}>
         <ExternalLink size={14} className="text-inherit" />
         <span>{status.toLowerCase()}</span>
       </div>
@@ -17,7 +19,7 @@ export const getStatusBadge = (status: string) => {
 
   if (["PENDING", "PENDING_APPROVAL"].includes(statusKey)) {
     return (
-      <div className={`${baseClass} bg-yellow-100 text-yellow-600 dark:bg-gray-700 dark:text-yellow-400`}>
+      <div className={`${baseClass} bg-yellow-100 text-yellow-600 dark:bg-gray-700/20 dark:text-yellow-400`}>
         <Clock size={14} className="text-inherit" />
         <span>{status.toLowerCase()}</span>
       </div>
@@ -26,7 +28,7 @@ export const getStatusBadge = (status: string) => {
 
   if (["APPROVED", "RENTED", "ACTIVE", "PAID"].includes(statusKey)) {
     return (
-      <div className={`${baseClass} bg-green-100 text-green-600 dark:bg-gray-700 dark:text-green-400`}>
+      <div className={`${baseClass} bg-green-100 text-green-600 dark:bg-gray-700/20 dark:text-green-400`}>
         <CheckCircle size={14} className="text-inherit" />
         <span>{status.toLowerCase()}</span>
       </div>
@@ -35,7 +37,7 @@ export const getStatusBadge = (status: string) => {
 
     if (["AVAILABLE"].includes(statusKey)) {
     return (
-      <div className={`${baseClass} bg-blue-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400`}>
+      <div className={`${baseClass} bg-blue-100 text-blue-600 dark:bg-gray-700/20 dark:text-blue-400`}>
         <CheckCircle size={14} className="text-inherit" />
         <span>{status.toLowerCase()}</span>
       </div>
@@ -44,7 +46,7 @@ export const getStatusBadge = (status: string) => {
 
   if (["CANCELED", "CANCEL", "REJECTED", "UNPAID", "INACTIVE"].includes(statusKey)) {
     return (
-      <div className={`${baseClass} bg-red-100 text-red-600 dark:bg-gray-700 dark:text-red-400`}>
+      <div className={`${baseClass} bg-red-100 text-red-600 dark:bg-gray-700/20 dark:text-red-400`}>
         <XCircle size={14} className="text-inherit" />
         <span>{status.toLowerCase()}</span>
       </div>
@@ -53,7 +55,7 @@ export const getStatusBadge = (status: string) => {
 
   // fallback
   return (
-    <div className={`${baseClass} bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400`}>
+    <div className={`${baseClass} bg-gray-100 text-gray-600 dark:bg-gray-700/20 dark:text-gray-400`}>
       <ExternalLink size={14} className="text-inherit" />
       <span>{status.toLowerCase()}</span>
     </div>
@@ -101,9 +103,11 @@ export const getRoleBadge = (role: string) => {
 
     default:
       return (
-        <span className={`${baseClass} bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100`}>
+        <span className={`${baseClass} bg-gray-200 text-gray-800 dark:bg-gray-700/20 dark:text-gray-100`}>
           {role.toLowerCase()}
         </span>
       );
   }
 };
+
+

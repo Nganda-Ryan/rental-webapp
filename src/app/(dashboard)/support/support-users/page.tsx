@@ -65,6 +65,7 @@ const SupportUsers = () => {
           id: _user.Code,
           firstName: _user.user.Firstname,
           lastName: _user.user.Lastname,
+          name: _user.user.Firstname + ' ' + _user.user.Lastname,
           email: _user.user.Email,
           phone: _user.user.Phone,
           profile: [_user.RoleCode],
@@ -77,6 +78,7 @@ const SupportUsers = () => {
           NIU: _user.user.NIU,
         })) : [];
         console.log('-->result.data.body.items', result.data.body.items);
+        console.log('-->_userList', _userList);
         setUserList(_userList);
       } else if(result.error){
         if(result.code == 'SESSION_EXPIRED'){
@@ -217,51 +219,8 @@ const SupportUsers = () => {
       <Breadcrumb previousPage={false} pageName="Support User" />
 
         <div className="w-full">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-            {/* Input avec icône search */}
-            <div className="flex-1 relative">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                size={18}
-              />
-              <input
-                type="text"
-                placeholder="Search users..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
 
-            <div className='flex gap-4'>
-              {/* Select role, avec largeur fixe pour ne pas être trop large */}
-              <div className="w-full sm:w-auto">
-                <select
-                  className="w-full sm:w-[160px] px-4 py-2 border border-gray-200 rounded-lg"
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value as any)}
-                >
-                  <option value="all">All Roles</option>
-                  {MANAGER_PROFILE_OBJ_LIST.map(profile => (
-                    <option key={profile.value} value={profile.value}>{profile.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Bouton aligné correctement */}
-              <div className="w-full sm:w-auto flex justify-end">
-                <button
-                  onClick={() => setShowNewUserForm(true)}
-                  className="bg-[#2A4365] text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto"
-                >
-                  <UserPlus size={18} />
-                  Add Support User
-                </button>
-              </div>
-            </div>
-          </div>
-
-
-
-          <div className="bg-transparent md:bg-white md:dark:bg-gray-800 rounded-lg md:shadow-sm overflow-hidden mb-5">
+          <div className="bg-transparent rounded-lg md:shadow-sm overflow-hidden mb-5">
             {
               !isFetchingUser ? 
                 userList.length > 0 && isFetchingUser == false ? (
@@ -270,6 +229,7 @@ const SupportUsers = () => {
                     data={userList.slice(0, 100)}
                     onRowClick={(user: IUser) => handleSelectUSer(user.id)}
                     keyField="id"
+                    searchKey='name'
                     paginate={10}
                   />
                   ) : (

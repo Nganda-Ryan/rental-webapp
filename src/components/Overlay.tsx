@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, type JSX } from 'react';
 
 type Props = {
     children: JSX.Element | string, 
-    onClose: () => void
+    onClose?: () => void
     isOpen: boolean
 }
 const Overlay = ({children, isOpen, onClose} : Props) => {
@@ -12,14 +12,14 @@ const Overlay = ({children, isOpen, onClose} : Props) => {
     const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>): void => {
         if (e.target === overlayRef.current || e.target === overlayRef2.current) {
             console.log('overlay clicked')
-            onClose();
+            onClose && onClose();
         }
     };
 
     useEffect(() => {
         const handleEscKey = (e: KeyboardEvent): void => {
           if (e.key === 'Escape') {
-            onClose();
+            onClose && onClose();
           }
         };
         

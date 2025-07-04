@@ -68,6 +68,8 @@ export const PROPERTY_TYPE_OBJ_CODE = [
   }
 ]
 
+export const PROPERTY_TYPE_LIST = ["CPLXMOD", "STUDMOD", "CHAMMOD", "APPART"]
+
 //user roles
 export const ROLE_MANAGER = "MANAGER";
 export const ROLE_LANDLORD = "LANDLORD";

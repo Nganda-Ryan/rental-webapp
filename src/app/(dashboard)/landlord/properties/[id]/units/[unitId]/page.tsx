@@ -26,7 +26,7 @@ import { useParams } from 'next/navigation';
 import { createContract, createInvoice, getAsset, searchInvoice, terminateLease } from "@/actions/assetAction";
 import { AssetData, AssetDataDetailed, IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, SeachInvoiceParams } from "@/types/Property";
 import { getStatusBadge } from "@/lib/utils-component";
-import { PropertySkeletonPageSection1, PropertySkeletonPageSection2 } from "@/components/skeleton/pages/PropertySkeletonPage";
+import { PropertySkeletonPageSection1, RightSideAction } from "@/components/skeleton/pages/PropertySkeletonPage";
 import Button from "@/components/ui/Button";
 import toast from 'react-hot-toast';
 import { ResponsiveTable } from "@/components/feature/Support/ResponsiveTable";
@@ -791,7 +791,7 @@ const PropertyDetail = () => {
                                                         <Building2 size={16} /> Attach Properties
                                                     </Button>
                                                 )}
-                                                <Button variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false} onClick={() => router.push(`/landlord/properties/edit?propertyId=${params.id}`)}>
+                                                <Button variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false} onClick={() => router.push(`/landlord/properties/${params.id}/edit-unit?unitId=${asset.Code}`)}>
                                                     <Building2 size={16} /> Edit Property
                                                 </Button>
                                             </>
@@ -889,7 +889,7 @@ const PropertyDetail = () => {
                                     </SectionWrapper>
                                 }
                             </div> : 
-                            <PropertySkeletonPageSection2 />
+                            <RightSideAction />
                         }
                     </div>
                 </div>

@@ -31,7 +31,7 @@ import { useParams } from 'next/navigation';
 import { createContract, createInvoice, getAsset, inviteManager, searchInvoice, terminateLease } from "@/actions/assetAction";
 import { AssetData, AssetDataDetailed, IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, SeachInvoiceParams } from "@/types/Property";
 import { getStatusBadge } from "@/lib/utils-component";
-import { PropertySkeletonPageSection1, PropertySkeletonPageSection2 } from "@/components/skeleton/pages/PropertySkeletonPage";
+import { PropertySkeletonPageSection1, RightSideAction } from "@/components/skeleton/pages/PropertySkeletonPage";
 import Button from "@/components/ui/Button";
 import toast from 'react-hot-toast';
 import { ResponsiveTable } from "@/components/feature/Support/ResponsiveTable";
@@ -270,7 +270,7 @@ const PropertyDetail = () => {
                         fullWidth={false}
                         onClick={(e) => {
                             e.stopPropagation();
-                            router.push(`/landlord/properties/${params.id}/edit-unit?unitId=${unit.Code}`)
+                            router.push(`/landlord/properties/${params.id}/edit-unit?unitId=${unit.Code}`);
                         }}
                     >
                         Edit
@@ -858,13 +858,14 @@ const PropertyDetail = () => {
 
                                 {/* UNITS */}
                                 {
-                                    asset?.TypeCode == ASSET_TYPE_COMPLEXE && asset?.Units.length && <SectionWrapper title="Units" Icon={House}>
+                                    asset?.TypeCode == ASSET_TYPE_COMPLEXE && (asset.Units && asset?.Units.length) && <SectionWrapper title="Units" Icon={House}>
                                         {asset.Units.length > 0 ? (
                                             <ResponsiveTable
                                                 columns={unitColumns}
                                                 data={asset.Units.slice(0, 3)}
                                                 onRowClick={(unit) => handleSelectUnit(unit.Code)}
                                                 keyField="Id"
+                                                searchKey='Title'
                                                 showMore={asset && asset?.Units.length > 3 ? {
                                                     url: `/landlord/properties/${asset?.Code}/units`,
                                                     label: 'Show more units'
@@ -1100,7 +1101,7 @@ const PropertyDetail = () => {
                                     </div>
                                 </div> */}
                             </div> : 
-                            <PropertySkeletonPageSection2 />
+                            <RightSideAction />
                         }
 
                         

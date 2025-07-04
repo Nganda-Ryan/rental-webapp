@@ -543,6 +543,7 @@ const ContractDetail = () => {
                                                     data={invoiceTableData}
                                                     onRowClick={(inv) => handleSelectInvoice(inv.id)}
                                                     keyField="id"
+                                                    paginate={7}
                                                 />
                                                 ) : (
                                                 <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No invoices available</p>
