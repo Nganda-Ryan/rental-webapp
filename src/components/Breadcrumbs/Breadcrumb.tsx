@@ -69,11 +69,11 @@ const Breadcrumb = ({ pageName, previousPage }: BreadcrumbProps) => {
         { previousPage && <span className="p-2 rounded-lg transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"><ArrowLeft size={24} onClick={() => router.back()} className=""/></span>}
         <h1 className="text-xl md:text-2xl font-bold">{pageName}</h1>
       </div>
-      {/* <nav className="hidden md:inline">
+      <nav className="hidden md:inline">
         <ol className="flex items-center gap-2 max-w-[95vw]">
           {pathElements}
         </ol>
-      </nav> */}
+      </nav>
     </div>
   );
 };

@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import Overlay from '../Overlay';
 import { ProcessingModal } from '../Modal/ProcessingModal';
 import { useRouter } from '@bprogress/next/app';
+import Image from 'next/image';
 
 interface FormError {
   username: string | null;
@@ -85,9 +86,15 @@ export const LoginForm = () => {
       </Overlay>
       <div className="text-center">
         <div className="flex justify-center mb-4">
-          <Building2 className="h-12 w-12 text-blue-900" />
+            <Image
+              width={200}
+              height={200}
+              src={"/images/logo-blue.svg"}
+              alt="Logo"
+              className="h-13 relative left-2"
+            />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
+        {/* <h1 className="text-3xl font-bold text-[#083959]">Welcome back</h1> */}
         <p className="mt-2 text-gray-600">Please sign in to your account</p>
       </div>
       <form onSubmit={handleSubmit} className="sm:mt-8 space-y-6">

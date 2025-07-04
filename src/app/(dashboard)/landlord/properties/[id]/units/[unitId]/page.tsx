@@ -2,16 +2,16 @@
 import React, { useEffect, useState } from "react";
 import {
   Building2,
-  Users,
   MapPin,
   Share2,
   UserPlus,
   FileText,
   DollarSign,
   UserCog,
+  Zap,
+  X,
 } from "lucide-react";
 import { useRouter } from '@bprogress/next/app';
-import { ManagerSearch } from "@/components/feature/Properties/ManagerSearch";
 import { VerificationForm } from "@/components/feature/Properties/VerificationForm";
 import { DeletePropertyModal } from "@/components/feature/Properties/DeletePropertyModal";
 import { AttachPropertiesModal } from "@/components/feature/Properties/AttachPropertiesModal";
@@ -23,66 +23,53 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Overlay from "@/components/Overlay";
 import InvoiceGenerator from "@/components/feature/Properties/InvoiceGenerator";
 import { useParams } from 'next/navigation';
-import { createContract, createInvoice, getAsset, inviteManager, searchInvoice, terminateLease } from "@/actions/assetAction";
+import { createContract, createInvoice, getAsset, searchInvoice, terminateLease } from "@/actions/assetAction";
 import { AssetData, AssetDataDetailed, IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, SeachInvoiceParams } from "@/types/Property";
 import { getStatusBadge } from "@/lib/utils-component";
 import { PropertySkeletonPageSection1, PropertySkeletonPageSection2 } from "@/components/skeleton/pages/PropertySkeletonPage";
 import Button from "@/components/ui/Button";
 import toast from 'react-hot-toast';
 import { ResponsiveTable } from "@/components/feature/Support/ResponsiveTable";
-import { capitalize, formatDateToText, formatNumberWithSpaces } from "@/lib/utils";
+import { capitalize, formatDateToText } from "@/lib/utils";
 import { ActionConfirmationModal } from "@/components/Modal/ActionConfirmationModal";
 import { useAuth } from "@/context/AuthContext";
 import { ASSET_TYPE_COMPLEXE, PROFILE_LANDLORD_LIST } from "@/constant";
 import ImageLoading from "@/components/ImageLoading";
-import { IInviteManagerRequest, IUser, IUserPermission } from "@/types/user";
-import { ProcessingModal } from "@/components/Modal/ProcessingModal";
-import { set } from "zod";
+import { IUser, IUserPermission } from "@/types/user";
+import SectionWrapper from "@/components/Cards/SectionWrapper";
+import { IContractColumn } from "@/types/TableTypes";
 
 
-
-interface IContractColumn {
-    tenant: string;
-    startDate: string;
-    endDate: string;
-    status: string;
-    monthlyRent: string;
-    id: string;
-}
 
 const PropertyDetail = () => {
     const today = new Date().toISOString().split("T")[0];
     const [asset, setAsset] = useState<AssetDataDetailed | null>(null);
-    const [selectedTenant, setSelectedTenant] = useState<any>(null);
     const [contractTableData, setContractTableData] = useState<IContractColumn[]>([]);
-    const [permissionList, setPermissionList] = useState<IUserPermission[]>([]);
-    const [unitList, setUnitList] = useState<AssetData[]>([]);
     const [invoiceFormDefaultValue, setInvoiceFormDefaultValue] = useState<IInvoiceForm>();
     const [tempInvoiceFormDefaultValue, setTempInvoiceFormDefaultValue] = useState<IInvoiceForm>();
     const [managerList, setManagerList] = useState<IUser[]>([]);
     const [invoiceTableData, setInvoiceTableData] = useState<IInvoiceForm[]>([]);
     const [activeContract, setActiveContract] = useState<IContractDetail>();
     const [action, setAction] = useState<"CREATE" | "UPDATE">("CREATE");
-    const [loadingMessage, setLoadingMessage] = useState("Loading...");
     const [successMessage, setSuccessMessage] = useState("");
 
     const [isReady, setIsReady] = useState(false);
     const [isImageLoading, setIsImageLoading] = useState(true);
-    const [isManagerSearchOpen, setIsManagerSearchOpen] = useState(false);
     const [isContractFormOpen, setContractFormOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isAttachPropertiesModalOpen, setIsAttachPropertiesModalOpen] = useState(false);
     const [isTerminatingContract, setIsTerminatingContract] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
     const [showShareLink, setShowShareLink] = useState(false);
+    const [showMobileActions, setShowMobileActions] = useState(false);
+        const [clicked, setClicked] = useState(false);
     const [showActionModal, setShowActionModal] = useState(false);
 
     const params = useParams();
     const router = useRouter();
-    const { isAuthorized, loadingProfile, activeProfile, profilesDetails } = useAuth();
+    const { isAuthorized, loadingProfile } = useAuth();
 
     useEffect(() => {
         init();
@@ -96,6 +83,33 @@ const PropertyDetail = () => {
     }, [showInvoiceGenerator, tempInvoiceFormDefaultValue]);
     
 
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        console.log(showShareLink)
+        if (showShareLink) {
+            timer = setTimeout(() => {
+                setShowShareLink(false);
+                setClicked(false);
+            }, 7000);
+        }
+
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
+    }, [showShareLink]);
+
+    useEffect(() => {
+        if (showMobileActions) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [showMobileActions]);
+    
 
     const contractColumns = [
         {
@@ -193,30 +207,15 @@ const PropertyDetail = () => {
         },
     ];
  
-    const tenantRequests = [
-        {
-        id: "REQ001",
-        name: "Alice Brown",
-        email: "alice.b@email.com",
-        phone: "(555) 123-4567",
-        status: "Pending",
-        submitted: "2 days ago",
-        },
-        {
-        id: "REQ002",
-        name: "James Wilson",
-        email: "james.w@email.com",
-        phone: "(555) 234-5678",
-        status: "Reviewing",
-        submitted: "5 days ago",
-        },
-    ];
     const handleShareLink = () => {
         const shareLink = `https://rentila.com/properties/ASkswDWMB1748465484436/apply`;
         setShowShareLink(true);
     };
     const handleCreateContract = () => {
+        
         setContractFormOpen(true);
+        setShowMobileActions(false);
+        
     };
     const handleVerificationSubmit = (data: any) => {
         setIsModalOpen(false);
@@ -258,7 +257,7 @@ const PropertyDetail = () => {
         
     };
     const handleSelectedContract = (contractId: string) => {
-        router.push(`/landlord/properties/${params.unitId}/contracts/${contractId}`)
+        router.push(`/landlord/properties/${asset?.ParentCode}/units/${asset?.Code}/contracts/${contractId}`)
     }
     const handleCreateInvoice = async (data: IInvoiceForm) => {
         try {
@@ -334,47 +333,7 @@ const PropertyDetail = () => {
             toast.success("Lease terminated", { position: 'bottom-right' });
         }
     }
-    const handleInviteManager = async (manager: {userInfo: IUser, permissions: string[]}) => {
-        if(asset){
-            try {
-                
-                const payload: IInviteManagerRequest = {
-                    assetCode: asset.Code,
-                    managerCode: manager.userInfo.id,
-                    profilCode: profilesDetails.find(profile => profile.RoleCode == "LANDLORD")?.Code ?? "",
-                    notes: "",
-                    title: asset.Title,
-                    body: mapPermissionsToObject(manager.permissions),
-                }
-                
-                setIsLoading(true);
-                setLoadingMessage("Inviting manager...");   
-                const result = await inviteManager(payload);
-                console.log('-->result', result)
-                if(result.data){
-                    setIsLoading(false);
-                    setLoadingMessage("Loadind...");  
-                    setSuccessMessage("Manager invited successfully");
-                    setShowSuccessModal(true);
-                    await init();
-                } else if(result.error){
-                    setIsLoading(false);
-                    setLoadingMessage("Loadind...");  
-                    if(result.code == 'SESSION_EXPIRED'){
-                        router.push('/signin');
-                        return;
-                    }
-                    toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
-                }
-            } catch (error) {
-                toast.error("An error occurred while inviting the manager. Please try again.", { position: 'bottom-right' });
-            }
-        }                    
-    }
 
-    const handleCancelManagerInvitation = (manager: IUser) => {
-
-    }
 
     
     const getUnits = (items:any[]): AssetData [] => {
@@ -487,10 +446,6 @@ const PropertyDetail = () => {
 
         return false;
     }
-    const canAttachManager = (): boolean => {
-        let can = asset?.whoIs == 'OWNER' && asset.IsVerified == 1 ? true : false;
-        return can == undefined ? true : !can;
-    }
     const canCreateContract = (): boolean => {
         if(asset) {
             const hasPermission = asset.Permission.includes("GenerateContract");
@@ -500,6 +455,42 @@ const PropertyDetail = () => {
         }
         return false;
     }
+
+    const copyToClipboard = (text: string) => {
+        if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch((err) => {
+            console.error("Clipboard write failed:", err);
+            });
+        } else {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+
+            textArea.style.position = "fixed";
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.width = "1px";
+            textArea.style.height = "1px";
+            textArea.style.padding = "0";
+            textArea.style.border = "none";
+            textArea.style.outline = "none";
+            textArea.style.boxShadow = "none";
+            textArea.style.background = "transparent";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+            document.execCommand("copy");
+            } catch (err) {
+            console.error("Fallback: copy failed", err);
+            }
+
+            document.body.removeChild(textArea);
+        }
+        console.log('Clicked')
+        setClicked(true);
+    };
 
     const init = async () => {
         try {
@@ -521,6 +512,7 @@ const PropertyDetail = () => {
                     whoIs: result.data.body.whoIs,
                     BillingItems: result.data.body.billingItems.map((item: any) => (item.ItemCode)),
                     Units: getUnits(item.assets),
+                    ParentCode: item.ParentCode,
                     Address: {
                         Code: item.Address.Code,
                         City: item.Address.City,
@@ -652,7 +644,7 @@ const PropertyDetail = () => {
                     setTempInvoiceFormDefaultValue(_invoiceformDefaultValue);
                     setContractTableData([..._contractTableData].reverse());
                 }
-                setPermissionList(result.data.body.ConfigPermissionList);
+                
                 setManagerList(_managerList);
                 setAsset(assetData)
             } else if(result.error){
@@ -668,22 +660,14 @@ const PropertyDetail = () => {
             setIsReady(true);
         }
     }
-    // const fetch
 
-    const mapPermissionsToObject = (permissions: string[]): Record<string, boolean> => {
-        return permissions.reduce((acc, permission) => {
-            acc[permission] = true;
-            return acc;
-        }, {} as Record<string, boolean>);
-    }
 
     if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
         return <div>Unauthorized</div>;
     }
     return (
         <DefaultLayout>
-            <Breadcrumb previousPage pageName="Property/Unit" />
-            
+            <Breadcrumb previousPage pageName={`Unit ${asset?.Title ? "- " + capitalize(asset.Title) : ""}`} />
             
             <div className="w-full mt-7">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -744,14 +728,8 @@ const PropertyDetail = () => {
 
                                 {
                                     asset?.TypeCode != ASSET_TYPE_COMPLEXE && <>
-                                        {/* BILLING STATEMENT */}
-                                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
-                                            <div className="flex items-center justify-between mx-3 mb-3">
-                                                <h2 className="text-xl font-semibold flex items-center gap-2">
-                                                    <FileText size={20} className="text-gray-400" />
-                                                    Invoice history
-                                                </h2>
-                                            </div>
+                                        {/* INVOICE HISTORY */}
+                                        {/* <SectionWrapper title="Invoice history" Icon={FileText}>
                                             {invoiceTableData.length > 0 ? (
                                                 <ResponsiveTable
                                                     columns={invoiceColumns}
@@ -759,23 +737,17 @@ const PropertyDetail = () => {
                                                     onRowClick={(inv) => handleSelectInvoice(inv.id)}
                                                     keyField="id"
                                                     showMore={asset && invoiceTableData.length > 3 ? {
-                                                        url: `/landlord/properties/${asset?.Code}/invoices`,
+                                                        url: `/landlord/properties/${asset?.ParentCode}/units/${asset?.Code}/invoices`,
                                                         label: 'Show more invoices'
                                                     } : undefined}
                                                 />
                                                 ) : (
                                                 <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No invoices available</p>
                                             )}
-                                        </div>
+                                        </SectionWrapper> */}
                                         
                                         {/* CONTRACT */}
-                                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
-                                            <div className="flex items-center justify-between mx-3 mb-3">
-                                            <h2 className="text-xl font-semibold flex items-center gap-2">
-                                                <FileText size={20} className="text-gray-400" />
-                                                Lease Contracts
-                                            </h2>
-                                            </div>
+                                        <SectionWrapper title="Lease Contracts" Icon={FileText}>
                                             {contractTableData.length > 0 ? (
                                                 <ResponsiveTable
                                                     columns={contractColumns}
@@ -783,16 +755,15 @@ const PropertyDetail = () => {
                                                     onRowClick={(contract) => handleSelectedContract(contract.id)}
                                                     keyField="id"
                                                     showMore={asset && contractTableData.length > 3 ? {
-                                                        url: `/landlord/properties/${asset?.Code}/contracts`,
+                                                        url: `/landlord/properties/${asset?.ParentCode}/units/${asset?.Code}/contracts`,
                                                         label: 'Show more contracts'
                                                     } : undefined}
                                                 />
                                                 ) : (<p className="text-gray-500 dark:text-gray-400 text-sm p-3">No lease contracts available</p>)
                                             }
-                                        </div>
+                                        </SectionWrapper>
                                     </>
                                 }
-                                
                             </div>
                         :
                         <PropertySkeletonPageSection1 />
@@ -803,9 +774,8 @@ const PropertyDetail = () => {
                         { isReady ? 
                             <div>
                                 {/* ACTIONS */}
-                                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                                    <h3 className="font-medium mb-4 text-gray-800 dark:text-gray-100 ">Quick Actions</h3>
-                                    <div className="space-y-3">
+                                <div className="hidden lg:block">
+                                    <SectionWrapper title="Quick Actions">
                                         {
                                             asset?.whoIs == "OWNER" && <>
                                                 {asset?.IsVerified == 1 && <Button onClick={handleShareLink} variant='neutral' isSubmitBtn={false}>
@@ -821,12 +791,9 @@ const PropertyDetail = () => {
                                                         <Building2 size={16} /> Attach Properties
                                                     </Button>
                                                 )}
-                                                <Button variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false} onClick={() => router.push(`/landlord/properties/${params.id}/edit-unit?unitId=${params.unitId}`)}>
+                                                <Button variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false} onClick={() => router.push(`/landlord/properties/edit?propertyId=${params.id}`)}>
                                                     <Building2 size={16} /> Edit Property
                                                 </Button>
-                                                {asset?.IsVerified == 1 && <Button onClick={() => setIsManagerSearchOpen(true)} variant='neutral' disable={canAttachManager()} isSubmitBtn={false}>
-                                                    <UserPlus size={16} /> Attach Manager
-                                                </Button>}
                                             </>
                                         }
                                         {
@@ -836,10 +803,10 @@ const PropertyDetail = () => {
                                         }
                                         
                                         {
-                                            canCreateInvoice() &&
-                                            <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={false} isSubmitBtn={false}>
-                                                <DollarSign size={16} /> Create Invoice
-                                            </Button>
+                                            // canCreateInvoice() &&
+                                            // <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={false} isSubmitBtn={false}>
+                                            //     <DollarSign size={16} /> Create Invoice
+                                            // </Button>
                                         }
                                         {
                                             asset?.whoIs == "OWNER" && activeContract?.status == "ACTIVE" && 
@@ -849,43 +816,42 @@ const PropertyDetail = () => {
                                                 </Button>
                                             </div>)
                                         }
-                                    </div>
-                                    {showShareLink && (
-                                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                                        <p className="text-sm text-gray-600 mb-2">
-                                            Share this link with potential tenants:
-                                        </p>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value="https://rentila.com/properties/123/apply"
-                                                readOnly
-                                                className="flex-1 text-sm p-2 border border-gray-200 rounded-lg bg-white"
-                                            />
-                                            <button
-                                                onClick={() =>
-                                                    navigator.clipboard.writeText(
-                                                        "https://rentila.com/properties/123/apply",
-                                                    )
-                                                }
-                                                className="px-3 py-2 bg-gray-200 rounded-lg text-sm hover:bg-gray-300"
-                                            >
-                                                Copy
-                                            </button>
-                                        </div>
-                                    </div>
-                                    )}
+                                        {showShareLink && (
+                                            <div className={`mt-4 p-3 bg-gray-50 rounded-lg transform ${showShareLink ? "block" : "hidden"}`}>
+                                                <p className="text-sm text-gray-600 mb-2">
+                                                    Share this link with potential tenants:
+                                                </p>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={`https://applink.rentalafrique.com/share/property/${asset?.Code}`}
+                                                        readOnly
+                                                        className="flex-1 text-sm p-2 border border-gray-200 rounded-lg bg-white"
+                                                    />
+                                                    <button 
+                                                        onClick={() => copyToClipboard(`https://applink.rentalafrique.com/share/property/${asset?.Code}`)}
+                                                        className={`px-3 py-2 rounded-lg text-sm transition-all duration-300 ease-out transform hover:scale-105 active:scale-95
+                                                            ${
+                                                                clicked 
+                                                                ? "bg-green-500 text-white" 
+                                                                : "bg-gray-200 hover:bg-gray-300"
+                                                            }
+                                                        `}
+                                                        >
+                                                        <span className="inline-flex items-center gap-1">
+                                                            {clicked ? "Copied!" : "Copy"}
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </SectionWrapper>
                                 </div>
 
                                 {/* MANAGER INVITATION REQUESTS */}
                                 {
                                     managerList.length > 0 && 
-                                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm mt-4">
-                                        <div className="flex items-center gap-2 mb-4">
-                                        <UserCog size={20} className="text-gray-400" />
-                                        <h3 className="font-medium">Manager(s)</h3>
-                                        </div>
-                                        <div className="space-y-4">
+                                    <SectionWrapper title="Manager" Icon={UserCog}>
                                         {managerList.map((manager) => (
                                             <div
                                                 key={manager.id}
@@ -918,36 +884,134 @@ const PropertyDetail = () => {
                                                     }
                                                 </div>
                                             }
-                                            { 
-                                                manager.status =="PENDING" && <div className="flex gap-2">
-                                                    <Button
-                                                        onClick={() => {handleCancelManagerInvitation(manager)}}
-                                                        isSubmitBtn={false}
-                                                        variant="danger"
-                                                        fullWidth={false}
-                                                    >
-                                                        Cancel Invitation
-                                                    </Button>
-                                                </div>
-                                            }
                                             </div>
                                         ))}
-                                        </div>
-                                    </div>
+                                    </SectionWrapper>
                                 }
                             </div> : 
                             <PropertySkeletonPageSection2 />
                         }
-
-                        
                     </div>
                 </div>
                 
-                
-                
-                
-                
-                
+
+                {/* Drawer d’actions pour mobile */}
+                <div
+                    className={`
+                        fixed inset-0 z-50 lg:hidden
+                        ${showMobileActions ? "pointer-events-auto" : "pointer-events-none"}
+                    `}
+                    role="dialog"
+                    aria-modal="true"
+                    >
+                    {/* Overlay */}
+                    <div
+                        className={`
+                        absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm
+                        transition-opacity duration-300 ease-linear
+                        ${showMobileActions ? "opacity-100" : "opacity-0"}
+                        `}
+                        onClick={() => setShowMobileActions(false)}
+                    />
+
+                    {/* Drawer - slide up/down */}
+                    <div
+                        className={`
+                        absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl p-4 shadow-lg
+                        transform transition-transform duration-300 ease-linear
+                        ${showMobileActions ? "translate-y-0" : "translate-y-full"}
+                        `}
+                    >
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Quick Actions</h2>
+                            <button onClick={() => setShowMobileActions(false)} className="text-gray-500 hover:text-gray-800 dark:hover:text-white" aria-label="Close drawer">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {/* MOBILE ACTIONS */}
+                        <div className="space-y-3 mb-20">
+                            {
+                                asset?.whoIs == "OWNER" && <>
+                                    {asset?.IsVerified == 1 && <Button onClick={handleShareLink} variant='neutral' isSubmitBtn={false}>
+                                        <Share2 size={16} /> Invite Tenant
+                                    </Button>}
+
+                                    { asset?.StatusCode == "DRAFT" && <Button onClick={handleVerificationFormOpen} variant='neutral' disable={false} isSubmitBtn={false}>
+                                        <FileText size={16} /> Verify Property
+                                    </Button>}
+
+                                    {asset?.TypeCode === "CPLXMOD" && asset?.IsVerified == 1 && (
+                                        <Button onClick={() => setIsAttachPropertiesModalOpen(true)} variant='neutral' isSubmitBtn={false}>
+                                            <Building2 size={16} /> Attach Properties
+                                        </Button>
+                                    )}
+                                    <Button variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false} onClick={() => router.push(`/landlord/properties/edit?propertyId=${params.id}`)}>
+                                        <Building2 size={16} /> Edit Property
+                                    </Button>
+                                </>
+                            }
+                            {
+                                canCreateContract() && <Button onClick={handleCreateContract} variant='neutral' disable={false} isSubmitBtn={false}>
+                                    <FileText size={16} /> Create a contract
+                                </Button>
+                            }
+                            
+                            {
+                                // canCreateInvoice() &&
+                                // <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={false} isSubmitBtn={false}>
+                                //     <DollarSign size={16} /> Create Invoice
+                                // </Button>
+                            }
+                            {
+                                asset?.whoIs == "OWNER" && activeContract?.status == "ACTIVE" && 
+                                (<div className="space-y-3">
+                                    <Button onClick={handleClickTerminateLease} variant='danger' disable={false} isSubmitBtn={false} loading={isTerminatingContract}>
+                                        <DollarSign size={16} /> Terminate Lease
+                                    </Button>
+                                </div>)
+                            }
+                            {showShareLink && (
+                                <div className={`mt-4 p-3 bg-gray-50 rounded-lg transform ${showShareLink ? "block" : "hidden"}`}>
+                                    <p className="text-sm text-gray-600 mb-2">
+                                        Share this link with potential tenants:
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={`https://applink.rentalafrique.com/share/property/${asset?.Code}`}
+                                            readOnly
+                                            className="flex-1 text-sm p-2 border border-gray-200 rounded-lg bg-white"
+                                        />
+                                        <button 
+                                            onClick={() => copyToClipboard(`https://applink.rentalafrique.com/share/property/${asset?.Code}`)}
+                                            className={`px-3 py-2 rounded-lg text-sm transition-all duration-300 ease-out transform hover:scale-105 active:scale-95
+                                                ${
+                                                    clicked 
+                                                    ? "bg-green-500 text-white" 
+                                                    : "bg-gray-200 hover:bg-gray-300"
+                                                }
+                                            `}
+                                            >
+                                            <span className="inline-flex items-center gap-1">
+                                                {clicked ? "Copied!" : "Copy"}
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* FAB pour mobile */}
+                {!showMobileActions && (
+                    <button onClick={() => setShowMobileActions(true)} aria-label="Show quick actions" className={`fixed bottom-9 right-6 z-50 bg-[#2A4365] text-white p-2 rounded-full shadow-lg hover:bg-blue-700 active:scale-95 duration-300 ease-linear lg:hidden`}  >
+                        <Zap size={24} />
+                    </button>
+                )}
+
+
 
                 {/* Modal Actions */}
                 <Overlay isOpen={showInvoiceGenerator} onClose={() => setShowInvoiceGenerator(false)}>
@@ -956,13 +1020,6 @@ const PropertyDetail = () => {
                         onCreate={(data: IInvoiceForm) => {handleCreateInvoice(data)}}
                         defaultValue={invoiceFormDefaultValue}
                         action={action}
-                    />
-                </Overlay>
-                <Overlay isOpen={isManagerSearchOpen} onClose={() => setIsManagerSearchOpen(false)}>
-                    <ManagerSearch
-                        permissionList={permissionList}
-                        onClose={() => setIsManagerSearchOpen(false)}
-                        onSelect={(manager) => {handleInviteManager(manager)}}
                     />
                 </Overlay>
                 <Overlay isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
@@ -1008,9 +1065,6 @@ const PropertyDetail = () => {
                         showCommentInput={false}
                         message={`Are you sure you want to terminate lease #${activeContract?.id} ?`}
                     />
-                </Overlay>
-                <Overlay isOpen={isLoading} onClose={() => {setIsLoading(false)}}>
-                    <ProcessingModal message={loadingMessage} />
                 </Overlay>
             </div>
         </DefaultLayout>

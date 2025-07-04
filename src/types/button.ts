@@ -6,7 +6,7 @@ export interface ButtonProps {
     variant: Variant;
     disable?: boolean;
     onClick?: (e: any) => void;
-    isSubmitBtn: boolean;
+    isSubmitBtn?: boolean;
     fullWidth?: boolean;
     loading?: boolean;
 }

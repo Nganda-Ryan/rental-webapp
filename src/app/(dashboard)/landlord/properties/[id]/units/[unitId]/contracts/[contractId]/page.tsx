@@ -156,13 +156,6 @@ const ContractDetail = () => {
     }, []);
 
     useEffect(() => {
-        if(showInvoiceGenerator == false){
-            setFormDefaultInvoice(tempFormDefaultInvoice);
-            setAction("CREATE");
-        }
-    }, [showInvoiceGenerator, tempFormDefaultInvoice]);
-
-    useEffect(() => {
         if (showMobileActions) {
             document.body.style.overflow = 'hidden';
         } else {
@@ -173,6 +166,15 @@ const ContractDetail = () => {
             document.body.style.overflow = '';
         };
     }, [showMobileActions]);
+
+    useEffect(() => {
+        if(showInvoiceGenerator == false){
+            setFormDefaultInvoice(tempFormDefaultInvoice);
+            setAction("CREATE");
+        }
+    }, [showInvoiceGenerator, tempFormDefaultInvoice]);
+
+
 
     const today = new Date().toISOString().split("T")[0];
     const invoiceColumns = [
@@ -413,15 +415,14 @@ const ContractDetail = () => {
     }
     return (
         <DefaultLayout>
-            <Breadcrumb previousPage pageName="Locatif" />
+            <Breadcrumb previousPage pageName="Unit Contract" />
             {
                 isLoading ? 
                 <ContractDetailSkeleton />
                 :
                 <div className="w-full mt-10">
                     {
-                        contract ? 
-                        <>
+                        contract ? <>
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div className="lg:col-span-2 space-y-6">
                                     {/* Contract Overview */}
@@ -528,7 +529,7 @@ const ContractDetail = () => {
                                     </div>
 
                                     {/* BILLING STATEMENT */}
-                                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm">
+                                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
                                         <div className="flex items-center justify-between mb-6">
                                             <h2 className="text-xl font-semibold flex items-center gap-2 text-gray-800 dark:text-white">
                                             <FileText size={20} className="text-gray-400 dark:text-gray-300" />
@@ -550,8 +551,9 @@ const ContractDetail = () => {
                                         </div>
                                     </div>
                                 </div>
-                                {/* ACTIONS */}
-                                <div className="hidden lg:block">
+                                <div className="space-y-6">
+                                    {/* ACTIONS */}
+                                    <div className="hidden lg:block">
                                     <SectionWrapper title="Quick Actions">
                                         <div className="space-y-3 mb-3">
                                             <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={contract.status == "INACTIVE"} isSubmitBtn={false}>
@@ -568,9 +570,11 @@ const ContractDetail = () => {
                                         }
                                     </SectionWrapper>
                                 </div>
+                                    
+                                </div>
                             </div>
 
-                            
+
                             {/* Drawer d’actions pour mobile */}
                             <div
                                 className={`
@@ -631,7 +635,6 @@ const ContractDetail = () => {
                                 </button>
                             )}
 
-                                        
 
                             <Overlay isOpen={showInvoiceGenerator} onClose={() => setShowInvoiceGenerator(false)}>
                                 <InvoiceGenerator
@@ -657,9 +660,7 @@ const ContractDetail = () => {
                                     message={`Are you sure you want to terminate lease #${contract.id} ?`}
                                 />
                             </Overlay>
-                        </>
-                        : 
-                        <div>
+                        </> : <div>
                             <Nodata />
                         </div>
                     }

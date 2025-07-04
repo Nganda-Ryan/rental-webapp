@@ -365,8 +365,9 @@ const Page = () => {
                           <p className="text-sm text-red-500">{errors.price.message}</p>
                         )}
                       </div>
-                      
-                      {!(typeCode == "CPLXMOD") && <div></div>}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-4 ">
                         <h3 className="font-medium text-gray-800 dark:text-gray-200">Description</h3>
                         <textarea

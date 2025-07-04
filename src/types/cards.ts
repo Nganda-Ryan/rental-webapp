@@ -1,3 +1,5 @@
+import { LucideIcon } from "lucide-react";
+
 export type CardItemProps = {
   imageSrc?: string;
   name?: string;
@@ -6,3 +8,11 @@ export type CardItemProps = {
   cardTitle?: string;
   cardContent?: string;
 };
+
+
+export interface SectionWrapperProps {
+  title: string;
+  children: React.ReactNode;
+  Icon?: LucideIcon;
+
+}

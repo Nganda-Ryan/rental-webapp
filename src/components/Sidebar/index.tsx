@@ -19,6 +19,7 @@ import {
 import SidebarItemSkeleton from "../skeleton/SidebarItemSkeleton";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import logoImage from "../../../public/images/logo.svg";
 
 
 type MenuItem = {
@@ -175,9 +176,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             <Image
               width={200}
               height={200}
-              src={"/images/logo.svg"}
+              src={logoImage}
               alt="Logo"
-              className="h-13 relative left-2"
+              className="h-13 w-auto relative left-2"
+              priority
             />
           </Link>
           <button

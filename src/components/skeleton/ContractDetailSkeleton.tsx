@@ -24,7 +24,7 @@ const ContractDetailSkeleton = () => {
           <div className="border-t border-gray-100 dark:border-gray-700 pt-4 mt-4">
             <h3 className="font-medium mb-4 flex items-center gap-2 dark:text-white">
 
-              Financial Information
+              <SkeletonBox className="h-4 w-50 mb-1" />
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
@@ -46,7 +46,7 @@ const ContractDetailSkeleton = () => {
           <div className="border-t border-gray-100 dark:border-gray-700 pt-4 mt-4">
             <h3 className="font-medium mb-4 flex items-center gap-2 dark:text-white">
 
-              Tenant Information
+              <SkeletonBox className="h-4 w-50 mb-1" />
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -81,11 +81,11 @@ const ContractDetailSkeleton = () => {
 
       {/* Right section (actions or invoice generator) */}
       <div className="space-y-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 h-64">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 h-36">
           <SkeletonBox className="h-6 w-40 mb-4" />
-          <SkeletonBox className="h-10 w-full mb-2" />
-          <SkeletonBox className="h-10 w-full mb-2" />
-          <SkeletonBox className="h-10 w-full mb-2" />
+          <SkeletonBox className="h-8 w-full mb-2" />
+          <SkeletonBox className="h-8 w-full mb-2" />
+          {/* <SkeletonBox className="h-6 w-full mb-2" /> */}
         </div>
       </div>
     </div>

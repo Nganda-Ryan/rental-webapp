@@ -18,7 +18,7 @@ export const AuthLayout = ({ children }: AuthLayoutProps) => {
         </div>
       </div>
       {/* Right side - Content */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 pt-10 bg-gray-50">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 bg-gray-50">
         {children}
       </div>
     </main>

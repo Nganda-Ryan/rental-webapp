@@ -9,6 +9,11 @@ import {
   FileText,
   DollarSign,
   UserCog,
+  House,
+  Plus,
+  Zap,
+  X,
+  ClipboardCheck,
 } from "lucide-react";
 import { useRouter } from '@bprogress/next/app';
 import { ManagerSearch } from "@/components/feature/Properties/ManagerSearch";
@@ -38,6 +43,7 @@ import ImageLoading from "@/components/ImageLoading";
 import { IInviteManagerRequest, IUser, IUserPermission } from "@/types/user";
 import { ProcessingModal } from "@/components/Modal/ProcessingModal";
 import { set } from "zod";
+import SectionWrapper from "@/components/Cards/SectionWrapper";
 
 
 
@@ -79,6 +85,8 @@ const PropertyDetail = () => {
     const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
     const [showShareLink, setShowShareLink] = useState(false);
     const [showActionModal, setShowActionModal] = useState(false);
+    const [showMobileActions, setShowMobileActions] = useState(false);
+    const [clicked, setClicked] = useState(false);
 
     const params = useParams();
     const router = useRouter();
@@ -95,6 +103,32 @@ const PropertyDetail = () => {
         }
     }, [showInvoiceGenerator, tempInvoiceFormDefaultValue]);
     
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        console.log(showShareLink)
+        if (showShareLink) {
+            timer = setTimeout(() => {
+                setShowShareLink(false);
+                setClicked(false);
+            }, 7000);
+        }
+
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
+    }, [showShareLink]);
+
+    useEffect(() => {
+        if (showMobileActions) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [showMobileActions]);
 
 
     const contractColumns = [
@@ -195,10 +229,10 @@ const PropertyDetail = () => {
     const unitColumns = [
         {
             key: 'unit',
-            label: 'Unit',
+            label: 'Unit Name',
             priority: "medium" as "medium",
             render: (_: any, unit: AssetData) => (
-                <div className="flex flex-col text-gray-800 text-sm dark:text-gray-100">
+                <div className="flex flex-col text-gray-800 dark:text-gray-100">
                     <span className="font-medium">{capitalize(unit.Title)}</span>
                     <span className="text-xs text-gray-600 dark:text-gray-100 ml-1">{capitalize(unit.TypeCode)}</span>
                 </div>
@@ -209,7 +243,7 @@ const PropertyDetail = () => {
             label: 'Status',
             priority: "low" as "low",
             render: (_: any, unit: AssetData) => (
-                <div className="text-sm text-gray-800 dark:text-gray-100">
+                <div className=" text-gray-800 dark:text-gray-100">
                     {getStatusBadge(unit.StatusCode)}
                 </div>
             ),
@@ -219,7 +253,7 @@ const PropertyDetail = () => {
             label: 'Rent',
             priority: "medium" as "medium",
             render: (_: any, unit: AssetData) => (
-                <span className="text-sm">
+                <span className="">
                     {formatNumberWithSpaces(unit.Price)} {unit.Currency}
                 </span>
             ),
@@ -255,30 +289,14 @@ const PropertyDetail = () => {
         },
     ]
  
-    const tenantRequests = [
-        {
-        id: "REQ001",
-        name: "Alice Brown",
-        email: "alice.b@email.com",
-        phone: "(555) 123-4567",
-        status: "Pending",
-        submitted: "2 days ago",
-        },
-        {
-        id: "REQ002",
-        name: "James Wilson",
-        email: "james.w@email.com",
-        phone: "(555) 234-5678",
-        status: "Reviewing",
-        submitted: "5 days ago",
-        },
-    ];
+  
     const handleShareLink = () => {
-        const shareLink = `https://rentila.com/properties/ASkswDWMB1748465484436/apply`;
+        console.log("-->handleShareLink", showShareLink)
         setShowShareLink(true);
     };
     const handleCreateContract = () => {
         setContractFormOpen(true);
+        setShowMobileActions(false);
     };
     const handleVerificationSubmit = (data: any) => {
         setIsModalOpen(false);
@@ -539,7 +557,7 @@ const PropertyDetail = () => {
     const canCreateInvoice = (): boolean => {
         if(asset){
             const hasPermission = asset.Permission.includes("ManageBilling");
-            if(hasPermission){
+            if(hasPermission && asset.TypeCode != ASSET_TYPE_COMPLEXE){
                 if(asset.IsVerified == 0){
                     return false;
                 } else {
@@ -559,7 +577,7 @@ const PropertyDetail = () => {
     const canCreateContract = (): boolean => {
         if(asset) {
             const hasPermission = asset.Permission.includes("GenerateContract");
-            if(hasPermission){
+            if(hasPermission && asset.TypeCode != ASSET_TYPE_COMPLEXE){
                return asset?.IsVerified == 1 && !contractTableData.some(contract => (contract.status == 'ACTIVE'));
             }
         }
@@ -735,6 +753,41 @@ const PropertyDetail = () => {
     }
     // const fetch
 
+    const copyToClipboard = (text: string) => {
+        if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch((err) => {
+            console.error("Clipboard write failed:", err);
+            });
+        } else {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+
+            textArea.style.position = "fixed";
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.width = "1px";
+            textArea.style.height = "1px";
+            textArea.style.padding = "0";
+            textArea.style.border = "none";
+            textArea.style.outline = "none";
+            textArea.style.boxShadow = "none";
+            textArea.style.background = "transparent";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+            document.execCommand("copy");
+            } catch (err) {
+            console.error("Fallback: copy failed", err);
+            }
+
+            document.body.removeChild(textArea);
+        }
+        console.log('Clicked')
+        setClicked(true);
+    };
     const mapPermissionsToObject = (permissions: string[]): Record<string, boolean> => {
         return permissions.reduce((acc, permission) => {
             acc[permission] = true;
@@ -747,7 +800,7 @@ const PropertyDetail = () => {
     }
     return (
         <DefaultLayout>
-            <Breadcrumb previousPage pageName={`Property - ${capitalize(asset?.Title ?? "")}`} />
+            <Breadcrumb previousPage pageName={`Property ${asset ? ("- " + capitalize(asset.Title)) : ""}`} />
 
             <div className="w-full mt-7">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -755,24 +808,20 @@ const PropertyDetail = () => {
                         isReady ?
                             <div className="lg:col-span-2 space-y-6 h-fit">
                                 {/* Property image */}
+                                
                                 <div className="rounded-lg overflow-hidden h-100">
-                                    {asset?.CoverUrl == "" || asset?.CoverUrl == null ?
-                                        <div className="relative h-full w-full overflow-hidden">
-                                            <ImageLoading />
-                                        </div>
-                                        :
+                                    {asset && (!(asset?.CoverUrl == "") || !asset?.CoverUrl) ?
                                         <Image
-                                            src={asset.CoverUrl}
-                                            alt={asset.Title}
-                                            className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${
-                                                isImageLoading ? 'opacity-0' : 'opacity-100'
-                                            }`}
+                                            src={asset!.CoverUrl}
+                                            alt={asset!.Title}
+                                            className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110`}
                                             width={1280}
                                             height={600}
-                                            onLoad={() => setIsImageLoading(false)}
                                             priority
-                                            onError={() => <ImageLoading />}
-                                        />
+                                            onError={(e) => console.log('ERROR WHILE LOADING THE IMAGE')}
+                                            placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mPsnrquHgAF0AJP9UhCwgAAAABJRU5ErkJggg=="
+                                        /> :
+                                        <ImageLoading />
                                     }
                                 </div>
 
@@ -809,13 +858,7 @@ const PropertyDetail = () => {
 
                                 {/* UNITS */}
                                 {
-                                    asset?.TypeCode == ASSET_TYPE_COMPLEXE && asset?.Units.length && <div className="md:bg-white dark:md:bg-gray-800 rounded-lg shadow-sm pt-3">
-                                        <div className="flex items-center justify-between mx-3 mb-3">
-                                            <h2 className="text-xl font-semibold flex items-center gap-2">
-                                                <FileText size={20} className="text-gray-400" />
-                                                Units
-                                            </h2>
-                                        </div>
+                                    asset?.TypeCode == ASSET_TYPE_COMPLEXE && asset?.Units.length && <SectionWrapper title="Units" Icon={House}>
                                         {asset.Units.length > 0 ? (
                                             <ResponsiveTable
                                                 columns={unitColumns}
@@ -828,20 +871,14 @@ const PropertyDetail = () => {
                                                 } : undefined}
                                             />
                                             ) : (
-                                            <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No invoices available</p>
+                                            <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No units available</p>
                                         )}
-                                    </div>
+                                    </SectionWrapper>
                                 }
                                 {
                                     asset?.TypeCode != ASSET_TYPE_COMPLEXE && <>
-                                        {/* BILLING STATEMENT */}
-                                        <div className="md:bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
-                                            <div className="flex items-center justify-between mx-3 mb-3 ">
-                                                <h2 className="text-xl font-semibold flex items-center gap-2">
-                                                    <FileText size={20} className="text-gray-400" />
-                                                    Invoice history
-                                                </h2>
-                                            </div>
+                                        {/* INVOICE HISTORY */}
+                                        {/* <SectionWrapper title="Invoice history" Icon={FileText}>
                                             {invoiceTableData.length > 0 ? (
                                                 <ResponsiveTable
                                                     columns={invoiceColumns}
@@ -856,16 +893,10 @@ const PropertyDetail = () => {
                                                 ) : (
                                                 <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No invoices available</p>
                                             )}
-                                        </div>
+                                        </SectionWrapper> */}
                                         
                                         {/* CONTRACT */}
-                                        <div className="md:bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
-                                            <div className="flex items-center justify-between mx-3 mb-3">
-                                            <h2 className="text-xl font-semibold flex items-center gap-2">
-                                                <FileText size={20} className="text-gray-400" />
-                                                Lease Contracts
-                                            </h2>
-                                            </div>
+                                        <SectionWrapper title="Lease Contracts" Icon={FileText}>
                                             {contractTableData.length > 0 ? (
                                                 <ResponsiveTable
                                                     columns={contractColumns}
@@ -879,7 +910,7 @@ const PropertyDetail = () => {
                                                 />
                                                 ) : (<p className="text-gray-500 dark:text-gray-400 text-sm p-3">No lease contracts available</p>)
                                             }
-                                        </div>
+                                        </SectionWrapper>
                                     </>
                                 }
                                 
@@ -893,12 +924,11 @@ const PropertyDetail = () => {
                         { isReady ? 
                             <div>
                                 {/* ACTIONS */}
-                                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                                    <h3 className="font-medium mb-4 text-gray-800 dark:text-gray-100 ">Quick Actions</h3>
-                                    <div className="space-y-3">
+                                <div className="hidden lg:block">
+                                    <SectionWrapper title="Quick Actions">
                                         {
                                             asset?.whoIs == "OWNER" && <>
-                                                {asset?.IsVerified == 1 && <Button onClick={handleShareLink} variant='neutral' isSubmitBtn={false}>
+                                                {(asset?.IsVerified == 1 && asset.TypeCode != ASSET_TYPE_COMPLEXE) && <Button onClick={handleShareLink} variant='neutral' isSubmitBtn={false}>
                                                     <Share2 size={16} /> Invite Tenant
                                                 </Button>}
 
@@ -914,7 +944,7 @@ const PropertyDetail = () => {
                                                 <Button variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false} onClick={() => router.push(`/landlord/properties/edit?propertyId=${params.id}`)}>
                                                     <Building2 size={16} /> Edit Property
                                                 </Button>
-                                                {asset?.IsVerified == 1 && <Button onClick={() => setIsManagerSearchOpen(true)} variant='neutral' disable={canAttachManager()} isSubmitBtn={false}>
+                                                {asset?.IsVerified == 1 && <Button onClick={() => {setIsManagerSearchOpen(true); setShowMobileActions(false);}} variant='neutral' disable={canAttachManager()} isSubmitBtn={false}>
                                                     <UserPlus size={16} /> Attach Manager
                                                 </Button>}
                                             </>
@@ -926,10 +956,10 @@ const PropertyDetail = () => {
                                         }
                                         
                                         {
-                                            canCreateInvoice() &&
-                                            <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={false} isSubmitBtn={false}>
-                                                <DollarSign size={16} /> Create Invoice
-                                            </Button>
+                                            // canCreateInvoice() &&
+                                            // <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={false} isSubmitBtn={false}>
+                                            //     <DollarSign size={16} /> Create Invoice
+                                            // </Button>
                                         }
                                         {
                                             asset?.whoIs == "OWNER" && activeContract?.status == "ACTIVE" && 
@@ -939,91 +969,89 @@ const PropertyDetail = () => {
                                                 </Button>
                                             </div>)
                                         }
-                                    </div>
-                                    {showShareLink && (
-                                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                                        <p className="text-sm text-gray-600 mb-2">
-                                            Share this link with potential tenants:
-                                        </p>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value="https://rentila.com/properties/123/apply"
-                                                readOnly
-                                                className="flex-1 text-sm p-2 border border-gray-200 rounded-lg bg-white"
-                                            />
-                                            <button
-                                                onClick={() =>
-                                                    navigator.clipboard.writeText(
-                                                        "https://rentila.com/properties/123/apply",
-                                                    )
-                                                }
-                                                className="px-3 py-2 bg-gray-200 rounded-lg text-sm hover:bg-gray-300"
-                                            >
-                                                Copy
-                                            </button>
-                                        </div>
-                                    </div>
-                                    )}
+                                        {showShareLink && (
+                                            <div className={`mt-4 p-3 bg-gray-50 rounded-lg transform ${showShareLink ? "block" : "hidden"}`}>
+                                                <p className="text-sm text-gray-600 mb-2">
+                                                    Share this link with potential tenants:
+                                                </p>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={`https://applink.rentalafrique.com/share/property/${asset?.Code}`}
+                                                        readOnly
+                                                        className="flex-1 text-sm p-2 border border-gray-200 rounded-lg bg-white"
+                                                    />
+                                                    <button 
+                                                        onClick={() => copyToClipboard(`https://applink.rentalafrique.com/share/property/${asset?.Code}`)}
+                                                        className={`px-3 py-2 rounded-lg text-sm transition-all duration-300 ease-out transform hover:scale-105 active:scale-95
+                                                            ${
+                                                                clicked 
+                                                                ? "bg-green-500 text-white" 
+                                                                : "bg-gray-200 hover:bg-gray-300"
+                                                            }
+                                                        `}
+                                                        >
+                                                        <span className="inline-flex items-center gap-1">
+                                                            {clicked ? "Copied!" : "Copy"}
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </SectionWrapper>
                                 </div>
 
                                 {/* MANAGER INVITATION REQUESTS */}
                                 {
                                     managerList.length > 0 && 
-                                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm mt-4">
-                                        <div className="flex items-center gap-2 mb-4">
-                                        <UserCog size={20} className="text-gray-400" />
-                                        <h3 className="font-medium">Manager(s)</h3>
-                                        </div>
-                                        <div className="space-y-4">
-                                        {managerList.map((manager) => (
-                                            <div
-                                                key={manager.id}
-                                                className="border border-gray-100 rounded-lg p-4"
-                                            >
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <h4 className="font-medium dark:text-gray-300">{manager.lastName} {manager.firstName}</h4>
-                                                    <p className="text-sm text-gray-500 dark:text-gray-400">{manager.email}</p>
-                                                    <p className="text-sm text-gray-500 dark:text-gray-400">{manager.phone}</p>
-                                                </div>
-                                                <div className="flex flex-col items-end">
-                                                    <span className="flex flex-col items-center">
-                                                        {getStatusBadge(manager.status)}
-                                                        {
-                                                            manager.createdAt && <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                                {formatDateToText(manager.createdAt)}
-                                                            </span>
-                                                        }
-                                                    </span>
-                                                </div>
+                                    <SectionWrapper title="Manager" Icon={UserCog}>
+                                    {managerList.map((manager) => (
+                                        <div
+                                            key={manager.id}
+                                            className="border border-gray-100 rounded-lg p-4"
+                                        >
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h4 className="font-medium dark:text-gray-300">{manager.lastName} {manager.firstName}</h4>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">{manager.email}</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">{manager.phone}</p>
                                             </div>
-                                            {
-                                                (manager.permissions && manager.permissions.length > 0) && <div className="flex flex-wrap gap-4 py-4 border-t border-gray-100 dark:border-gray-700">
+                                            <div className="flex flex-col items-end">
+                                                <span className="flex flex-col items-center">
+                                                    {getStatusBadge(manager.status)}
                                                     {
-                                                        manager.permissions.map((item) => (
-                                                        <span key={item} className="px-1.5 py-1.5 w-fit text-xs bg-gray-50 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-100">
-                                                            {item}
-                                                        </span>))
+                                                        manager.createdAt && <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                            {formatDateToText(manager.createdAt)}
+                                                        </span>
                                                     }
-                                                </div>
-                                            }
-                                            { 
-                                                manager.status =="PENDING" && <div className="flex gap-2">
-                                                    <Button
-                                                        onClick={() => {handleCancelManagerInvitation(manager)}}
-                                                        isSubmitBtn={false}
-                                                        variant="danger"
-                                                        fullWidth={false}
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                </div>
-                                            }
+                                                </span>
                                             </div>
-                                        ))}
                                         </div>
-                                    </div>
+                                        {
+                                            (manager.permissions && manager.permissions.length > 0) && <div className="flex flex-wrap gap-4 py-4 border-t border-gray-100 dark:border-gray-700">
+                                                {
+                                                    manager.permissions.map((item) => (
+                                                    <span key={item} className="px-1.5 py-1.5 w-fit text-xs bg-gray-50 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-100">
+                                                        {item}
+                                                    </span>))
+                                                }
+                                            </div>
+                                        }
+                                        { 
+                                            manager.status =="PENDING" && <div className="flex gap-2">
+                                                <Button
+                                                    onClick={() => {handleCancelManagerInvitation(manager)}}
+                                                    isSubmitBtn={false}
+                                                    variant="danger"
+                                                    fullWidth={false}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </div>
+                                        }
+                                        </div>
+                                    ))}
+                                    </SectionWrapper>
                                 }
 
                                 {/* TENANT REQUESTS */}
@@ -1078,6 +1106,118 @@ const PropertyDetail = () => {
                         
                     </div>
                 </div>
+
+                {/* Drawer d’actions pour mobile */}
+                <div
+                    className={`
+                        fixed inset-0 z-50 lg:hidden
+                        ${showMobileActions ? "pointer-events-auto" : "pointer-events-none"}
+                    `}
+                    role="dialog"
+                    aria-modal="true"
+                    >
+                    {/* Overlay */}
+                    <div
+                        className={`
+                        absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm
+                        transition-opacity duration-300 ease-linear
+                        ${showMobileActions ? "opacity-100" : "opacity-0"}
+                        `}
+                        onClick={() => setShowMobileActions(false)}
+                    />
+
+                    {/* Drawer - slide up/down */}
+                    <div
+                        className={`
+                        absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl p-4 shadow-lg
+                        transform transition-transform duration-300 ease-linear
+                        ${showMobileActions ? "translate-y-0" : "translate-y-full"}
+                        `}
+                    >
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Quick Actions</h2>
+                            <button onClick={() => setShowMobileActions(false)} className="text-gray-500 hover:text-gray-800 dark:hover:text-white" aria-label="Close drawer">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {/* MOBILE ACTIONS */}
+                        <div className="space-y-3 mb-20">
+                            {
+                                asset?.whoIs == "OWNER" && <>
+                                    {(asset?.IsVerified == 1 && asset.TypeCode != ASSET_TYPE_COMPLEXE) && <Button onClick={handleShareLink} variant='neutral' isSubmitBtn={false}>
+                                        <Share2 size={16} /> Invite Tenant
+                                    </Button>}
+
+                                    { asset?.StatusCode == "DRAFT" && <Button onClick={handleVerificationFormOpen} variant='neutral' disable={false} isSubmitBtn={false}>
+                                        <FileText size={16} /> Verify Property
+                                    </Button>}
+
+                                    {asset?.TypeCode === "CPLXMOD" && asset?.IsVerified == 1 && (
+                                        <Button onClick={() => setIsAttachPropertiesModalOpen(true)} variant='neutral' isSubmitBtn={false}>
+                                            <Building2 size={16} /> Attach Properties
+                                        </Button>
+                                    )}
+                                    <Button variant='neutral' disable={asset?.StatusCode == "PENDING"} isSubmitBtn={false} onClick={() => router.push(`/landlord/properties/edit?propertyId=${params.id}`)}>
+                                        <Building2 size={16} /> Edit Property
+                                    </Button>
+                                    {asset?.IsVerified == 1 && <Button onClick={() => {setIsManagerSearchOpen(true); setShowMobileActions(false);}} variant='neutral' disable={canAttachManager()} isSubmitBtn={false}>
+                                        <UserPlus size={16} /> Attach Manager
+                                    </Button>}
+                                </>
+                            }
+                            {
+                                canCreateContract() && <Button onClick={handleCreateContract} variant='neutral' disable={false} isSubmitBtn={false}>
+                                    <FileText size={16} /> Create a contract
+                                </Button>
+                            }
+                            {
+                                asset?.whoIs == "OWNER" && activeContract?.status == "ACTIVE" && 
+                                (<div className="space-y-3">
+                                    <Button onClick={handleClickTerminateLease} variant='danger' disable={false} isSubmitBtn={false} loading={isTerminatingContract}>
+                                        <DollarSign size={16} /> Terminate Lease
+                                    </Button>
+                                </div>)
+                            }
+                            {showShareLink && (
+                                <div className={`mt-4 p-3 bg-gray-50 rounded-lg`}>
+                                    <p className="text-sm text-gray-600 mb-2">
+                                        Share this link with potential tenants:
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={`https://applink.rentalafrique.com/share/property/${asset?.Code}`}
+                                            readOnly
+                                            className="flex-1 text-sm p-2 border border-gray-200 rounded-lg bg-white"
+                                        />
+                                        <button 
+                                            onClick={() => copyToClipboard(`https://applink.rentalafrique.com/share/property/${asset?.Code}`)}
+                                            className={`px-3 py-2 rounded-lg text-sm transition-all duration-300 ease-out transform hover:scale-105 active:scale-95
+                                                ${
+                                                    clicked 
+                                                    ? "bg-green-500 text-white animate-bounce" 
+                                                    : "bg-gray-200 hover:bg-gray-300"
+                                                }
+                                            `}
+                                            >
+                                            <span className="inline-flex items-center gap-1">
+                                                {clicked ? "Copied!" : "Copy"}
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* FAB pour mobile */}
+                {!showMobileActions && (
+                    <button onClick={() => setShowMobileActions(true)} aria-label="Show quick actions" className={`fixed bottom-9 right-6 z-50 bg-[#2A4365] text-white p-2 rounded-full shadow-lg hover:bg-blue-700 active:scale-95 duration-300 ease-linear lg:hidden`}  >
+                        <Zap size={24} />
+                    </button>
+                )}
                 
                 
                 

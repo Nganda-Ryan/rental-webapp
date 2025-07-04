@@ -295,7 +295,7 @@ export async function createInvoice(invoice: IInvoice) {
   try {
     const session = await verifySession();
     const userProfile = session.Profiles.find((p: any) => p.RoleCode === 'LANDLORD');
-    console.log('-->Session:', userProfile);
+    // console.log('-->Session:', userProfile);
     
     const token = session.accessToken;
     

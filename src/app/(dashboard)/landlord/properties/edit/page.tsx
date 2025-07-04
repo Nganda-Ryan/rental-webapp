@@ -19,6 +19,7 @@ import { useAuth } from '@/context/AuthContext';
 import { PROFILE_LANDLORD_LIST, PROPERTY_TYPE_OBJ_CODE } from '@/constant';
 import { useSearchParams } from 'next/navigation';
 import { set } from "zod";
+import { capitalize } from "@/lib/utils";
 
 
 const countryOptions = getNames()
@@ -201,7 +202,7 @@ const Page = () => {
 
   return (
     <DefaultLayout>
-      <Breadcrumb pageName="Locatif / Edit" previousPage />
+      <Breadcrumb pageName={`Edit Property ${asset?.Title ? "- " + capitalize(asset.Title) : ""}`} previousPage />
       <div className="border border-stroke dark:border-strokedark min-h-150 bg-white dark:bg-boxdark shadow-default rounded-md max-w-7xl">
         <div className="w-full max-w-6xl p-4 mx-auto relative min-h-96">
           <form onSubmit={handleSubmit(handleFormValidSubmit)}>
@@ -364,7 +365,8 @@ const Page = () => {
                         )}
                       </div>
                       
-                      {!(typeCode == "CPLXMOD") && <div></div>}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-4 ">
                         <h3 className="font-medium text-gray-800 dark:text-gray-200">Description</h3>
                         <textarea

@@ -135,7 +135,7 @@ export const ManagerSearch = ({
     }
   }
   return (
-    <div className="rounded-lg w-full max-h-[75vh] min-h-[75vh] overflow-y-auto max-w-2xl mx-auto bg-white dark:bg-gray-800 flex flex-col">
+    <div className="rounded-lg w-full max-h-[75vh] min-h-[75vh] max-w-2xl mx-auto bg-white dark:bg-gray-800 flex flex-col">
       <div className="bg-white dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <h2 className="text-lg font-semibold dark:text-white">
           {step === "search" && "Find Property Manager"}
@@ -146,41 +146,43 @@ export const ManagerSearch = ({
           <X size={20} className="dark:text-gray-400" />
         </button>
       </div>
-      <div className="p-4 h-full flex-1 flex flex-col">
+      {step === "search" &&
+        <div className="p-4 flex gap-2 border-b">
+          <div className="relative flex-1">
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={20}
+            />
+            <input
+              type="text"
+              placeholder={`Search by ${searchOptions[searchFilter]}...`}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        
+          <div className="relative">
+            <select 
+              name="cars" 
+              id="cars" 
+              value={searchFilter}
+              onChange={(e => handleFilterChange(e.target.value as keyof typeof searchOptions))}
+              className="w-full py-2 min-w-25 pl-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="firstName">Name</option>
+              <option value="email">Email</option>
+              <option value="NIU">NIU</option>
+            </select>
+          </div>
+          
+        </div>
+      }
+      <div className="p-4 h-full flex-1 flex flex-col overflow-y-auto">
         {step === "search" && (
           <>
-            <div className="flex gap-2 mb-4.5">
-              <div className="relative flex-1">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={20}
-                />
-                <input
-                  type="text"
-                  placeholder={`Search by ${searchOptions[searchFilter]}...`}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
             
-              <div className="relative">
-                <select 
-                  name="cars" 
-                  id="cars" 
-                  value={searchFilter}
-                  onChange={(e => handleFilterChange(e.target.value as keyof typeof searchOptions))}
-                  className="w-full py-2 min-w-25 pl-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="firstName">Name</option>
-                  <option value="email">Email</option>
-                  <option value="NIU">NIU</option>
-                </select>
-              </div>
-              
-            </div>
-            
-            <div className="space-y-4 overflow-y-hidden"  ref={listRef}>
+            <div className="space-y-4 bg-re"  ref={listRef}>
               {!isFetchingUsers ? 
                 filterManagers(userList).slice(0, 10).map((manager) => <ManagerCard key={manager.id} manager={manager} handleManagerSelect={handleManagerSelect} />) :
                 <div className="space-y-4">

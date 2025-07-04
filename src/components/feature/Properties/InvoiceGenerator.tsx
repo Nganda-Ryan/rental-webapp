@@ -191,6 +191,8 @@ export const InvoiceGenerator = ({
             Description
           </label>
           <textarea
+            disabled={action == "UPDATE"}
+            readOnly={action == "UPDATE"}
             className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={4}
             {...register("notes")}
@@ -198,17 +200,21 @@ export const InvoiceGenerator = ({
           />
         </div>
         
-        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
-          <button
-            type="button"
+        <div className="flex justify-end gap-3 pt-4">
+          <Button
+            variant='outline-neutral'
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg w-full sm:w-auto"
+            fullWidth={false}
+            isSubmitBtn={false}
           >
             Cancel
-          </button>
-          <Button variant='neutral' disable={canNotGenerateInvoice()} isSubmitBtn={true} fullWidth={false} loading={loading}>
+          </Button>
+          <Button
+            variant='neutral' disable={canNotGenerateInvoice()}
+            isSubmitBtn={true} fullWidth={false} loading={loading}
+          >
             {
-              action == "CREATE" ? "Generate Invoice" : "Update Invoice"
+              action == "CREATE" ? "Save Invoice" : "Update Invoice"
             }
           </Button>
         </div>
