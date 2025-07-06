@@ -18,14 +18,14 @@ export async function createAsset(asset: CreatePropertyType, coverFile: any) {
     const token = session.accessToken;
     const cover = coverFile[0] as File;
     
-    const coverPath = `${process.env.ASSET_FILE_NAME_SRC}/AS-${Date.now()}/COVER${getExtension(cover.name)}`;
+    const coverPath = `${process.env.ASSET_MAIN_FILE_NAME_SRC}/AS-${Date.now()}/COVER${getExtension(cover.name)}`;
     const uploadedCoverPath = await uploadFile(cover, coverPath);
     if(uploadedCoverPath.error) return {error: "error while uploading ID CARD VERSO", code:uploadedCoverPath.code, data: null}
     
     const response = await axios.post(`${process.env.ASSET_WORKER_ENDPOINT}/api/v1/Asset`, {
       Asset: {
         ...asset,
-        coverUrl: 'Documents/' + coverPath
+        coverUrl: coverPath
       }
     },{
       headers: {

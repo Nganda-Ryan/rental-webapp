@@ -112,7 +112,7 @@ export const VerificationForm = ({
 
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[75vh] overflow-y-auto">
+    <div className="rounded-lg w-full max-h-[75vh] overflow-y-auto max-w-2xl mx-auto bg-white dark:bg-gray-800">
       <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl">
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Property Verification</h2>
@@ -125,62 +125,7 @@ export const VerificationForm = ({
           </button>
         </div>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="p-4 sm:p-6 space-y-6">
-          {/* Fiscal Information */}
-          {/* <div className="space-y-4">
-            <h3 className="font-medium text-gray-900 dark:text-white">Fiscal Information</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tax ID Number
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Registration Number
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
-                  required
-                />
-              </div>
-            </div>
-          </div> */}
           
-          {/* Additional Images */}
-          {/* <div className="space-y-4">
-            <h3 className="font-medium text-gray-900 dark:text-white">Additional Property Images</h3>
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 sm:p-6 text-center">
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                className="hidden"
-                id="images"
-                onChange={(e) => {
-                  const files = Array.from(e.target.files || []);
-                  setDocuments((prev) => [...prev, ...files]);
-                }}
-              />
-              <label
-                htmlFor="images"
-                className="flex flex-col items-center cursor-pointer"
-              >
-                <Upload size={24} className="text-gray-400 dark:text-gray-500 mb-2" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Upload additional property images
-                </span>
-                <span className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  Drag and drop or click to select
-                </span>
-              </label>
-            </div>
-          </div> */}
           
           {/* Property Documents */}
           <div className="space-y-4">

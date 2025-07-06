@@ -20,6 +20,7 @@
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-popover": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",
+    "@react-pdf/renderer": "^4.3.0",
     "ag-grid-react": "^33.1.0",
     "apexcharts": "^4.5.0",
     "axios": "^1.8.4",

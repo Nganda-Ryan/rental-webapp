@@ -224,7 +224,13 @@ export async function getProfile(){
         userId: session?.Code,
         Profiles: session?.Profiles,
         activeRole: sortedRoles[0],
-        expiresAt: session?.expiresAt
+        expiresAt: session?.expiresAt,
+        firstname: session?.Firstname,
+        lastname: session?.Lastname,
+        email: session?.Email,
+        avatarUrl: session?.AvatarUrl,
+        phone: session?.Phone,
+        address: session?.Address,
       },
       error: null,
       code: null

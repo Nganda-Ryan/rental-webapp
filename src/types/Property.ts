@@ -184,7 +184,7 @@ export interface IContract {
   "initialDuration": number,
   "startDate": string,
   "endDate": string,
-  "notes": "sample",
+  "notes": string,
   "billingItems":string []
 }
 
@@ -202,11 +202,13 @@ export interface IContractForm {
 export interface IContractDetail {
   id: string;
   tenant: {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phone: string;
     userCode: string;
-  }
+  },
+  tenantName: string,
   startDate: string;
   endDate: string;
   monthlyRent: number;
@@ -217,6 +219,16 @@ export interface IContractDetail {
     code: string,
     label: string,
   }>
+}
+
+
+interface IContractColumn {
+    tenant: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+    monthlyRent: string;
+    id: string;
 }
 
 

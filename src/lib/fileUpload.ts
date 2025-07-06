@@ -11,15 +11,15 @@ const R2 = new S3Client({
 
 export async function uploadFile(file: File, filePath: string) {
   if (!file) {
-    return { error: "No file provided", filePath: null, code: "no-file-provided"};
+    return { error: "No file provided", filePath: null, code: "no-file-provided" };
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const bucket = process.env.ASSET_BUCKET_NAME!;
+  const bucket = process.env.ASSET_BUCKET_NAME!; // ex: "rentaldev"
 
   const command = new PutObjectCommand({
-    Bucket: "Documents",
-    Key: filePath,
+    Bucket: bucket,
+    Key: filePath, // ex: Documents/Assets/AS-1751704976291/Verification/DEED_SALE.pdf
     Body: buffer,
     ContentType: file.type,
     ACL: "public-read",
@@ -27,14 +27,12 @@ export async function uploadFile(file: File, filePath: string) {
 
   try {
     await R2.send(command);
-
-    return { error: null, filePath: filePath, code: null };
+    return { error: null, filePath, code: null };
   } catch (error: any) {
-    console.error(error);
     return {
-        filePath: null,
-        error: "A technical error occurred. Please try again.",
-        code: error.code ?? "unknown",
+      filePath: null,
+      error: "A technical error occurred. Please try again.",
+      code: error.code ?? "unknown",
     };
   }
 }

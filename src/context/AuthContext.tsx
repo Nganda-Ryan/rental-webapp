@@ -48,12 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const result = await getProfile();
         if(result.data){
           const userInfo = result.data;
-          setUser(JSON.stringify({
-            roles: userInfo.roles ?? [],
-            userId: userInfo.userId ?? "",
-            activeRole: userInfo.activeRole ?? "",
-            expiresAt: userInfo.expiresAt ?? ""
-          }));
+          console.log('-->userInfo', userInfo)
+          setUser(JSON.stringify(userInfo));
           setProfilesDetails(result.data.Profiles)
           // console.log('-->userInfo', userInfo);
           const profiles = userInfo?.roles;

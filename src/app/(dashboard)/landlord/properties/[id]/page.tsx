@@ -44,23 +44,17 @@ import { IInviteManagerRequest, IUser, IUserPermission } from "@/types/user";
 import { ProcessingModal } from "@/components/Modal/ProcessingModal";
 import { set } from "zod";
 import SectionWrapper from "@/components/Cards/SectionWrapper";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { ContractPdf } from "@/components/pdf/ContractPdf";
 
 
 
-interface IContractColumn {
-    tenant: string;
-    startDate: string;
-    endDate: string;
-    status: string;
-    monthlyRent: string;
-    id: string;
-}
 
 const PropertyDetail = () => {
     const today = new Date().toISOString().split("T")[0];
     const [asset, setAsset] = useState<AssetDataDetailed | null>(null);
     const [selectedTenant, setSelectedTenant] = useState<any>(null);
-    const [contractTableData, setContractTableData] = useState<IContractColumn[]>([]);
+    const [contractTableData, setContractTableData] = useState<IContractDetail[]>([]);
     const [permissionList, setPermissionList] = useState<IUserPermission[]>([]);
     const [unitList, setUnitList] = useState<AssetData[]>([]);
     const [invoiceFormDefaultValue, setInvoiceFormDefaultValue] = useState<IInvoiceForm>();
@@ -90,8 +84,9 @@ const PropertyDetail = () => {
 
     const params = useParams();
     const router = useRouter();
-    const { isAuthorized, loadingProfile, activeProfile, profilesDetails } = useAuth();
-
+    const { isAuthorized, loadingProfile, user, profilesDetails } = useAuth();
+    const userObj = JSON.parse(user);
+    // console.log('-->userObj', userObj)
     useEffect(() => {
         init();
     }, [params.id, today]);
@@ -135,10 +130,10 @@ const PropertyDetail = () => {
         {
             key: 'tenant',
             label: 'Tenant',
-            priority: 'high' as const,
-            render: (_:any, contract: IContractColumn) => (
+            priority: 'medium' as const,
+            render: (_:any, contract: IContractDetail) => (
             <div className="font-medium text-gray-800 dark:text-gray-100">
-                {contract.tenant}
+                {contract.tenantName}
             </div>
             ),
         },
@@ -146,7 +141,7 @@ const PropertyDetail = () => {
             key: 'period',
             label: 'Period',
             priority: 'medium' as const,
-            render: (_: any, contract: IContractColumn) => (
+            render: (_: any, contract: IContractDetail) => (
             <div className="text-sm text-gray-800 dark:text-gray-100">
                 <div><span className="font-bold">From</span> {formatDateToText(contract.startDate)}</div>
                 <div className="text-gray-600 dark:text-gray-300"><span className="font-bold">to</span> {formatDateToText(contract.endDate)}</div>
@@ -156,8 +151,8 @@ const PropertyDetail = () => {
         {
             key: 'monthlyRent',
             label: 'Monthly Rent',
-            priority: 'high' as const,
-            render: (_: any, contract: IContractColumn) => (
+            priority: 'medium' as const,
+            render: (_: any, contract: IContractDetail) => (
             <div className="text-sm text-gray-800 dark:text-gray-100">
                 {`${contract.monthlyRent} ${asset?.Currency ?? ''}`}
             </div>
@@ -166,10 +161,43 @@ const PropertyDetail = () => {
         {
             key: 'status',
             label: 'Status',
-            priority: 'high' as const,
-            render: (_: any, contract: IContractColumn) => (
+            priority: 'low' as const,
+            render: (_: any, contract: IContractDetail) => (
                 <>
                     {getStatusBadge(contract.status)}
+                </>
+            ),
+        },
+        {
+            key: 'action',
+            label: 'Action',
+            priority: 'high' as const,
+            render: (_: any, contract: IContractDetail) => (
+                <>
+                    {asset && 
+                        <PDFDownloadLink
+                            document={<ContractPdf contract={contract} asset={asset} contractor={userObj} />}
+                            fileName={`contrat-${contract.id}.pdf`}
+                            >
+                            {({ loading, url }) => (
+                                <button
+                                className="px-4 py-2 bg-blue-600 text-white rounded"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation(); //
+                                    if (url) {
+                                        const link = document.createElement("a");
+                                        link.href = url;
+                                        link.download = `contrat-${contract.id}.pdf`;
+                                        link.click();
+                                    }
+                                }}
+                                >
+                                Imprimer
+                                </button>
+                            )}
+                        </PDFDownloadLink>
+                    }
                 </>
             ),
         }
@@ -514,6 +542,7 @@ const PropertyDetail = () => {
                     const _activeContract: IContractDetail = {
                         id: _rawActiveContract.Code,
                         billingElements: [],
+                        tenantName: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
                         endDate: _rawActiveContract.EndDate,
                         monthlyRent: _rawActiveContract.asset.Price,
                         currency: _rawActiveContract.Currency,
@@ -521,7 +550,8 @@ const PropertyDetail = () => {
                         startDate: _rawActiveContract.StartDate,
                         status: _rawActiveContract.StatusCode,
                         tenant: {
-                            name: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
+                            firstName: _rawActiveContract.renter.user.Firstname,
+                            lastName: _rawActiveContract.renter.user.Lastname,
                             email: _rawActiveContract.renter.user.Email,
                             phone: _rawActiveContract.renter.user.Phone,
                             userCode: _rawActiveContract.renter.user.Code,
@@ -529,13 +559,23 @@ const PropertyDetail = () => {
                     };
                     const _contractTableData = item.contracts.map((contract: any) => ({
                         id: contract.Code,
-                        tenant: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
-                        startDate: contract.StartDate,
+                        billingElements: [],
+                        tenantName: contract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
                         endDate: contract.EndDate,
+                        monthlyRent: contract.asset.Price,
+                        currency: contract.Currency,
+                        notes: "",
+                        startDate: contract.StartDate,
                         status: contract.StatusCode,
-                        monthlyRent: assetData.Price,// + ' ' + assetData.Currency,
-                    })) as IContractColumn[];
-
+                        tenant: {
+                            firstName: contract.renter.user.Firstname,
+                            lastName: contract.renter.user.Lastname,
+                            email: contract.renter.user.Email,
+                            phone: contract.renter.user.Phone,
+                            userCode: contract.renter.user.Code,
+                        }// + ' ' + assetData.Currency,
+                    })) as IContractDetail[];
+                    console.log('-->_contractTableData', _contractTableData);
                     setActiveContract(_activeContract);
                     setContractTableData([..._contractTableData].reverse());
                 }
@@ -648,10 +688,12 @@ const PropertyDetail = () => {
                         monthlyRent: _rawActiveContract.asset.Price,
                         currency: _rawActiveContract.Currency,
                         notes: "",
+                        tenantName: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
                         startDate: _rawActiveContract.StartDate,
                         status: _rawActiveContract.StatusCode,
                         tenant: {
-                            name: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
+                            firstName: _rawActiveContract.renter.user.Firstname,
+                            lastName: _rawActiveContract.renter.user.Lastname,
                             email: _rawActiveContract.renter.user.Email,
                             phone: _rawActiveContract.renter.user.Phone,
                             userCode: _rawActiveContract.renter.user.Code,
@@ -659,7 +701,7 @@ const PropertyDetail = () => {
                     };
                     const _invoiceformDefaultValue: IInvoiceForm = {
                         id: _activeContract.id,
-                        tenant: _activeContract.tenant.name,
+                        tenant: _activeContract.tenantName,
                         tableId: "",
                         startDate: _activeContract.startDate,
                         endDate: "",
@@ -676,14 +718,26 @@ const PropertyDetail = () => {
                             status: false,
                         }))
                     };
+                    
                     const _contractTableData = item.contracts.map((contract: any) => ({
                         id: contract.Code,
-                        tenant: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
-                        startDate: contract.StartDate,
+                        billingElements: [],
+                        tenantName: contract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
                         endDate: contract.EndDate,
+                        monthlyRent: contract.asset.Price,
+                        currency: contract.Currency,
+                        notes: "",
+                        startDate: contract.StartDate,
                         status: contract.StatusCode,
-                        monthlyRent: assetData.Price,
-                    })) as IContractColumn[];
+                        tenant: {
+                            firstName: contract.renter.user.Firstname,
+                            lastName: contract.renter.user.Lastname,
+                            email: contract.renter.user.Email,
+                            phone: contract.renter.user.Phone,
+                            userCode: contract.renter.user.Code,
+                        }// + ' ' + assetData.Currency,
+                    })) as IContractDetail[];
+                    console.log('-->_contractTableData', _contractTableData);
 
 
                     const getInvoiceParam: SeachInvoiceParams = {
@@ -933,9 +987,11 @@ const PropertyDetail = () => {
                                                     <Share2 size={16} /> Invite Tenant
                                                 </Button>}
 
-                                                { asset?.StatusCode == "DRAFT" && <Button onClick={handleVerificationFormOpen} variant='neutral' disable={false} isSubmitBtn={false}>
-                                                    <FileText size={16} /> Verify Property
-                                                </Button>}
+                                                {(asset?.StatusCode == "DRAFT" || asset?.StatusCode == "INACTIVE") && (
+                                                    <Button onClick={handleVerificationFormOpen} variant="neutral" disable={false} isSubmitBtn={false}>
+                                                        <FileText size={16} /> Verify Property
+                                                    </Button>
+                                                )}
 
                                                 {asset?.TypeCode === "CPLXMOD" && asset?.IsVerified == 1 && (
                                                     <Button onClick={() => setIsAttachPropertiesModalOpen(true)} variant='neutral' isSubmitBtn={false}>
@@ -1150,9 +1206,11 @@ const PropertyDetail = () => {
                                         <Share2 size={16} /> Invite Tenant
                                     </Button>}
 
-                                    { asset?.StatusCode == "DRAFT" && <Button onClick={handleVerificationFormOpen} variant='neutral' disable={false} isSubmitBtn={false}>
-                                        <FileText size={16} /> Verify Property
-                                    </Button>}
+                                    {(asset?.StatusCode == "DRAFT" || asset?.StatusCode == "INACTIVE") && (
+                                        <Button onClick={handleVerificationFormOpen} variant="neutral" disable={false} isSubmitBtn={false}>
+                                            <FileText size={16} /> Verify Property
+                                        </Button>
+                                    )}
 
                                     {asset?.TypeCode === "CPLXMOD" && asset?.IsVerified == 1 && (
                                         <Button onClick={() => setIsAttachPropertiesModalOpen(true)} variant='neutral' isSubmitBtn={false}>

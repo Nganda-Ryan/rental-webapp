@@ -21,9 +21,24 @@ export function formatDateToText(dateString: string): string {
 }
 
 export function capitalize(str: string): string {
+  if(!str) return str
   const trimmed = str.trim();
   if (!trimmed) return '';
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+}
+
+export function capitalizeEachWord(str: string): string {
+  if(!str) return str
+  return str
+    .trim()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+export function toUpperCase(str: string): string {
+  if(!str) return str
+  return str.trim().toUpperCase();
 }
 
 

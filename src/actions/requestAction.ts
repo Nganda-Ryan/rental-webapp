@@ -222,74 +222,66 @@ export async function requestPropertyVerification(application: IPropertyVerifica
   try {
     const session = await verifySession();
 
+    const timestamp = Date.now();
+
     const docPathList = application.body.map(doc => {
-      return doc.ContentUrl instanceof File ? `${process.env.ASSET_FILE_NAME_SRC}/${session.Code}/${doc.Type} ${getExtension(doc.ContentUrl.name)}` : '';
+      if (!(doc.ContentUrl instanceof File)) return '';
+      return `${process.env.ASSET_VERIFICATION_FILE_NAME_SRC}/AS-${timestamp}/Verification/${doc.Type}${getExtension(doc.ContentUrl.name)}`;
     });
 
-    let uploadedDocs:  string [] = [];
-    for(let index = 0; index < docPathList.length; index++) {
+    console.log('--> docPathList', docPathList);
+
+    let uploadedDocs: string[] = [];
+
+    for (let index = 0; index < docPathList.length; index++) {
       const contentUrl = application.body[index].ContentUrl;
-        
+      const path = docPathList[index];
+
       if (contentUrl instanceof File) {
-        const uploadedDoc = await uploadFile(contentUrl, docPathList[index]);
-        if(uploadedDoc.error) console.log('-->error', uploadedDoc.error)
-        uploadedDocs.push(`Asset/${session.Code}/${application.body[index].Type}${getExtension(contentUrl.name)}`);
-      } else {
-        uploadedDocs.push(contentUrl as string);
+        const uploadedDoc = await uploadFile(contentUrl, path);
+        if (uploadedDoc.error) {
+          console.log('--> Erreur upload:', uploadedDoc.error);
+        }
+
+        uploadedDocs.push(path);
       }
     }
-
-
 
     const payload = {
-      "userId":session.Code,
-      "title": application.title,
-      "assetCode": application.assetCode,
-      "notes": application.notes,
-      // "description":"please approve my property",
-      "body": application.body.map((doc, index) => {
-        return {
-          "Title": doc.Title,
-          "ContentUrl": uploadedDocs[index],
-          "Type": doc.Type
-        }
-      })
-    }
-    
-    console.log('-->payload', payload);
+      userId: session.Code,
+      title: application.title,
+      assetCode: application.assetCode,
+      notes: application.notes,
+      body: application.body.map((doc, index) => ({
+        Code: `DOC${index}_${application.assetCode}`,
+        Title: doc.Title,
+        ContentUrl: uploadedDocs[index],
+        Type: doc.Type,
+      })),
+    };
 
-    const response = await axios.post(`${process.env.ASSET_WORKER_ENDPOINT!}/api/v1/Asset/Request/Verification`,
-      {
-        Request: {...payload }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-      }
-    )
+    console.log('--> Payload final:', payload);
 
-    
-    return {
-      code: null,
-      error: null,
-      data: response.data
-    }
+    // 5. Appel à l’API backend
+    const response = await axios.post(
+      `${process.env.ASSET_WORKER_ENDPOINT!}/api/v1/Asset/Request/Verification`,
+      { Request: { ...payload } },
+      { headers: { Authorization: `Bearer ${session.accessToken}` } }
+    );
+
+    return { code: null, error: null, data: response.data };
   } catch (error: any) {
-    console.log('-->requestLessorProfile.error', error)
-    
+    console.log('--> requestPropertyVerification.error', error);
+
     const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
     if (isRedirect) {
-      return {
-        data: null,
-        error: 'Session expired',
-        code: 'SESSION_EXPIRED',
-      };
+      return { data: null, error: 'Session expired', code: 'SESSION_EXPIRED' };
     }
+
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
-      data: null
-    }
+      data: null,
+    };
   }
 }
