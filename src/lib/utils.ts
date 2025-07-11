@@ -13,7 +13,7 @@ export function getExtension(filename: string): string {
 
 export function formatDateToText(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-GB', {
+  return date.toLocaleDateString('fr-FR', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -42,7 +42,8 @@ export function toUpperCase(str: string): string {
 }
 
 
-export function formatNumberWithSpaces(num: number): string {
+export function formatNumberWithSpaces(num: number | undefined | null): string {
+  if(!num) return '0'
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
 

@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import {
   Building2,
-  Users,
   MapPin,
   Share2,
   UserPlus,
@@ -10,10 +9,8 @@ import {
   DollarSign,
   UserCog,
   House,
-  Plus,
   Zap,
   X,
-  ClipboardCheck,
 } from "lucide-react";
 import { useRouter } from '@bprogress/next/app';
 import { ManagerSearch } from "@/components/feature/Properties/ManagerSearch";
@@ -35,17 +32,17 @@ import { PropertySkeletonPageSection1, RightSideAction } from "@/components/skel
 import Button from "@/components/ui/Button";
 import toast from 'react-hot-toast';
 import { ResponsiveTable } from "@/components/feature/Support/ResponsiveTable";
-import { capitalize, formatDateToText, formatNumberWithSpaces } from "@/lib/utils";
+import { capitalize, capitalizeEachWord, formatDateToText, formatNumberWithSpaces } from "@/lib/utils";
 import { ActionConfirmationModal } from "@/components/Modal/ActionConfirmationModal";
 import { useAuth } from "@/context/AuthContext";
 import { ASSET_TYPE_COMPLEXE, PROFILE_LANDLORD_LIST } from "@/constant";
 import ImageLoading from "@/components/ImageLoading";
 import { IInviteManagerRequest, IUser, IUserPermission } from "@/types/user";
 import { ProcessingModal } from "@/components/Modal/ProcessingModal";
-import { set } from "zod";
 import SectionWrapper from "@/components/Cards/SectionWrapper";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { ContractPdf } from "@/components/pdf/ContractPdf";
+import Nodata from "@/components/error/Nodata";
 
 
 
@@ -53,10 +50,8 @@ import { ContractPdf } from "@/components/pdf/ContractPdf";
 const PropertyDetail = () => {
     const today = new Date().toISOString().split("T")[0];
     const [asset, setAsset] = useState<AssetDataDetailed | null>(null);
-    const [selectedTenant, setSelectedTenant] = useState<any>(null);
     const [contractTableData, setContractTableData] = useState<IContractDetail[]>([]);
     const [permissionList, setPermissionList] = useState<IUserPermission[]>([]);
-    const [unitList, setUnitList] = useState<AssetData[]>([]);
     const [invoiceFormDefaultValue, setInvoiceFormDefaultValue] = useState<IInvoiceForm>();
     const [tempInvoiceFormDefaultValue, setTempInvoiceFormDefaultValue] = useState<IInvoiceForm>();
     const [managerList, setManagerList] = useState<IUser[]>([]);
@@ -67,7 +62,6 @@ const PropertyDetail = () => {
     const [successMessage, setSuccessMessage] = useState("");
 
     const [isReady, setIsReady] = useState(false);
-    const [isImageLoading, setIsImageLoading] = useState(true);
     const [isManagerSearchOpen, setIsManagerSearchOpen] = useState(false);
     const [isContractFormOpen, setContractFormOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -86,10 +80,10 @@ const PropertyDetail = () => {
     const router = useRouter();
     const { isAuthorized, loadingProfile, user, profilesDetails } = useAuth();
     const userObj = JSON.parse(user);
-    // console.log('-->userObj', userObj)
+    
     useEffect(() => {
         init();
-    }, [params.id, today]);
+    }, []);
 
     useEffect(() => {
         if(showInvoiceGenerator == false){
@@ -133,7 +127,7 @@ const PropertyDetail = () => {
             priority: 'medium' as const,
             render: (_:any, contract: IContractDetail) => (
             <div className="font-medium text-gray-800 dark:text-gray-100">
-                {contract.tenantName}
+                {capitalizeEachWord(contract.tenantName)}
             </div>
             ),
         },
@@ -154,7 +148,7 @@ const PropertyDetail = () => {
             priority: 'medium' as const,
             render: (_: any, contract: IContractDetail) => (
             <div className="text-sm text-gray-800 dark:text-gray-100">
-                {`${contract.monthlyRent} ${asset?.Currency ?? ''}`}
+                {`${formatNumberWithSpaces(contract.monthlyRent)} ${asset?.Currency ?? ''}`}
             </div>
             ),
         },
@@ -180,21 +174,23 @@ const PropertyDetail = () => {
                             fileName={`contrat-${contract.id}.pdf`}
                             >
                             {({ loading, url }) => (
-                                <button
-                                className="px-4 py-2 bg-blue-600 text-white rounded"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation(); //
-                                    if (url) {
-                                        const link = document.createElement("a");
-                                        link.href = url;
-                                        link.download = `contrat-${contract.id}.pdf`;
-                                        link.click();
-                                    }
-                                }}
+                                <Button
+                                    variant="info"
+                                    isSubmitBtn={false}
+                                    fullWidth={false}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation(); //
+                                        if (url) {
+                                            const link = document.createElement("a");
+                                            link.href = url;
+                                            link.download = `contrat-${contract.id}.pdf`;
+                                            link.click();
+                                        }
+                                    }}
                                 >
-                                Imprimer
-                                </button>
+                                Print
+                                </Button>
                             )}
                         </PDFDownloadLink>
                     }
@@ -482,12 +478,11 @@ const PropertyDetail = () => {
             }
         }                    
     }
-
     const handleCancelManagerInvitation = (manager: IUser) => {
 
     }
 
-    
+
     const getUnits = (items:any[]): AssetData [] => {
         return items.map((item: any, index: number) => {
             return {
@@ -593,23 +588,6 @@ const PropertyDetail = () => {
             setIsReady(true);
         }
     }
-
-    const canCreateInvoice = (): boolean => {
-        if(asset){
-            const hasPermission = asset.Permission.includes("ManageBilling");
-            if(hasPermission && asset.TypeCode != ASSET_TYPE_COMPLEXE){
-                if(asset.IsVerified == 0){
-                    return false;
-                } else {
-                    if(contractTableData.some(contract => (contract.status == 'ACTIVE'))){
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
     const canAttachManager = (): boolean => {
         let can = asset?.whoIs == 'OWNER' && asset.IsVerified == 1 ? true : false;
         return can == undefined ? true : !can;
@@ -623,7 +601,6 @@ const PropertyDetail = () => {
         }
         return false;
     }
-
     const init = async () => {
         try {
             const result = await getAsset(params.id as string);
@@ -800,7 +777,8 @@ const PropertyDetail = () => {
                 toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
             }
         } catch (error) {
-            console.log(error)
+            console.log(error);
+            toast.error("Something went wrong during the process. Try again or contact the administrator", { position: 'bottom-right' });
         } finally {
             setIsReady(true);
         }
@@ -860,116 +838,123 @@ const PropertyDetail = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {
                         isReady ?
-                            <div className="lg:col-span-2 space-y-6 h-fit">
-                                {/* Property image */}
-                                
-                                <div className="rounded-lg overflow-hidden h-100">
-                                    {asset && (!(asset?.CoverUrl == "") || !asset?.CoverUrl) ?
-                                        <Image
-                                            src={asset!.CoverUrl}
-                                            alt={asset!.Title}
-                                            className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110`}
-                                            width={1280}
-                                            height={600}
-                                            priority
-                                            onError={(e) => console.log('ERROR WHILE LOADING THE IMAGE')}
-                                            placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mPsnrquHgAF0AJP9UhCwgAAAABJRU5ErkJggg=="
-                                        /> :
-                                        <ImageLoading />
-                                    }
-                                </div>
+                            <>
+                                { asset ?
+                                    <div className="lg:col-span-2 space-y-6 h-fit">
+                                        {/* Property image */}
+                                        
+                                        <div className="rounded-lg overflow-hidden h-100">
+                                            {asset && (!(asset?.CoverUrl == "") || !asset?.CoverUrl) ?
+                                                <Image
+                                                    src={asset!.CoverUrl}
+                                                    alt={asset!.Title}
+                                                    className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110`}
+                                                    width={1280}
+                                                    height={600}
+                                                    priority
+                                                    onError={(e) => console.log('ERROR WHILE LOADING THE IMAGE')}
+                                                    placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mPsnrquHgAF0AJP9UhCwgAAAABJRU5ErkJggg=="
+                                                /> :
+                                                <ImageLoading />
+                                            }
+                                        </div>
 
-                                {/* Property detail */}
-                                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div>
-                                            <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
-                                                {asset?.Title} {
-                                                    asset?.TypeCode !== "CPLXMOD" && `(${asset?.Price}/${asset?.Currency})`
-                                                }
-                                            </h2>
-                                            <div className="flex items-center text-gray-800 dark:text-gray-100">
-                                                <MapPin size={16} className="mr-1" />
-                                                <span>{`${asset?.Address.City}, ${asset?.Address.Street}`}</span>
+                                        {/* Property detail */}
+                                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
+                                                        {asset?.Title} {
+                                                            asset?.TypeCode !== "CPLXMOD" && `(${formatNumberWithSpaces(asset?.Price)}/${asset?.Currency})`
+                                                        }
+                                                    </h2>
+                                                    <div className="flex items-center text-gray-800 dark:text-gray-100">
+                                                        <MapPin size={16} className="mr-1" />
+                                                        <span>{`${asset?.Address.City}, ${asset?.Address.Street}`}</span>
+                                                    </div>
+                                                </div>
+                                                <span>
+                                                    {getStatusBadge(asset?.StatusCode ?? 'DRAFT')}
+                                                </span>
+                                            </div>
+                                            <div className="grid grid-cols-4 gap-4 py-4 border-t border-gray-100 dark:border-gray-700">
+                                                {asset?.BillingItems.map((item) => (
+                                                <div
+                                                    key={item}
+                                                    className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-100"
+                                                >
+                                                    {item}
+                                                </div>
+                                                ))}
                                             </div>
                                         </div>
-                                        <span>
-                                            {getStatusBadge(asset?.StatusCode ?? 'DRAFT')}
-                                        </span>
-                                    </div>
-                                    <div className="grid grid-cols-4 gap-4 py-4 border-t border-gray-100 dark:border-gray-700">
-                                        {asset?.BillingItems.map((item) => (
-                                        <div
-                                            key={item}
-                                            className="px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-100"
-                                        >
-                                            {item}
-                                        </div>
-                                        ))}
-                                    </div>
-                                </div>
 
 
-                                {/* UNITS */}
-                                {
-                                    asset?.TypeCode == ASSET_TYPE_COMPLEXE && (asset.Units && asset?.Units.length) && <SectionWrapper title="Units" Icon={House}>
-                                        {asset.Units.length > 0 ? (
-                                            <ResponsiveTable
-                                                columns={unitColumns}
-                                                data={asset.Units.slice(0, 3)}
-                                                onRowClick={(unit) => handleSelectUnit(unit.Code)}
-                                                keyField="Id"
-                                                searchKey='Title'
-                                                showMore={asset && asset?.Units.length > 3 ? {
-                                                    url: `/landlord/properties/${asset?.Code}/units`,
-                                                    label: 'Show more units'
-                                                } : undefined}
-                                            />
-                                            ) : (
-                                            <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No units available</p>
-                                        )}
-                                    </SectionWrapper>
+                                        {/* UNITS */}
+                                        {
+                                            asset?.TypeCode == ASSET_TYPE_COMPLEXE && (asset.Units && asset?.Units.length) && <SectionWrapper title="Units" Icon={House}>
+                                                {asset.Units.length > 0 ? (
+                                                    <ResponsiveTable
+                                                        columns={unitColumns}
+                                                        data={asset.Units.slice(0, 3)}
+                                                        onRowClick={(unit) => handleSelectUnit(unit.Code)}
+                                                        keyField="Id"
+                                                        searchKey='Title'
+                                                        showMore={asset && asset?.Units.length > 3 ? {
+                                                            url: `/landlord/properties/${asset?.Code}/units`,
+                                                            label: 'Show more units'
+                                                        } : undefined}
+                                                    />
+                                                    ) : (
+                                                    <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No units available</p>
+                                                )}
+                                            </SectionWrapper>
+                                        }
+                                        {
+                                            asset?.TypeCode != ASSET_TYPE_COMPLEXE && <>
+                                                {/* INVOICE HISTORY */}
+                                                {/* <SectionWrapper title="Invoice history" Icon={FileText}>
+                                                    {invoiceTableData.length > 0 ? (
+                                                        <ResponsiveTable
+                                                            columns={invoiceColumns}
+                                                            data={invoiceTableData.slice(0, 3)}
+                                                            onRowClick={(inv) => handleSelectInvoice(inv.id)}
+                                                            keyField="id"
+                                                            showMore={asset && invoiceTableData.length > 3 ? {
+                                                                url: `/landlord/properties/${asset?.Code}/invoices`,
+                                                                label: 'Show more invoices'
+                                                            } : undefined}
+                                                        />
+                                                        ) : (
+                                                        <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No invoices available</p>
+                                                    )}
+                                                </SectionWrapper> */}noo
+                                                
+                                                {/* CONTRACT */}
+                                                <SectionWrapper title="Lease Contracts" Icon={FileText}>
+                                                    {contractTableData.length > 0 ? (
+                                                        <ResponsiveTable
+                                                            columns={contractColumns}
+                                                            data={contractTableData.slice(0, 3)}
+                                                            onRowClick={(contract) => handleSelectedContract(contract.id)}
+                                                            keyField="id"
+                                                            showMore={asset && contractTableData.length > 3 ? {
+                                                                url: `/landlord/properties/${asset?.Code}/contracts`,
+                                                                label: 'Show more contracts'
+                                                            } : undefined}
+                                                        />
+                                                        ) : (<p className="text-gray-500 dark:text-gray-400 text-sm p-3">No lease contracts available</p>)
+                                                    }
+                                                </SectionWrapper>
+                                            </>
+                                        }
+                                    </div>
+                                    :  
+                                    <div className="lg:col-span-2 space-y-6 h-fit">
+                                        <Nodata />
+                                    </div>
                                 }
-                                {
-                                    asset?.TypeCode != ASSET_TYPE_COMPLEXE && <>
-                                        {/* INVOICE HISTORY */}
-                                        {/* <SectionWrapper title="Invoice history" Icon={FileText}>
-                                            {invoiceTableData.length > 0 ? (
-                                                <ResponsiveTable
-                                                    columns={invoiceColumns}
-                                                    data={invoiceTableData.slice(0, 3)}
-                                                    onRowClick={(inv) => handleSelectInvoice(inv.id)}
-                                                    keyField="id"
-                                                    showMore={asset && invoiceTableData.length > 3 ? {
-                                                        url: `/landlord/properties/${asset?.Code}/invoices`,
-                                                        label: 'Show more invoices'
-                                                    } : undefined}
-                                                />
-                                                ) : (
-                                                <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No invoices available</p>
-                                            )}
-                                        </SectionWrapper> */}
-                                        
-                                        {/* CONTRACT */}
-                                        <SectionWrapper title="Lease Contracts" Icon={FileText}>
-                                            {contractTableData.length > 0 ? (
-                                                <ResponsiveTable
-                                                    columns={contractColumns}
-                                                    data={contractTableData.slice(0, 3)}
-                                                    onRowClick={(contract) => handleSelectedContract(contract.id)}
-                                                    keyField="id"
-                                                    showMore={asset && contractTableData.length > 3 ? {
-                                                        url: `/landlord/properties/${asset?.Code}/contracts`,
-                                                        label: 'Show more contracts'
-                                                    } : undefined}
-                                                />
-                                                ) : (<p className="text-gray-500 dark:text-gray-400 text-sm p-3">No lease contracts available</p>)
-                                            }
-                                        </SectionWrapper>
-                                    </>
-                                }
-                                
-                            </div>
+                            </>
                         :
                         <PropertySkeletonPageSection1 />
                     }

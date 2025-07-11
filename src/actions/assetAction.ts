@@ -1,7 +1,7 @@
 "use server";
 
 import axios, { AxiosInstance, isAxiosError } from "axios";
-import { CreatePropertyType, IContractForm, IInvoice, IPropertyVerification, IUpdateAssetRequest, IUpdateInvoiceParam, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
+import { CreatePropertyType, IContractForm, IDashBoardParams, IInvoice, IPropertyVerification, IUpdateAssetRequest, IUpdateInvoiceParam, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
 import { verifySession } from "@/lib/session";
 import { getExtension } from "@/lib/utils";
 import { uploadFile } from "@/lib/fileUpload";
@@ -91,7 +91,7 @@ export async function updateAsset(asset: IUpdateAssetRequest) {
         'Content-Type': 'application/json',
       },
     });
-    // console.log('-->updateAsset.result', response);
+    
     
     return {
       code: 200,
@@ -209,6 +209,7 @@ export async function getAsset(assetCode: string): Promise<any> {
 
 export async function searchAsset(params: SeachPropertyParams, profile: string) {
   try {
+    console.log("-->profile", profile)
     const session = await verifySession();
     // console.log('-->session', session);
     const apiClient: AxiosInstance = axios.create({
@@ -510,4 +511,48 @@ export async function inviteManager (param: IInviteManagerRequest) {
     }
   }
 
+}
+
+export async function dashboard (params: IDashBoardParams) {
+  try {
+    const session = await verifySession();
+    const token = session.accessToken;
+
+    const apiClient: AxiosInstance = axios.create({
+      baseURL: process.env.DASHBOARD_WORKER_ENDPOINT,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    const response = await apiClient.request({
+      method: 'GET',
+      url: '/api/v1/Dashboard',
+      params: {
+        ...params
+      },
+    });
+
+    
+    return {
+      code: null,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->error', error.response)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
 }

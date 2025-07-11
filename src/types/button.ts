@@ -65,6 +65,59 @@ export const VARIANTS = {
 } as const;
   
   
+export const VARIANTS_V1 = {
+  info: `
+    px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200
+    bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300
+    dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800 dark:active:bg-blue-700
+  `,
+  danger: `
+    px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200
+    bg-red-100 text-red-800 hover:bg-red-200 active:bg-red-300
+    dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800 dark:active:bg-red-700
+  `,
+  warning: `
+    px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200
+    bg-yellow-100 text-yellow-800 hover:bg-yellow-200 active:bg-yellow-300
+    dark:bg-yellow-900 dark:text-yellow-100 dark:hover:bg-yellow-800 dark:active:bg-yellow-700
+  `,
+  success: `
+    px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200
+    bg-green-100 text-green-800 hover:bg-green-200 active:bg-green-300
+    dark:bg-green-900 dark:text-green-100 dark:hover:bg-green-800 dark:active:bg-green-700
+  `,
+  neutral: `
+    px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200
+    bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300
+    dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 dark:active:bg-gray-600
+  `,
+  'outline-info': `
+    px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200
+    border border-blue-300 text-blue-800 bg-white hover:bg-blue-50 active:bg-blue-100
+    dark:border-blue-700 dark:text-blue-200 dark:bg-transparent dark:hover:bg-blue-800/20 dark:active:bg-blue-800/30
+  `,
+  'outline-danger': `
+    px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200
+    border border-red-300 text-red-800 bg-white hover:bg-red-50 active:bg-red-100
+    dark:border-red-700 dark:text-red-200 dark:bg-transparent dark:hover:bg-red-800/20 dark:active:bg-red-800/30
+  `,
+  'outline-warning': `
+    px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200
+    border border-yellow-300 text-yellow-800 bg-white hover:bg-yellow-50 active:bg-yellow-100
+    dark:border-yellow-700 dark:text-yellow-200 dark:bg-transparent dark:hover:bg-yellow-800/20 dark:active:bg-yellow-800/30
+  `,
+  'outline-success': `
+    px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200
+    border border-green-300 text-green-800 bg-white hover:bg-green-50 active:bg-green-100
+    dark:border-green-700 dark:text-green-200 dark:bg-transparent dark:hover:bg-green-800/20 dark:active:bg-green-800/30
+  `,
+  'outline-neutral': `
+    px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200
+    border border-gray-300 text-gray-800 bg-white hover:bg-gray-50 active:bg-gray-100
+    dark:border-gray-600 dark:text-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:active:bg-gray-600
+  `,
+} as const;
+
   
-  
+type Variant_1 = keyof typeof VARIANTS_V1;
 type Variant = keyof typeof VARIANTS;

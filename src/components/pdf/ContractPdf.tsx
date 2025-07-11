@@ -10,7 +10,7 @@ import {
   StyleSheet,
 } from '@react-pdf/renderer'
 import { AssetDataDetailed, IContractDetail } from '@/types/Property'
-import { capitalize, toUpperCase } from '@/lib/utils';
+import { capitalize, capitalizeEachWord, formatDateToText, toUpperCase } from '@/lib/utils';
 
 const styles = StyleSheet.create({
   page: { 
@@ -105,13 +105,13 @@ export const ContractPdf = ({ contract, asset, contractor }: Props) => {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, styles.bold]}>ENTRE LES SOUSSIGNES :</Text>
           <Text style={styles.paragraph}>
-            <Text style={styles.bold}>Nom :</Text> {capitalize(contractor.firstname)} {toUpperCase(contractor.lastname)}
+            <Text style={styles.bold}>Nom :</Text> {capitalizeEachWord(contractor.firstname)} {toUpperCase(contractor.lastname)}
           </Text>
           <Text style={styles.paragraph}>
             <Text style={styles.bold}>CNI : N° </Text>_________________ domiciliée à {contractor?.address?.City} lieudit {contractor?.address?.Street} ,
           </Text>
           <Text style={styles.paragraph}>
-            Tél. ______________________ désignée dans tout ce qui va suivre, <Text style={styles.bold}>« le bailleur »</Text>
+            Tél. {contractor.phone} désignée dans tout ce qui va suivre, <Text style={styles.bold}>« le bailleur »</Text>
           </Text>
 
           <Text style={styles.paragraph}>D'une part ;</Text>
@@ -304,7 +304,7 @@ export const ContractPdf = ({ contract, asset, contractor }: Props) => {
             loyer mensuel en vigueur ;
           </Text>
           <Text style={styles.paragraph}>
-            Le présent bail est fait pour une durée de {monthDiff} mois allant du {contract.startDate} jusqu'au {contract.endDate}.
+            Le présent bail est fait pour une durée de {monthDiff} mois allant du {formatDateToText(contract.startDate)} jusqu'au {formatDateToText(contract.endDate)}.
           </Text>
           <Text style={styles.paragraph}>
             Le présent bail prend effet dès sa signature.
@@ -397,7 +397,7 @@ export const ContractPdf = ({ contract, asset, contractor }: Props) => {
             Fait en cinq (02) exemplaires dont un exemplaire pour chaque 
             partie.
           </Text>
-          <Text style={styles.paragraph}>{contractor?.address?.City}, le __________</Text>
+          <Text style={styles.paragraph}>{contractor?.address?.City}, le {formatDateToText(contract.startDate)}</Text>
         </View>
 
         {/* Bloc de signatures */}
@@ -405,6 +405,7 @@ export const ContractPdf = ({ contract, asset, contractor }: Props) => {
           <View style={styles.signatureBlock}>
             <Text>Lu et approuvé</Text>
             <Text>Le Bailleur</Text>
+            <Text style={styles.bold}>{capitalizeEachWord(contractor.firstname)} {toUpperCase(contractor.lastname)}</Text>
           </View>
           <View style={styles.signatureBlock}>
             <Text>Lu et approuvé</Text>

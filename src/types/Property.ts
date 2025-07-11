@@ -101,6 +101,8 @@ export interface SeachPropertyParams {
   page?: number;
   profileCode?: string;
 }
+
+
 export interface SeachInvoiceParams {
   "orderBy": string,
   "orderMode": "asc" | "desc",
@@ -110,6 +112,19 @@ export interface SeachInvoiceParams {
   "assetCodes"?: string[], //not required
   "profileCode"?: string[],//not required
 }
+
+
+export interface IDashBoardParams {
+  "term"?: string,
+  "endDate"?: string,
+  "offset": number,
+  "limit": number,
+  "page": number,
+  "startDate"?: string,
+  "type"?: string,
+  "profileCode"?: string,//not required
+}
+
 
 export type AssetData = {
   Code: string;
@@ -128,6 +143,12 @@ export type AssetData = {
     Country: string;
     Street: string;
   };
+  owner?: {
+    firstName: string;
+    lastname: string;
+    email: string;
+    phone: string;
+  }
 };
 
 export type AssetDataDetailed = {
@@ -153,6 +174,12 @@ export type AssetDataDetailed = {
     Country: string;
     Street: string;
   };
+  owner?: {
+    firstName: string;
+    lastname: string;
+    email: string;
+    phone: string;
+  }
 };
 
 export interface IPropertyVerificationDoc {
@@ -178,6 +205,7 @@ export interface IPropertyVerificationForm {
 }
 
 export interface IContract {
+  "code"?: string,
   "profilCode": string,
   "renterUserId": string,
   "assetCode": string,
@@ -185,7 +213,15 @@ export interface IContract {
   "startDate": string,
   "endDate": string,
   "notes": string,
-  "billingItems":string []
+  "billingItems":string [],
+  status?: string;
+  owner?: {
+    firstName: string;
+    lastname: string;
+    email: string;
+    phone: string;
+  },
+  asset?: AssetData
 }
 
 export interface IContractForm {
@@ -207,6 +243,12 @@ export interface IContractDetail {
     email: string;
     phone: string;
     userCode: string;
+    address?: {
+      Code: string;
+      City: string;
+      Country: string;
+      Street: string;
+    }
   },
   tenantName: string,
   startDate: string;
@@ -218,7 +260,14 @@ export interface IContractDetail {
   billingElements: Array<{
     code: string,
     label: string,
-  }>
+  }>,
+  owner?: {
+    firstName: string;
+    lastname: string;
+    email: string;
+    phone: string;
+  },
+  asset?: AssetData
 }
 
 

@@ -1,6 +1,28 @@
 import { AssetTypeCode } from "@/types/Property";
-import { CheckCircle, Clock, ExternalLink, XCircle, Building2, BedSingle, DoorOpen, Home, LucideIcon } from "lucide-react"
+import { CheckCircle, Clock, ExternalLink, XCircle } from "lucide-react"
+import {
+  DollarSign,
+  Euro,
+  IndianRupee,
+  PoundSterling,
+  SwissFranc,
+  Banknote,
+} from 'lucide-react';
 
+interface Props {
+  code:
+    | 'DOLLAR'
+    | 'EURO'
+    | 'INR'
+    | 'GBP'
+    | 'RUB'
+    | 'JPY'
+    | 'CHF'
+    | 'FCFA'
+    | string; // pour capturer les cas inconnus
+  size?: number;
+  color?: string;
+}
 
 export const getStatusBadge = (status: string) => {
   const baseClass =
@@ -110,4 +132,33 @@ export const getRoleBadge = (role: string) => {
   }
 };
 
+export const getCurrencyIcon = (code: string, size = 16, className = "") => {
+  const currency = code.toUpperCase();
 
+  if (["USD", "DOLLAR"].includes(currency)) {
+    return <DollarSign size={size} className={className} />;
+  }
+
+  if (["EUR", "EURO"].includes(currency)) {
+    return <Euro size={size} className={className} />;
+  }
+
+  if (["INR", "RUPEE"].includes(currency)) {
+    return <IndianRupee size={size} className={className} />;
+  }
+
+  if (["GBP", "POUND"].includes(currency)) {
+    return <PoundSterling size={size} className={className} />;
+  }
+
+  if (["CHF", "FRANC"].includes(currency)) {
+    return <SwissFranc size={size} className={className} />;
+  }
+
+  if (["FCFA", "XAF", "XOF"].includes(currency)) {
+    return <Banknote size={size} className={className} />;
+  }
+
+  // Fallback icon
+  return <Banknote size={size} className={className} />;
+};

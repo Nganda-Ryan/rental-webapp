@@ -11,7 +11,7 @@ import { getAsset, terminateLease } from '@/actions/assetAction'
 import { useRouter } from '@bprogress/next/app'
 import toast from 'react-hot-toast'
 import { getStatusBadge } from '@/lib/utils-component'
-import { capitalize, formatDateToText } from '@/lib/utils'
+import { capitalize, capitalizeEachWord, formatDateToText } from '@/lib/utils'
 import SectionWrapper from '@/components/Cards/SectionWrapper'
 import { FileText, X, Zap } from 'lucide-react'
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable'
@@ -21,10 +21,12 @@ import { ActionConfirmationModal } from '@/components/Modal/ActionConfirmationMo
 import Button from '@/components/ui/Button'
 import { ProcessingModal } from '@/components/Modal/ProcessingModal'
 import { RightSideAction2 } from '@/components/skeleton/pages/PropertySkeletonPage'
-import { AssetDataDetailed } from '@/types/Property'
+import { AssetDataDetailed, IContractDetail } from '@/types/Property'
+import { PDFDownloadLink } from '@react-pdf/renderer'
+import { ContractPdf } from '@/components/pdf/ContractPdf'
 
 const Page = () => {
-  const [contractTableData, setContractTableData] = useState<IContractColumn[]>([]);
+  const [contractTableData, setContractTableData] = useState<IContractDetail[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
   const [isTerminatingContract, setIsTerminatingContract] = useState(false);
@@ -34,7 +36,8 @@ const Page = () => {
   const [currency, setCurrency] = useState("");
   const router = useRouter();
   const params = useParams();
-  const { isAuthorized, loadingProfile } = useAuth();
+  const { isAuthorized, loadingProfile, user } = useAuth();
+  const contractor = JSON.parse(user);
 
 
   useEffect(() => {
@@ -58,9 +61,9 @@ const Page = () => {
         key: 'tenant',
         label: 'Tenant',
         priority: 'medium' as const,
-        render: (_:any, contract: IContractColumn) => (
+        render: (_:any, contract: IContractDetail) => (
         <div className="font-medium text-gray-800 dark:text-gray-100">
-            {contract.tenant}
+            {capitalizeEachWord(contract.tenantName)}
         </div>
         ),
     },
@@ -68,7 +71,7 @@ const Page = () => {
         key: 'period',
         label: 'Period',
         priority: 'medium' as const,
-        render: (_: any, contract: IContractColumn) => (
+        render: (_: any, contract: IContractDetail) => (
         <div className="text-sm text-gray-800 dark:text-gray-100">
             <div><span className="font-bold">From</span> {formatDateToText(contract.startDate)}</div>
             <div className="text-gray-600 dark:text-gray-300"><span className="font-bold">to</span> {formatDateToText(contract.endDate)}</div>
@@ -79,7 +82,7 @@ const Page = () => {
         key: 'monthlyRent',
         label: 'Monthly Rent',
         priority: 'medium' as const,
-        render: (_: any, contract: IContractColumn) => (
+        render: (_: any, contract: IContractDetail) => (
         <div className="text-sm text-gray-800 dark:text-gray-100">
             {`${contract.monthlyRent} ${currency ?? ''}`}
         </div>
@@ -89,7 +92,7 @@ const Page = () => {
         key: 'status',
         label: 'Status',
         priority: 'low' as const,
-        render: (_: any, contract: IContractColumn) => (
+        render: (_: any, contract: IContractDetail) => (
             <>
                 {getStatusBadge(contract.status)}
             </>
@@ -99,12 +102,36 @@ const Page = () => {
       key: 'actions',
       label: 'Actions',
       priority: "high" as "high",
-      render: (_: any, contract: IContractColumn) => (
-        <div className="flex gap-2 items-center justify-end md:justify-start ">
-          <Button variant="info" isSubmitBtn={false} fullWidth={true} onClick={(e) => {e.stopPropagation(); console.log("Print")}}>
-            Print
-          </Button>
-        </div>
+      render: (_: any, contract: IContractDetail) => (
+        <>
+          {
+            asset && 
+            <PDFDownloadLink
+                document={<ContractPdf contract={contract} asset={asset} contractor={contractor} />}
+                fileName={`contrat-${contract.id}.pdf`}
+                >
+                {({ loading, url }) => (
+                    <Button
+                        variant="info"
+                        isSubmitBtn={false}
+                        fullWidth={false}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation(); //
+                            if (url) {
+                                const link = document.createElement("a");
+                                link.href = url;
+                                link.download = `contrat-${contract.id}.pdf`;
+                                link.click();
+                            }
+                        }}
+                    >
+                    Print
+                    </Button>
+                )}
+            </PDFDownloadLink>
+          }
+        </>
       ),
     },
   ];
@@ -146,12 +173,22 @@ const Page = () => {
           if(item.contracts && item.contracts.length > 0){
             const _contractTableData = item.contracts.map((contract: any) => ({
               id: contract.Code,
-              tenant: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
-              startDate: contract.StartDate,
-              endDate: contract.EndDate,
-              status: contract.StatusCode,
-              monthlyRent: item.Price,
-            })) as IContractColumn[];
+                billingElements: [],
+                endDate: contract.EndDate,
+                monthlyRent: contract.asset.Price,
+                currency: contract.Currency,
+                notes: "",
+                tenantName: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
+                startDate: contract.StartDate,
+                status: contract.StatusCode,
+                tenant: {
+                    firstName: contract.renter.user.Firstname,
+                    lastName: contract.renter.user.Lastname,
+                    email: contract.renter.user.Email,
+                    phone: contract.renter.user.Phone,
+                    userCode: contract.renter.user.Code,
+                }
+            })) as IContractDetail[];
             console.log("-->_contractTableData", _contractTableData);
   
             setCurrency(item.Currency);
@@ -221,7 +258,7 @@ const Page = () => {
                           data={contractTableData}
                           onRowClick={(contract) => handleSelectedContract(contract.id)}
                           keyField="id"
-                          searchKey='tenant'
+                          searchKey='tenantName'
                           paginate={10}
                         />
                       ) : (<p className="text-gray-500 dark:text-gray-400 text-sm p-3">No lease contracts available</p>)

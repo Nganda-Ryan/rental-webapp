@@ -18,7 +18,8 @@ interface AuthContextType {
   setActiveProfile: (value: string) => void;
   user: string,
   loadingProfile: boolean,
-  isAuthorized: (requiredRoles?: string[] | undefined) => boolean
+  isAuthorized: (requiredRoles?: string[] | undefined) => boolean,
+  getProfileCode: (roleName: string) => any;
 }
 
 
@@ -30,7 +31,8 @@ const AuthContext = createContext<AuthContextType>({
   setActiveProfile: () => {},
   user: "",
   loadingProfile: true,
-  isAuthorized: () => false
+  isAuthorized: () => false,
+  getProfileCode: (roleName: string) => "",
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -48,7 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const result = await getProfile();
         if(result.data){
           const userInfo = result.data;
-          console.log('-->userInfo', userInfo)
           setUser(JSON.stringify(userInfo));
           setProfilesDetails(result.data.Profiles)
           // console.log('-->userInfo', userInfo);
@@ -85,9 +86,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!requiredRoles || requiredRoles.length === 0) return true;
     return requiredRoles.some((role) => JSON.parse(user).roles.includes(role));
   };
+  const getProfileCode = (roleName: string) => {
+    const userObj = JSON.parse(user);
 
+    // console.log('-->userObj', userObj.Profiles.filter((item: any) => item.RoleCode == roleName));
+    return userObj.Profiles.filter((item: any) => item.RoleCode == roleName)[0];
+
+  }
   return (
-      <AuthContext.Provider value={{ profileList, activeProfile, setProfileList, setActiveProfile, user, loadingProfile, isAuthorized, profilesDetails }}>
+      <AuthContext.Provider value={{ profileList, activeProfile, setProfileList, setActiveProfile, user, loadingProfile, isAuthorized, getProfileCode ,profilesDetails }}>
         {loadingProfile ? <LoadingPage /> : children}
       </AuthContext.Provider>
   );

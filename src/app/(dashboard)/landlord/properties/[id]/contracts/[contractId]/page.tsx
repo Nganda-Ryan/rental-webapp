@@ -68,11 +68,13 @@ const ContractDetail = () => {
                         notes: "",
                         startDate: result.data.body.contractData.StartDate,
                         status: result.data.body.contractData.StatusCode,
+                        tenantName: result.data.body.contractData.renter.user.Firstname + " " + result.data.body.contractData.renter.user.Lastname,
                         tenant: {
-                            name: result.data.body.contractData.renter.user.Lastname + ' ' + result.data.body.contractData.renter.user.Firstname,
                             email: result.data.body.contractData.renter.user.Email,
                             phone: result.data.body.contractData.renter.user.Phone,
                             userCode: result.data.body.contractData.renter.user.Code,
+                            firstName: result.data.body.contractData.renter.user.Firstname,
+                            lastName: result.data.body.contractData.renter.user.Lastname
                         }
                     }
                     const getInvoiceParam: SeachInvoiceParams = {
@@ -82,7 +84,7 @@ const ContractDetail = () => {
                     };
                     const _formDefaultInvoice: IInvoiceForm = {
                         id: _contract.id,
-                        tenant: _contract.tenant.name,
+                        tenant: _contract.tenant.firstName + " " + _contract.tenant.lastName,
                         tableId: "",
                         startDate: _contract.startDate,
                         endDate: "",
@@ -111,7 +113,7 @@ const ContractDetail = () => {
                                 status: inv.StatusCode,
                                 startDate: inv.StartDate.split("T")[0],
                                 endDate: inv.EndDate.split("T")[0],
-                                tenant: _contract.tenant.name,
+                                tenant: _contract.tenant.firstName + " " + _contract.tenant.lastName,
                                 monthlyRent: _contract.monthlyRent,
                                 notes: inv.Notes,
                                 currency: _contract.currency,
@@ -213,10 +215,10 @@ const ContractDetail = () => {
             priority: "high" as "high",
             render: (_: any, invoice: IInvoiceForm) => (
                 <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    handleClickUpdateInvoice(invoice);
-                }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleClickUpdateInvoice(invoice);
+                    }}
                     className="px-2 py-1.5 rounded-lg font-medium text-sm transition-colors duration-200 
                                 bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 
                                 dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800 dark:active:bg-blue-700"
@@ -348,7 +350,7 @@ const ContractDetail = () => {
             };
             const _formDefaultInvoice: IInvoiceForm = {
                 id: _contract.id,
-                tenant: _contract.tenant.name,
+                tenant: _contract.tenant.firstName + " " + _contract.tenant.lastName,
                 tableId: "",
                 startDate: _contract.startDate,
                 endDate: "",
@@ -376,7 +378,7 @@ const ContractDetail = () => {
                         status: inv.StatusCode,
                         startDate: inv.StartDate.split("T")[0],
                         endDate: inv.EndDate.split("T")[0],
-                        tenant: _contract.tenant.name,
+                        tenant: _contract.tenant.firstName + " " + _contract.tenant.lastName,
                         monthlyRent: _contract.monthlyRent,
                         notes: inv.Notes,
                         currency: _contract.currency,
@@ -487,7 +489,7 @@ const ContractDetail = () => {
                                                         Name
                                                     </p>
                                                     <p className="font-medium dark:text-white">
-                                                        {contract?.tenant.name}
+                                                        {contract?.tenant.firstName} {contract?.tenant.lastName}
                                                     </p>
                                                 </div>
                                                 <div>

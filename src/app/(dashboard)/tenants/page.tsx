@@ -10,44 +10,102 @@ import { requestLessorProfile } from '@/actions/requestAction'
 import useLocalStorage from '@/hooks/useLocalStorage';
 import toast from 'react-hot-toast';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal'
+import { useRouter } from '@bprogress/next/app'
+import { useAuth } from '@/context/AuthContext'
+import { IDashBoardParams } from '@/types/Property'
+import { dashboard } from '@/actions/assetAction'
+import { PROFILE_LANDLORD_LIST } from '@/constant'
+import Link from 'next/link'
 
 const TenantDashboard = () => {
-  const [showLessorRequestForm, setShowLessorRequestForm] = useState(false);
-  const [profileList, setProfileList] = useLocalStorage("selectedProfile", [] as string []);
-  const [isClient, setIsClient] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+    const [showLessorRequestForm, setShowLessorRequestForm] = useState(false);
+    const [profileList, setProfileList] = useLocalStorage("selectedProfile", [] as string []);
+    const [isClient, setIsClient] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [counts, setCounts] = useState({
+        "properties": 0,
+        "pendingInvoices": 0,
+        "pendingRequests": 0
+    })
+    const loadingMessage = 'Loading data...';
+    const { isAuthorized, loadingProfile, activeProfile, getProfileCode} = useAuth();
+    const router = useRouter();
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+    useEffect(() => {
+        setIsClient(true);
+        init();
+    }, []);
 
 
   
-  const handleSubmitRequest = (async (data: any) => {
-    try {
-        setShowLessorRequestForm(false);
-        setIsLoading(true);
-        const application = data as ProfileApplication_T;
-        const result =  await requestLessorProfile(application);
-        if(result.data){
+    const handleSubmitRequest = (async (data: any) => {
+        try {
+            setShowLessorRequestForm(false);
+            setIsLoading(true);
+            const application = data as ProfileApplication_T;
+            const result =  await requestLessorProfile(application);
+            if(result.data){
+                setIsLoading(false)
+                toast.success("Request submitted successfully", { position: 'bottom-right' });
+            } else if(result.error){
+                setIsLoading(false)
+                console.log('TenantDashBoard.handleSubmitRequest.result.error', result.error);
+                toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            }
+            console.log('-->result', result)
+        } catch (error) {
+            console.log("TenantDashBoard.handleSubmitRequest.error", error);
+            toast.error("Something went wrong during the process. Try again or contact the administrator")
+        } finally {
             setIsLoading(false)
-            toast.success("Request submitted successfully", { position: 'bottom-right' });
-        } else if(result.error){
-            setIsLoading(false)
-            console.log('TenantDashBoard.handleSubmitRequest.result.error', result.error);
-            toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
         }
-        console.log('-->result', result)
-    } catch (error) {
-        console.log("TenantDashBoard.handleSubmitRequest.error", error);
-        toast.error("Something went wrong during the process. Try again or contact the administrator")
-    } finally {
-        setIsLoading(false)
+        
+    });
+
+    const init = async () => {
+        try {
+            setIsLoading(true);
+            const user = getProfileCode('RENTER');
+            const params: IDashBoardParams = {
+                offset: 0,
+                page: 1,
+                limit: 1000,
+                profileCode: user.Code,
+                endDate: "",
+                startDate: "",
+                term: "",
+                type: ""
+            };
+            const result = await dashboard(params);
+            console.log('-->result', result);
+            if (result.data) {
+                const dashboardData = result.data?.body?.dashboard;
+                if(dashboardData){
+                    setCounts({
+                        "properties": dashboardData.Counts.properties,
+                        "pendingInvoices": dashboardData.Counts.pendingInvoices,
+                        "pendingRequests": dashboardData.Counts.pendingRequests
+                    });
+                }      
+            } else if (result.error) {
+                if (result.code === 'SESSION_EXPIRED') {
+                router.push('/signin');
+                return;
+                }
+                toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            }
+        } catch (error) {
+            console.log('-->error', error);
+        } finally {
+            setIsLoading(false);
+        }
     }
-    
-  });
-  if (!isClient) return null;
-  const loadingMessage = 'Submitting request...';
+
+    if (!isClient) return null;
+  
+    if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+        return <div>Unauthorized</div>;
+    }
 
 
   return (
@@ -55,6 +113,7 @@ const TenantDashboard = () => {
         <Breadcrumb pageName='Dashboard' previousPage={false}/>
         <div className="w-full">
             {
+                
                 profileList && !profileList.includes("LANDLORD")
                 
                 && 
@@ -69,41 +128,57 @@ const TenantDashboard = () => {
                     </button>
                 </div>
             }
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                    <Home className="text-blue-600" size={24} />
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
+                {/* Card 1 */}
+                <Link
+                    href="/tenants/mylisting"
+                    className="rounded-lg bg-white dark:bg-gray-800 border border-neutral-300 dark:border-neutral-700 p-6 shadow hover:shadow-md transition-shadow"
+                >
+                    <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-blue-200 dark:bg-blue-600/30 rounded-md">
+                        <Home className="text-blue-700 dark:text-blue-300" size={24} />
                     </div>
                     <div>
-                    <h3 className="font-medium">Current Rentals</h3>
-                    <p className="text-2xl font-bold">2</p>
+                        <h3 className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">Current Rentals</h3>
+                        <p className="text-xl font-semibold text-neutral-900 dark:text-white">{counts.properties}</p>
                     </div>
-                </div>
-                </div>
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-green-50 rounded-lg">
-                    <Star className="text-green-600" size={24} />
                     </div>
-                    <div>
-                    <h3 className="font-medium">Rental Score</h3>
-                    <p className="text-2xl font-bold">4.8</p>
-                    </div>
-                </div>
-                </div>
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-purple-50 rounded-lg">
-                    <Clock className="text-purple-600" size={24} />
+                </Link>
+
+                {/* Card 2 */}
+                <div className="rounded-lg bg-white dark:bg-gray-800 border border-neutral-300 dark:border-neutral-700 p-6 shadow hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-green-200 dark:bg-green-600/30 rounded-md">
+                        <Star className="text-green-700 dark:text-green-300" size={24} />
                     </div>
                     <div>
-                    <h3 className="font-medium">Pending Applications</h3>
-                    <p className="text-2xl font-bold">1</p>
+                        <h3 className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">Rental Score</h3>
+                        <p className="text-xl font-semibold text-neutral-900 dark:text-white">4.8</p>
+                    </div>
                     </div>
                 </div>
-                </div>
+
+                {/* Card 3 */}
+                <Link
+                    href="/tenants/housing-application"
+                    className="rounded-lg bg-white dark:bg-gray-800 border border-neutral-300 dark:border-neutral-700 p-6 shadow hover:shadow-md transition-shadow"  
+                
+                >
+                    <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-purple-200 dark:bg-purple-600/30 rounded-md">
+                        <Clock className="text-purple-700 dark:text-purple-300" size={24} />
+                    </div>
+                    <div>
+                        <h3 className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">Pending Applications</h3>
+                        <p className="text-xl font-semibold text-neutral-900 dark:text-white">{counts.pendingRequests}</p>
+                    </div>
+                    </div>
+                </Link>
             </div>
+
+
+
 
             <Overlay isOpen={showLessorRequestForm} onClose={() => setShowLessorRequestForm(false)}>
                 <LessorRequestForm

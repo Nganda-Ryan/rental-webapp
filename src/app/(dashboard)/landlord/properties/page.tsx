@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@headlessui/react";
 import { useRouter } from '@bprogress/next/app';
 import PropertyCard from "@/components/Cards/PropertyCard";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 import { AssetData } from "@/types/Property";
 import { searchAsset } from "@/actions/assetAction";
 import PropertySkeletonCard from "@/components/skeleton/PropertySkeletonCard";
@@ -14,16 +14,15 @@ import { useAuth } from "@/context/AuthContext";
 import { PROFILE_LANDLORD_LIST } from "@/constant";
 import toast from "react-hot-toast";
 import autoAnimate from "@formkit/auto-animate";
+import Nodata from "@/components/error/Nodata";
 
 const PropertiesPage = () => {
   const [assetList, setAssetList] = useState<AssetData[]>([]);
   const [filteredAssets, setFilteredAssets] = useState<AssetData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isReady, setIsReady] = useState(false);
-  const [filterCity, setFilterCity] = useState("");
   const [filterActive, setFilterActive] = useState(""); // "1" ou "0"
   const [filterType, setFilterType] = useState("");
-  const [offSet, setOffSet] = useState(0);
   const { isAuthorized, loadingProfile, activeProfile } = useAuth();
   const router = useRouter();
   const listRef = useRef(null);
@@ -35,12 +34,12 @@ const PropertiesPage = () => {
           orderBy: 'CreatedAt',
           orderMode: 'desc',
           limit: 1000,
-          offset: offSet,
+          offset: 0,
         };
         const result = await searchAsset(params, activeProfile);
         console.log('-->result', result);
         if (result.data && result.data.body.items.length > 0) {
-          const datas = result.data.body.items.map((item: any) => ({
+          const datas: AssetData[] = result.data.body.items.map((item: any) => ({
             Code: item.Code,
             Title: item.Title,
             Price: item.Price,
@@ -68,6 +67,7 @@ const PropertiesPage = () => {
         }
       } catch (error) {
         console.log('-->error', error);
+        toast.error("Something went wrong during the process. Try again or contact the administrator", { position: 'bottom-right' });
       } finally {
         setIsReady(true);
       }
@@ -75,7 +75,7 @@ const PropertiesPage = () => {
 
     fetchData();
     listRef.current && autoAnimate(listRef.current, { duration: 300 });
-  }, []);
+  }, [activeProfile, router]);
 
   useEffect(() => {
     let filtered = assetList;
@@ -83,12 +83,6 @@ const PropertiesPage = () => {
     if (searchQuery.trim()) {
       filtered = filtered.filter((item) =>
         item.Title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (filterCity) {
-      filtered = filtered.filter((item) =>
-        item.Address.City.toLowerCase().includes(filterCity.toLowerCase())
       );
     }
 
@@ -101,7 +95,7 @@ const PropertiesPage = () => {
     }
 
     setFilteredAssets(filtered);
-  }, [searchQuery, filterCity, filterActive, filterType, assetList]);
+  }, [searchQuery, filterActive, filterType, assetList]);
 
   const handleCardClick = (code: string) => {
     router.push(`properties/${code}`);
@@ -184,7 +178,7 @@ const PropertiesPage = () => {
             ))
           ) : (
             <div className="col-span-full text-center text-gray-500 mt-10">
-              Aucun résultat trouvé.
+              <Nodata />
             </div>
           )
         ) : (
