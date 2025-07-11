@@ -52,12 +52,6 @@ const ALL_MENU_GROUPS = [
         profiles: ["RENTER"],
       },
       {
-        icon: <Home size={20} />,
-        label: "Housing application",
-        route: "/tenants/housing-application",
-        profiles: ["RENTER"],
-      },
-      {
         icon: <LayoutDashboard size={20} />,
         label: "Dashboard",
         route: "/landlord",
@@ -67,12 +61,6 @@ const ALL_MENU_GROUPS = [
         icon: <Building size={20} />,
         label: "Properties",
         route: "/landlord/properties",
-        profiles: ["LANDLORD"],
-      },
-      {
-        icon: <Users size={20} />,
-        label: "Tenants",
-        route: "/tenants",
         profiles: ["LANDLORD"],
       },
       {

@@ -25,7 +25,7 @@ import toast from 'react-hot-toast';
 import ContractDetailSkeleton from '@/components/skeleton/ContractDetailSkeleton';
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
 import { useRouter } from '@bprogress/next/app';
-import { formatDateToText } from '@/lib/utils';
+import { formatDateToText, formatNumberWithSpaces } from '@/lib/utils';
 import { ActionConfirmationModal } from '@/components/Modal/ActionConfirmationModal';
 import Nodata from '@/components/error/Nodata';
 import { useAuth } from "@/context/AuthContext";
@@ -51,7 +51,6 @@ const ContractDetail = () => {
 
     useEffect(() => {
         const fetchContractData = async () => {
-            
             try {
                 const result = await getContract(params.contractId as string);
                 console.log('-->result', result)
@@ -456,7 +455,7 @@ const ContractDetail = () => {
                                                         Monthly Rent
                                                     </p>
                                                     <p className="text-xl font-bold dark:text-white">
-                                                        {contract?.monthlyRent} {contract?.currency}
+                                                        {formatNumberWithSpaces(contract?.monthlyRent)} {contract?.currency}
                                                     </p>
                                                 </div>
                                             </div>

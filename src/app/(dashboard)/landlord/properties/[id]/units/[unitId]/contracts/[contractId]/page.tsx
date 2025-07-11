@@ -68,11 +68,13 @@ const ContractDetail = () => {
                         notes: "",
                         startDate: result.data.body.contractData.StartDate,
                         status: result.data.body.contractData.StatusCode,
+                        tenantName: result.data.body.contractData.renter.user.Lastname + ' ' + result.data.body.contractData.renter.user.Firstname,
                         tenant: {
-                            name: result.data.body.contractData.renter.user.Lastname + ' ' + result.data.body.contractData.renter.user.Firstname,
                             email: result.data.body.contractData.renter.user.Email,
                             phone: result.data.body.contractData.renter.user.Phone,
                             userCode: result.data.body.contractData.renter.user.Code,
+                            firstName: result.data.body.contractData.renter.user.Firstname,
+                            lastName: result.data.body.contractData.renter.user.Lastname
                         }
                     }
                     const getInvoiceParam: SeachInvoiceParams = {
@@ -82,7 +84,7 @@ const ContractDetail = () => {
                     };
                     const _formDefaultInvoice: IInvoiceForm = {
                         id: _contract.id,
-                        tenant: _contract.tenant.name,
+                        tenant: _contract.tenantName,
                         tableId: "",
                         startDate: _contract.startDate,
                         endDate: "",
@@ -111,7 +113,7 @@ const ContractDetail = () => {
                                 status: inv.StatusCode,
                                 startDate: inv.StartDate.split("T")[0],
                                 endDate: inv.EndDate.split("T")[0],
-                                tenant: _contract.tenant.name,
+                                tenant: _contract.tenantName,
                                 monthlyRent: _contract.monthlyRent,
                                 notes: inv.Notes,
                                 currency: _contract.currency,
@@ -350,7 +352,7 @@ const ContractDetail = () => {
             };
             const _formDefaultInvoice: IInvoiceForm = {
                 id: _contract.id,
-                tenant: _contract.tenant.name,
+                tenant: _contract.tenantName,
                 tableId: "",
                 startDate: _contract.startDate,
                 endDate: "",
@@ -378,7 +380,7 @@ const ContractDetail = () => {
                         status: inv.StatusCode,
                         startDate: inv.StartDate.split("T")[0],
                         endDate: inv.EndDate.split("T")[0],
-                        tenant: _contract.tenant.name,
+                        tenant: _contract.tenantName,
                         monthlyRent: _contract.monthlyRent,
                         notes: inv.Notes,
                         currency: _contract.currency,
@@ -488,7 +490,7 @@ const ContractDetail = () => {
                                                         Name
                                                     </p>
                                                     <p className="font-medium dark:text-white">
-                                                        {contract?.tenant.name}
+                                                        {contract?.tenantName}
                                                     </p>
                                                 </div>
                                                 <div>

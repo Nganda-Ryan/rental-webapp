@@ -35,7 +35,7 @@ import { ResponsiveTable } from "@/components/feature/Support/ResponsiveTable";
 import { capitalize, capitalizeEachWord, formatDateToText, formatNumberWithSpaces } from "@/lib/utils";
 import { ActionConfirmationModal } from "@/components/Modal/ActionConfirmationModal";
 import { useAuth } from "@/context/AuthContext";
-import { ASSET_TYPE_COMPLEXE, PROFILE_LANDLORD_LIST } from "@/constant";
+import { ASSET_TYPE_COMPLEXE, IMAGE_LOADING_SHIMMER, PROFILE_LANDLORD_LIST } from "@/constant";
 import ImageLoading from "@/components/ImageLoading";
 import { IInviteManagerRequest, IUser, IUserPermission } from "@/types/user";
 import { ProcessingModal } from "@/components/Modal/ProcessingModal";
@@ -830,17 +830,18 @@ const PropertyDetail = () => {
     if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
         return <div>Unauthorized</div>;
     }
+
     return (
         <DefaultLayout>
             <Breadcrumb previousPage pageName={`Property ${asset ? ("- " + capitalize(asset.Title)) : ""}`} />
 
             <div className="w-full mt-7">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {
                         isReady ?
                             <>
                                 { asset ?
-                                    <div className="lg:col-span-2 space-y-6 h-fit">
+                                    <div className="lg:col-span-2 space-y-4 h-fit">
                                         {/* Property image */}
                                         
                                         <div className="rounded-lg overflow-hidden h-100">
@@ -849,11 +850,11 @@ const PropertyDetail = () => {
                                                     src={asset!.CoverUrl}
                                                     alt={asset!.Title}
                                                     className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110`}
-                                                    width={1280}
-                                                    height={600}
+                                                    width={1920}
+                                                    height={1080}
                                                     priority
                                                     onError={(e) => console.log('ERROR WHILE LOADING THE IMAGE')}
-                                                    placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mPsnrquHgAF0AJP9UhCwgAAAABJRU5ErkJggg=="
+                                                    placeholder={IMAGE_LOADING_SHIMMER}
                                                 /> :
                                                 <ImageLoading />
                                             }
@@ -928,7 +929,7 @@ const PropertyDetail = () => {
                                                         ) : (
                                                         <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No invoices available</p>
                                                     )}
-                                                </SectionWrapper> */}noo
+                                                </SectionWrapper> */}
                                                 
                                                 {/* CONTRACT */}
                                                 <SectionWrapper title="Lease Contracts" Icon={FileText}>
@@ -965,19 +966,17 @@ const PropertyDetail = () => {
                             <div>
                                 {/* ACTIONS */}
                                 <div className="hidden lg:block">
-                                    <SectionWrapper title="Quick Actions">
+                                    <SectionWrapper title="Quick Actions" Icon={Zap}>
                                         {
                                             asset?.whoIs == "OWNER" && <>
                                                 {(asset?.IsVerified == 1 && asset.TypeCode != ASSET_TYPE_COMPLEXE) && <Button onClick={handleShareLink} variant='neutral' isSubmitBtn={false}>
                                                     <Share2 size={16} /> Invite Tenant
                                                 </Button>}
-
                                                 {(asset?.StatusCode == "DRAFT" || asset?.StatusCode == "INACTIVE") && (
                                                     <Button onClick={handleVerificationFormOpen} variant="neutral" disable={false} isSubmitBtn={false}>
                                                         <FileText size={16} /> Verify Property
                                                     </Button>
                                                 )}
-
                                                 {asset?.TypeCode === "CPLXMOD" && asset?.IsVerified == 1 && (
                                                     <Button onClick={() => setIsAttachPropertiesModalOpen(true)} variant='neutral' isSubmitBtn={false}>
                                                         <Building2 size={16} /> Attach Properties

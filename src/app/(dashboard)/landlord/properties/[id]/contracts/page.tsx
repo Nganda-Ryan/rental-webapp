@@ -6,12 +6,11 @@ import DefaultLayout from '@/components/Layouts/DefaultLayout'
 import { useAuth } from "@/context/AuthContext";
 import { PROFILE_LANDLORD_LIST } from "@/constant";
 import { useParams } from 'next/navigation'
-import { IContractColumn } from '@/types/TableTypes'
 import { getAsset, terminateLease } from '@/actions/assetAction'
 import { useRouter } from '@bprogress/next/app'
 import toast from 'react-hot-toast'
 import { getStatusBadge } from '@/lib/utils-component'
-import { capitalize, capitalizeEachWord, formatDateToText } from '@/lib/utils'
+import { capitalize, capitalizeEachWord, formatDateToText, formatNumberWithSpaces } from '@/lib/utils'
 import SectionWrapper from '@/components/Cards/SectionWrapper'
 import { FileText, X, Zap } from 'lucide-react'
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable'
@@ -84,7 +83,7 @@ const Page = () => {
         priority: 'medium' as const,
         render: (_: any, contract: IContractDetail) => (
         <div className="text-sm text-gray-800 dark:text-gray-100">
-            {`${contract.monthlyRent} ${currency ?? ''}`}
+            {`${formatNumberWithSpaces(contract.monthlyRent)} ${currency ?? ''}`}
         </div>
         ),
     },
@@ -143,72 +142,72 @@ const Page = () => {
   const contract = getActiveContract();
 
   const init = async () => {
-      try {
-        console.log('-->params.id', params.id);
-        const result = await getAsset(params.id as string);
-        console.log('-->result', result);
-        if(result?.data?.body?.assetData) {
-          const item = result.data.body.assetData;
-          const assetData: AssetDataDetailed  = {
-            Code: item.Code,
-            Title: item.Title,
-            Price: item.Price,
-            Currency: item.Currency,
-            CoverUrl: item.CoverUrl,
-            StatusCode: item.StatusCode,
-            IsActive: item.IsActive, // 1 ou 0
-            TypeCode: item.TypeCode,
-            IsVerified: item.IsVerified, // 1 ou 0
-            Permission: result.data.body.ConfigPermissionList.map((item:any) => (item.Code)),
-            whoIs: result.data.body.whoIs,
-            BillingItems: result.data.body.billingItems.map((item: any) => (item.ItemCode)),
-            Units: [],
-            Address: {
-              Code: item.Address.Code,
-              City: item.Address.City,
-              Country: item.Address.Country,
-              Street: item.Address.Street,
-            },
-          }
-          if(item.contracts && item.contracts.length > 0){
-            const _contractTableData = item.contracts.map((contract: any) => ({
-              id: contract.Code,
-                billingElements: [],
-                endDate: contract.EndDate,
-                monthlyRent: contract.asset.Price,
-                currency: contract.Currency,
-                notes: "",
-                tenantName: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
-                startDate: contract.StartDate,
-                status: contract.StatusCode,
-                tenant: {
-                    firstName: contract.renter.user.Firstname,
-                    lastName: contract.renter.user.Lastname,
-                    email: contract.renter.user.Email,
-                    phone: contract.renter.user.Phone,
-                    userCode: contract.renter.user.Code,
-                }
-            })) as IContractDetail[];
-            console.log("-->_contractTableData", _contractTableData);
-  
-            setCurrency(item.Currency);
-            setContractTableData([..._contractTableData].reverse());
-          }
-          
-          setAsset(assetData)
-        } else if(result.error){
-          if(result.code == 'SESSION_EXPIRED'){
-              router.push('/signin');
-              return;
-          }
-          toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+    try {
+      console.log('-->params.id', params.id);
+      const result = await getAsset(params.id as string);
+      console.log('-->result', result);
+      if(result?.data?.body?.assetData) {
+        const item = result.data.body.assetData;
+        const assetData: AssetDataDetailed  = {
+          Code: item.Code,
+          Title: item.Title,
+          Price: item.Price,
+          Currency: item.Currency,
+          CoverUrl: item.CoverUrl,
+          StatusCode: item.StatusCode,
+          IsActive: item.IsActive, // 1 ou 0
+          TypeCode: item.TypeCode,
+          IsVerified: item.IsVerified, // 1 ou 0
+          Permission: result.data.body.ConfigPermissionList.map((item:any) => (item.Code)),
+          whoIs: result.data.body.whoIs,
+          BillingItems: result.data.body.billingItems.map((item: any) => (item.ItemCode)),
+          Units: [],
+          Address: {
+            Code: item.Address.Code,
+            City: item.Address.City,
+            Country: item.Address.Country,
+            Street: item.Address.Street,
+          },
         }
-      } catch (error) {
-        console.log(error)
-      } finally {
-        setIsReady(true);
+        if(item.contracts && item.contracts.length > 0){
+          const _contractTableData = item.contracts.map((contract: any) => ({
+            id: contract.Code,
+              billingElements: [],
+              endDate: contract.EndDate,
+              monthlyRent: contract.asset.Price,
+              currency: contract.Currency,
+              notes: "",
+              tenantName: contract.renter.user.Lastname + ' ' + contract.renter.user.Firstname,
+              startDate: contract.StartDate,
+              status: contract.StatusCode,
+              tenant: {
+                  firstName: contract.renter.user.Firstname,
+                  lastName: contract.renter.user.Lastname,
+                  email: contract.renter.user.Email,
+                  phone: contract.renter.user.Phone,
+                  userCode: contract.renter.user.Code,
+              }
+          })) as IContractDetail[];
+          console.log("-->_contractTableData", _contractTableData);
+
+          setCurrency(item.Currency);
+          setContractTableData([..._contractTableData].reverse());
+        }
+        
+        setAsset(assetData)
+      } else if(result.error){
+        if(result.code == 'SESSION_EXPIRED'){
+            router.push('/signin');
+            return;
+        }
+        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
       }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsReady(true);
     }
+  }
 
   const handleSelectedContract = (contractId: string) => {
     router.push(`/landlord/properties/${params.id}/contracts/${contractId}`)
@@ -243,6 +242,7 @@ const Page = () => {
   if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
     return <div>Unauthorized</div>;
   }
+
   return (
     <DefaultLayout>
       <Breadcrumb previousPage pageName={`Property ${asset ? ("- " + capitalize(asset.Title)) : ""}`} />
@@ -363,6 +363,8 @@ const Page = () => {
             </button>
         )}
         
+
+        
         <Overlay isOpen={showActionModal} onClose={() => setShowActionModal(false)}>
           <ActionConfirmationModal
             onClose={() => setShowActionModal(false)}
@@ -373,7 +375,6 @@ const Page = () => {
             message={`Are you sure you want to terminate lease #${currentLease} ?`}
           />
         </Overlay>
-
         <Overlay isOpen={isTerminatingContract} onClose={() => {}}>
           <ProcessingModal message="Terminating the lease" />
         </Overlay>

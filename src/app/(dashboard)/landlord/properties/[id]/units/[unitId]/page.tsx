@@ -396,11 +396,13 @@ const PropertyDetail = () => {
                         notes: "",
                         startDate: _rawActiveContract.StartDate,
                         status: _rawActiveContract.StatusCode,
+                        tenantName: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
                         tenant: {
-                            name: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
                             email: _rawActiveContract.renter.user.Email,
                             phone: _rawActiveContract.renter.user.Phone,
                             userCode: _rawActiveContract.renter.user.Code,
+                            firstName: _rawActiveContract.renter.user.Firstname,
+                            lastName: _rawActiveContract.renter.user.Lastname
                         }
                     };
                     const _contractTableData = item.contracts.map((contract: any) => ({
@@ -559,16 +561,18 @@ const PropertyDetail = () => {
                         notes: "",
                         startDate: _rawActiveContract.StartDate,
                         status: _rawActiveContract.StatusCode,
+                        tenantName: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
                         tenant: {
-                            name: _rawActiveContract.renter.user.Lastname + ' ' + _rawActiveContract.renter.user.Firstname,
                             email: _rawActiveContract.renter.user.Email,
                             phone: _rawActiveContract.renter.user.Phone,
                             userCode: _rawActiveContract.renter.user.Code,
+                            firstName: _rawActiveContract.renter.user.Firstname,
+                            lastName: _rawActiveContract.renter.user.Lastname,
                         }
                     };
                     const _invoiceformDefaultValue: IInvoiceForm = {
                         id: _activeContract.id,
-                        tenant: _activeContract.tenant.name,
+                        tenant: _activeContract.tenantName,
                         tableId: "",
                         startDate: _activeContract.startDate,
                         endDate: "",
@@ -782,9 +786,6 @@ const PropertyDetail = () => {
                                                     <Share2 size={16} /> Invite Tenant
                                                 </Button>}
 
-                                                { asset?.StatusCode == "DRAFT" && <Button onClick={handleVerificationFormOpen} variant='neutral' disable={false} isSubmitBtn={false}>
-                                                    <FileText size={16} /> Verify Property
-                                                </Button>}
 
                                                 {asset?.TypeCode === "CPLXMOD" && asset?.IsVerified == 1 && (
                                                     <Button onClick={() => setIsAttachPropertiesModalOpen(true)} variant='neutral' isSubmitBtn={false}>
@@ -937,9 +938,6 @@ const PropertyDetail = () => {
                                         <Share2 size={16} /> Invite Tenant
                                     </Button>}
 
-                                    { asset?.StatusCode == "DRAFT" && <Button onClick={handleVerificationFormOpen} variant='neutral' disable={false} isSubmitBtn={false}>
-                                        <FileText size={16} /> Verify Property
-                                    </Button>}
 
                                     {asset?.TypeCode === "CPLXMOD" && asset?.IsVerified == 1 && (
                                         <Button onClick={() => setIsAttachPropertiesModalOpen(true)} variant='neutral' isSubmitBtn={false}>
