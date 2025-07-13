@@ -183,14 +183,18 @@ const PropertiesPage = () => {
                 }
               </div>
           ) : (
-            <div className="col-span-full text-center text-gray-500 mt-4">
+            <div className="col-span-full text-center text-gray-500 mt-5">
               <Nodata />
             </div>
           )
         ) : (
-          Array.from({ length: 4 }).map((_, index) => (
-            <PropertySkeletonCard key={index} />
-          ))
+          <div className="justify-items-center grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 mt-5" ref={listRef}>
+            {
+              Array.from({ length: 4 }).map((_, index) => (
+                <PropertySkeletonCard key={index} />
+              ))
+            }
+          </div>
         )}
       </div>
     </DefaultLayout>
