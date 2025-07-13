@@ -17,7 +17,7 @@ export default function DefaultLayout({
         {/* <!-- ===== Page Wrapper Start ===== --> */}
         <div className="flex">
           {/* <!-- ===== Sidebar Start ===== --> */}
-          <Sidebar key={auth.activeProfile} sidebarOpen={true} setSidebarOpen={setSidebarOpen} />
+          <Sidebar key={auth.activeProfile} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           {/* <!-- ===== Sidebar End ===== --> */}
 
           {/* <!-- ===== Content Area Start ===== --> */}

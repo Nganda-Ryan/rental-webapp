@@ -169,15 +169,19 @@ const PropertiesPage = () => {
       <div >
         {isReady ? (
           filteredAssets.length > 0 ? (
-            filteredAssets.map((property, index) => (
-              <div key={property.Code || index} className="justify-items-center grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 mt-5" ref={listRef}>
-                <PropertyCard
-                property={property}
-                className="h-full"
-                onClick={handleCardClick}
-              />
+            
+              <div className="justify-items-center grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 mt-5" ref={listRef}>
+                {
+                  filteredAssets.map((property, index) => (
+                    <PropertyCard
+                      key={property.Code || index}
+                      property={property}
+                      className="h-full"
+                      onClick={handleCardClick}
+                    />
+                  ))
+                }
               </div>
-            ))
           ) : (
             <div className="col-span-full text-center text-gray-500 mt-4">
               <Nodata />

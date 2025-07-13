@@ -53,7 +53,7 @@ const DropdownUser = () => {
   const [profileMenu, setProfileMenu] = useState<ProfileMenu[]>([]);
 
   const router = useRouter();
-  const { activeRole, user , setActiveRole} = roleStore();
+  const { activeRole, user} = roleStore();
 
   useEffect(() => {
     console.log('Dropdown activeRole changed', activeRole)
@@ -96,20 +96,16 @@ const DropdownUser = () => {
           <span className="block text-sm font-medium text-black dark:text-white">
             {user?.Firstname} {user?.Lastname}
           </span>
-          <span className="block text-xs">{user?.roles.join(" - ")}</span>
+          <span className="block text-xs">{activeRole}</span>
         </span>
 
         <span className="h-10 w-10 rounded-full">
           <Image
-            width={112}
-            height={112}
-            src={"/images/user/avatarg.webp"}
-            style={{
-              width: "auto",
-              height: "auto",
-            }}
+            width={100}
+            height={100}
+            src={"/images/user/among-us-blue-png-01.png"}
             alt="User"
-            className="rounded-full"
+            className="rounded-full overflow-hidden h-11 w-11"
           />
         </span>
 
@@ -131,7 +127,7 @@ const DropdownUser = () => {
       </Link>
 
       {/* Dropdown Start */}
-      {true && (
+      {dropdownOpen && (
         <div
           className={`absolute right-0 mt-4 flex w-62.5 flex-col rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark`}
         >

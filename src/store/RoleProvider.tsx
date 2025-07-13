@@ -32,9 +32,13 @@ export function RoleProvider({
     const browsedRole = _browsedRole == "SUPPORT" ? "ADMIN" : _browsedRole;
     if(browsedRole == activeRole){
       console.log('same role');
+      setLoadingProfile(false);
+      return;
     } else if(user?.roles.includes(browsedRole)) {
       console.log('authorised role');
       setActiveRole(browsedRole);
+      setLoadingProfile(false);
+      return;
     } else {
       init(browsedRole);
     }
