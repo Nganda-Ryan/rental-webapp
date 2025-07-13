@@ -24,6 +24,7 @@ import Button from '@/components/ui/Button'
 import { formatDateToText } from '@/lib/utils'
 import { MANAGER_PROFILE_LIST } from '@/constant'
 import { useAuth } from '@/context/AuthContext'
+import { roleStore } from '@/store/roleStore'
 
 interface VerificationRequest {
   id: string
@@ -54,7 +55,7 @@ const Page = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
   const [isReady, setIsReady] = useState(false);
-  const { isAuthorized, loadingProfile } = useAuth();
+  const { isAuthorized } = roleStore();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -228,7 +229,7 @@ const Page = () => {
     router.push(`/support/properties-verification/${id}`)
   }
 
-  if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
+  if (!isAuthorized(MANAGER_PROFILE_LIST)) {
     return <div>Unauthorized</div>;
   }
   

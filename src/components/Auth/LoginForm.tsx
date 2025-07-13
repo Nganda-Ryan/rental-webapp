@@ -91,7 +91,7 @@ export const LoginForm = () => {
               height={200}
               src={"/images/logo-blue.svg"}
               alt="Logo"
-              className="h-13 relative left-2"
+              className="h-13 w-auto relative left-2"
             />
         </div>
         {/* <h1 className="text-3xl font-bold text-[#083959]">Welcome back</h1> */}

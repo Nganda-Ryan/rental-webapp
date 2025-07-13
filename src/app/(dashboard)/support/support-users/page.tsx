@@ -26,6 +26,7 @@ import { SkeletonTable } from '@/components/skeleton/SkeletonTable';
 import Button from '@/components/ui/Button';
 import { MANAGER_PROFILE_LIST } from '@/constant'
 import { useAuth } from '@/context/AuthContext'
+import { roleStore } from '@/store/roleStore';
 
 
 
@@ -38,7 +39,7 @@ const SupportUsers = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isFetchingUser, setIsFetchingUser] = useState(true);
   const router = useRouter();
-  const { isAuthorized, loadingProfile } = useAuth();
+  const { isAuthorized } = roleStore();
 
   useEffect(() => {
 
@@ -210,7 +211,7 @@ const SupportUsers = () => {
     }
   };
 
-  if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
+  if (!isAuthorized(MANAGER_PROFILE_LIST)) {
     return <div>Unauthorized</div>;
   }
 

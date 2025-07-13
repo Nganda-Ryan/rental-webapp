@@ -6,8 +6,8 @@ import { cookies } from 'next/headers'
 const routeRoles: Record<string, string[]> = {
   'ADMIN': ['/support', '/settings', '/profile', '/images'],
   'SUPPORT': ['/support', '/settings', '/profile', '/images'],
-  'LANDLORD': ['/landlord', '/tenants', '/settings', '/profile', '/images'],
-  'RENTER': ['/tenants', '/settings', '/profile', '/images']
+  'LANDLORD': ['/landlord', '/renter', '/settings', '/profile', '/images'],
+  'RENTER': ['/renter', '/settings', '/profile', '/images']
 };
 
 const publicRoutes = ['/signin', '/signup', '/unauthorized', '/'];

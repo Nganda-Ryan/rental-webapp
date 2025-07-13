@@ -1,6 +1,6 @@
 'use client';
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   DollarSign,
   Home,
@@ -11,13 +11,18 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { useAuth } from "@/context/AuthContext";
 import { PROFILE_LANDLORD_LIST } from "@/constant";
+import { useRouter } from "@bprogress/next/app";
+import { roleStore } from "@/store/roleStore";
 
 export default function Dashboard() {
+  const router = useRouter();
+  const { isAuthorized } = roleStore();
+  useEffect(() => {
+    if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
+      router.push("/not-authorized");
+    }
+  }, []);
   
-  const { isAuthorized, loadingProfile } = useAuth();
-  if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
-    return <div>Unauthorized</div>;
-  }
   return (
     <DefaultLayout>
       <Breadcrumb previousPage={false} pageName="Dashboard Overview" />

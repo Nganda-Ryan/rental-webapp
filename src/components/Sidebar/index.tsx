@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import SidebarItem from "@/components/Sidebar/SidebarItem";
@@ -18,9 +18,8 @@ import {
 } from "lucide-react";
 import SidebarItemSkeleton from "../skeleton/SidebarItemSkeleton";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 import logoImage from "../../../public/images/logo.svg";
-
+import { roleStore } from "@/store/roleStore";
 
 type MenuItem = {
   icon: React.ReactNode;
@@ -34,7 +33,6 @@ type MenuGroup = {
   menuItems: MenuItem[];
 };
 
-
 const ALL_MENU_GROUPS = [
   {
     name: "MENU",
@@ -42,13 +40,19 @@ const ALL_MENU_GROUPS = [
       {
         icon: <LayoutDashboard size={20} />,
         label: "Dashboard",
-        route: "/tenants",
+        route: "/renter",
         profiles: ["RENTER"],
       },
       {
         icon: <Building2 size={20} />,
         label: "My Listing",
-        route: "/tenants/mylisting",
+        route: "/renter/mylisting",
+        profiles: ["RENTER"],
+      },
+      {
+        icon: <Home size={20} />,
+        label: "Housing application",
+        route: "/renter/housing-application",
         profiles: ["RENTER"],
       },
       {
@@ -108,20 +112,22 @@ interface SidebarProps {
   setSidebarOpen: (arg: boolean) => void;
 }
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
+const Sidebar = memo(function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const [pageName, setPageName] = useLocalStorage("selectedMenu", "dashboard");
   const [menuGroups, setMenuGroups] = useState<MenuGroup[]>([]);
-
-  const [isReady, setIsReady] = useState(false);
-  const auth = useAuth();
+  const [filtering, setFiltering] = useState(false);
+  
+  const { activeRole } = roleStore();
   const pathname = usePathname();
 
+  const menuListRef = useRef(null);
+  
   useEffect(() => {
-    if (!auth.activeProfile) return;
-
+    setFiltering(true);
+    console.log('Sidebar activeRole Changed', activeRole)
     const filtered = ALL_MENU_GROUPS.map((group) => {
       const menuItems = group.menuItems.filter((item) =>
-        item.profiles.includes(auth.activeProfile)
+        item.profiles.includes(activeRole)
       );
       return {
         ...group,
@@ -130,10 +136,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     }).filter((group) => group.menuItems.length > 0);
 
     setMenuGroups(filtered);
-    setIsReady(true);
-  }, [auth.activeProfile]);
+    setFiltering(false);
+  }, [activeRole]);
 
-  const isActive = (item: any) => {
+  const isActive = (item: MenuItem) => {
     if (pathname === item.route) return true;
     if (pathname.startsWith(item.route + "/")) {
       for (const group of menuGroups) {
@@ -154,7 +160,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   return (
     <ClickOutside onClick={() => setSidebarOpen(false)}>
-      <aside
+      <aside 
         className={`fixed left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark xl:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
@@ -191,18 +197,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         </div>
 
         <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
-          <nav className="mt-5 px-4 py-4 lg:px-6">
-            {!isReady ? (
-              <div role="status">
-                <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
-                  MENU
-                </h3>
-                <div className="flex items-center justify-center">
-                  <SidebarItemSkeleton />
-                </div>
-              </div>
-            ) : (
-              menuGroups.map((group, groupIndex) => (
+          <nav className="mt-5 px-4 py-4 lg:px-6" ref={menuListRef}>
+            {menuGroups.map((group, groupIndex) => (
                 <div key={groupIndex}>
                   <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
                     {group.name}
@@ -219,13 +215,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     ))}
                   </ul>
                 </div>
-              ))
-            )}
+              ))}
           </nav>
         </div>
       </aside>
     </ClickOutside>
   );
-};
+});
 
 export default Sidebar;

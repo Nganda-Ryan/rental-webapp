@@ -1,6 +1,7 @@
 'use client';
 
-import { useAuth } from '@/context/AuthContext';
+
+import { roleStore } from '@/store/roleStore';
 import { ReactNode } from 'react';
 
 interface RequireAuthProps {
@@ -9,7 +10,7 @@ interface RequireAuthProps {
 }
 
 export default function RequireAuth({ roles = [], children }: RequireAuthProps) {
-  const { isAuthorized } = useAuth();
+  const { isAuthorized } = roleStore();
 
 
   if (!isAuthorized(roles)) {

@@ -30,7 +30,7 @@ export type Profile = {
   RoleCode: string;
   IsActive: number;
   Status: string;
-  CreatedAt: string; // ISO date format, peut être typé plus strictement si besoin
+  CreatedAt: string;
 }
 
 type Address = {
@@ -45,7 +45,7 @@ export type SessionPayload = {
   AddressCode: string;
   Email: string;
   Firstname: string;
-  Gender: 'MALE' | 'FEMALE' | string; // tu peux restreindre davantage si tu connais toutes les valeurs possibles
+  Gender: 'MALE' | 'FEMALE' | string;
   Lastname: string;
   NIU: string;
   OtherEmail: string | null;
@@ -58,11 +58,34 @@ export type SessionPayload = {
   expiresAt: Date
   Profiles: Profile[];
   Address: Address;
-  Subscriptions: any[]; // à adapter si tu connais la structure des abonnements
+  Subscriptions: any[]; 
   accessToken: string;
   refreshToken: string;
   roles: string[];
   activeRole: string;
 }
 
+
+export type ProfileDetail = {
+  Code: string;
+  AddressCode: string;
+  Email: string;
+  Firstname: string;
+  Gender: 'MALE' | 'FEMALE' | string;
+  Lastname: string;
+  NIU: string;
+  OtherEmail: string | null;
+  OtherPhone: string | null;
+  Phone: string;
+  Status: string;
+  AvatarUrl: string;
+  userId: string;
+  IsVerified: number;
+  expiresAt: Date
+  Profiles: Profile[];
+  Address: Address;
+  Subscriptions: any[];
+  roles: string[];
+  activeRole: string;
+}
   

@@ -16,11 +16,12 @@ import toast from 'react-hot-toast'
 import { getAsset, searchInvoice } from '@/actions/assetAction'
 import { IUser } from '@/types/user'
 import { SkeletonTable } from '@/components/skeleton/SkeletonTable'
+import { roleStore } from '@/store/roleStore'
 
 const Page = () => {
   const [isReady, setIsReady] = useState(false);
   const [asset, setAsset] = useState<AssetDataDetailed | null>(null);
-  const { isAuthorized, loadingProfile } = useAuth();
+  const { isAuthorized} = roleStore();
   const params = useParams();
   const router = useRouter();
   
@@ -155,7 +156,7 @@ const Page = () => {
     }
   }
 
-  if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+  if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
     return <div>Unauthorized</div>;
   }
   return (

@@ -15,11 +15,12 @@ import { getAsset, updateAsset } from '@/actions/assetAction';
 import toast from 'react-hot-toast';
 import { useRouter } from '@bprogress/next/app';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal';
-import { useAuth } from '@/context/AuthContext';
+
 import { PROFILE_LANDLORD_LIST, PROPERTY_TYPE_OBJ_CODE } from '@/constant';
 import { useSearchParams } from 'next/navigation';
 import { set } from "zod";
 import { capitalize } from "@/lib/utils";
+import { roleStore } from "@/store/roleStore";
 
 
 const countryOptions = getNames()
@@ -39,7 +40,7 @@ const Page = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { isAuthorized, loadingProfile } = useAuth();
+  const { isAuthorized } = roleStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const unitId = searchParams.get('unitId');
@@ -196,7 +197,7 @@ const Page = () => {
   };
 
 
-  if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+  if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
       return <div>Unauthorized</div>;
   }
 

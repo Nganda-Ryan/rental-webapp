@@ -31,6 +31,7 @@ import Nodata from '@/components/error/Nodata';
 import { useAuth } from "@/context/AuthContext";
 import { PROFILE_LANDLORD_LIST } from "@/constant";
 import SectionWrapper from '@/components/Cards/SectionWrapper';
+import { roleStore } from '@/store/roleStore';
 
 const ContractDetail = () => {
     const [contract, setContract] = useState<IContractDetail>();
@@ -47,7 +48,7 @@ const ContractDetail = () => {
     const [action, setAction] = useState<"CREATE" | "UPDATE">("CREATE");
     const params = useParams();
     const router = useRouter();
-    const { isAuthorized, loadingProfile } = useAuth();
+    const { isAuthorized } = roleStore();
 
     useEffect(() => {
         const fetchContractData = async () => {
@@ -412,7 +413,7 @@ const ContractDetail = () => {
     }
 
 
-    if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+    if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
         return <div>Unauthorized</div>;
     }
     return (

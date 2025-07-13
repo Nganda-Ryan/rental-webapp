@@ -23,6 +23,7 @@ import { RightSideAction2 } from '@/components/skeleton/pages/PropertySkeletonPa
 import { AssetDataDetailed, IContractDetail } from '@/types/Property'
 import { PDFDownloadLink } from '@react-pdf/renderer'
 import { ContractPdf } from '@/components/pdf/ContractPdf'
+import { roleStore } from '@/store/roleStore'
 
 const Page = () => {
   const [contractTableData, setContractTableData] = useState<IContractDetail[]>([]);
@@ -35,8 +36,7 @@ const Page = () => {
   const [currency, setCurrency] = useState("");
   const router = useRouter();
   const params = useParams();
-  const { isAuthorized, loadingProfile, user } = useAuth();
-  const contractor = JSON.parse(user);
+  const { isAuthorized, user } = roleStore();
 
 
   useEffect(() => {
@@ -106,7 +106,7 @@ const Page = () => {
           {
             asset && 
             <PDFDownloadLink
-                document={<ContractPdf contract={contract} asset={asset} contractor={contractor} />}
+                document={<ContractPdf contract={contract} asset={asset} contractor={user} />}
                 fileName={`contrat-${contract.id}.pdf`}
                 >
                 {({ loading, url }) => (
@@ -239,7 +239,7 @@ const Page = () => {
     }
   }
   
-  if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+  if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
     return <div>Unauthorized</div>;
   }
 

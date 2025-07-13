@@ -342,3 +342,23 @@ export interface IUpdateInvoiceParam {
 }
 
 export type AssetTypeCode = "CPLXMOD" | "STUDMOD" | "CHAMMOD" | "APPART"
+
+export interface IAssetApplication {
+  "profilCode": string,
+  "assetCode": string
+  "title": string
+  "username": string
+}
+
+
+export interface ILoan {
+  "Code": string,
+  "AssetCode": string,
+  "Title": string,
+  "Amount": 80000,
+  "StartDate": string,
+  "EndDate": string,
+  "Currency": string,
+  "AssetTypeCode": string,
+  "CoverUrl": string
+}

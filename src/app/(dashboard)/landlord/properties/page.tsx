@@ -15,6 +15,7 @@ import { PROFILE_LANDLORD_LIST } from "@/constant";
 import toast from "react-hot-toast";
 import autoAnimate from "@formkit/auto-animate";
 import Nodata from "@/components/error/Nodata";
+import { roleStore } from "@/store/roleStore";
 
 const PropertiesPage = () => {
   const [assetList, setAssetList] = useState<AssetData[]>([]);
@@ -23,7 +24,7 @@ const PropertiesPage = () => {
   const [isReady, setIsReady] = useState(false);
   const [filterActive, setFilterActive] = useState(""); // "1" ou "0"
   const [filterType, setFilterType] = useState("");
-  const { isAuthorized, loadingProfile, activeProfile } = useAuth();
+  const { isAuthorized, activeRole } = roleStore();
   const router = useRouter();
   const listRef = useRef(null);
 
@@ -36,7 +37,7 @@ const PropertiesPage = () => {
           limit: 1000,
           offset: 0,
         };
-        const result = await searchAsset(params, activeProfile);
+        const result = await searchAsset(params, activeRole);
         console.log('-->result', result);
         if (result.data && result.data.body.items.length > 0) {
           const datas: AssetData[] = result.data.body.items.map((item: any) => ({
@@ -75,7 +76,7 @@ const PropertiesPage = () => {
 
     fetchData();
     listRef.current && autoAnimate(listRef.current, { duration: 300 });
-  }, [activeProfile, router]);
+  }, [activeRole, router]);
 
   useEffect(() => {
     let filtered = assetList;
@@ -105,7 +106,7 @@ const PropertiesPage = () => {
     router.push('/landlord/properties/new');
   };
 
-  if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+  if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
     return <div>Unauthorized</div>;
   }
 
@@ -165,19 +166,20 @@ const PropertiesPage = () => {
 
       </div>
 
-      <div className="justify-items-center grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 mt-5" ref={listRef}>
+      <div >
         {isReady ? (
           filteredAssets.length > 0 ? (
             filteredAssets.map((property, index) => (
-              <PropertyCard
-                key={property.Code || index}
+              <div key={property.Code || index} className="justify-items-center grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 mt-5" ref={listRef}>
+                <PropertyCard
                 property={property}
                 className="h-full"
                 onClick={handleCardClick}
               />
+              </div>
             ))
           ) : (
-            <div className="col-span-full text-center text-gray-500 mt-10">
+            <div className="col-span-full text-center text-gray-500 mt-4">
               <Nodata />
             </div>
           )

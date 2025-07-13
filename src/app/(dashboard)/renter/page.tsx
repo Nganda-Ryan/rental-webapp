@@ -1,7 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react'
 import { ArrowUpRight, Star, Home, Clock } from 'lucide-react'
-import { LessorRequestForm } from '@/components/feature/tenants/LessorRequestForm'
 import DefaultLayout from '@/components/Layouts/DefaultLayout'
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
 import Overlay from '@/components/Overlay'
@@ -14,12 +13,13 @@ import { useRouter } from '@bprogress/next/app'
 import { useAuth } from '@/context/AuthContext'
 import { IDashBoardParams } from '@/types/Property'
 import { dashboard } from '@/actions/assetAction'
-import { PROFILE_LANDLORD_LIST } from '@/constant'
+import { PROFILE_RENTER_LIST } from '@/constant'
 import Link from 'next/link'
+import { LessorRequestForm } from '@/components/feature/tenants/LessorRequestForm'
+import { roleStore } from '@/store/roleStore'
 
 const TenantDashboard = () => {
     const [showLessorRequestForm, setShowLessorRequestForm] = useState(false);
-    const [profileList, setProfileList] = useLocalStorage("selectedProfile", [] as string []);
     const [isClient, setIsClient] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [counts, setCounts] = useState({
@@ -28,12 +28,17 @@ const TenantDashboard = () => {
         "pendingRequests": 0
     })
     const loadingMessage = 'Loading data...';
-    const { isAuthorized, loadingProfile, activeProfile, getProfileCode} = useAuth();
+    const { isAuthorized, user, getProfileCode} = roleStore();
     const router = useRouter();
 
     useEffect(() => {
         setIsClient(true);
         init();
+    }, []);
+    useEffect(() => {
+        if (!isAuthorized(PROFILE_RENTER_LIST)) {
+            router.push("/not-authorized"); // ou page de fallback
+        }
     }, []);
 
 
@@ -63,49 +68,48 @@ const TenantDashboard = () => {
     });
 
     const init = async () => {
-        try {
-            setIsLoading(true);
-            const user = getProfileCode('RENTER');
-            const params: IDashBoardParams = {
-                offset: 0,
-                page: 1,
-                limit: 1000,
-                profileCode: user.Code,
-                endDate: "",
-                startDate: "",
-                term: "",
-                type: ""
-            };
-            const result = await dashboard(params);
-            console.log('-->result', result);
-            if (result.data) {
-                const dashboardData = result.data?.body?.dashboard;
-                if(dashboardData){
-                    setCounts({
-                        "properties": dashboardData.Counts.properties,
-                        "pendingInvoices": dashboardData.Counts.pendingInvoices,
-                        "pendingRequests": dashboardData.Counts.pendingRequests
-                    });
-                }      
-            } else if (result.error) {
-                if (result.code === 'SESSION_EXPIRED') {
-                router.push('/signin');
-                return;
+        const profileCode = getProfileCode("RENTER");
+        if(profileCode){
+            try {
+                setIsLoading(true);
+                console.log('-->user', user);
+                const params: IDashBoardParams = {
+                    offset: 0,
+                    page: 1,
+                    limit: 1000,
+                    profileCode: profileCode,
+                    endDate: "",
+                    startDate: "",
+                    term: "",
+                    type: ""
+                };
+                const result = await dashboard(params);
+                console.log('-->result', result);
+                if (result.data) {
+                    const dashboardData = result.data?.body?.dashboard;
+                    if(dashboardData){
+                        setCounts({
+                            "properties": dashboardData.Counts.properties,
+                            "pendingInvoices": dashboardData.Counts.pendingInvoices,
+                            "pendingRequests": dashboardData.Counts.pendingRequests
+                        });
+                    }      
+                } else if (result.error) {
+                    if (result.code === 'SESSION_EXPIRED') {
+                    router.push('/signin');
+                    return;
+                    }
+                    toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
                 }
-                toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            } catch (error) {
+                console.log('-->error', error);
+            } finally {
+                setIsLoading(false);
             }
-        } catch (error) {
-            console.log('-->error', error);
-        } finally {
-            setIsLoading(false);
         }
     }
 
     if (!isClient) return null;
-  
-    if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
-        return <div>Unauthorized</div>;
-    }
 
 
   return (
@@ -114,7 +118,7 @@ const TenantDashboard = () => {
         <div className="w-full">
             {
                 
-                profileList && !profileList.includes("LANDLORD")
+                user?.roles && !user.roles.includes("LANDLORD")
                 
                 && 
 
@@ -124,7 +128,7 @@ const TenantDashboard = () => {
                         className="flex items-center gap-2 px-4 py-2 bg-[#2A4365] text-white rounded-lg hover:bg-blue-800"
                     >
                         <ArrowUpRight size={20} />
-                        Become a Lessor
+                        Become a Landlord
                     </button>
                 </div>
             }
@@ -132,7 +136,7 @@ const TenantDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
                 {/* Card 1 */}
                 <Link
-                    href="/tenants/mylisting"
+                    href="/renter/mylisting"
                     className="rounded-lg bg-white dark:bg-gray-800 border border-neutral-300 dark:border-neutral-700 p-6 shadow hover:shadow-md transition-shadow"
                 >
                     <div className="flex items-center gap-4">
@@ -161,7 +165,7 @@ const TenantDashboard = () => {
 
                 {/* Card 3 */}
                 <Link
-                    href="/tenants/housing-application"
+                    href="/renter/housing-application"
                     className="rounded-lg bg-white dark:bg-gray-800 border border-neutral-300 dark:border-neutral-700 p-6 shadow hover:shadow-md transition-shadow"  
                 
                 >

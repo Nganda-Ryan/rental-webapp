@@ -22,6 +22,7 @@ import Button from '@/components/ui/Button'
 import { ProcessingModal } from '@/components/Modal/ProcessingModal'
 import { RightSideAction2 } from '@/components/skeleton/pages/PropertySkeletonPage'
 import { AssetDataDetailed } from '@/types/Property'
+import { roleStore } from '@/store/roleStore'
 
 const Page = () => {
   const [contractTableData, setContractTableData] = useState<IContractColumn[]>([]);
@@ -34,7 +35,7 @@ const Page = () => {
   const [asset, setAsset] = useState<AssetDataDetailed | null>(null);
   const router = useRouter();
   const params = useParams();
-  const { isAuthorized, loadingProfile } = useAuth();
+  const { isAuthorized } = roleStore();
 
 
   useEffect(() => {
@@ -201,7 +202,7 @@ const Page = () => {
     }
   }
   
-  if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+  if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
     return <div>Unauthorized</div>;
   }
   return (

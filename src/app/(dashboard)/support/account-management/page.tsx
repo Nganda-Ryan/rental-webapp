@@ -25,8 +25,9 @@ import { SuccessModal } from '@/components/Modal/SucessModal';
 import Loading from '@/components/error/Loading';
 import { SkeletonTable } from '@/components/skeleton/SkeletonTable';
 import Button from '@/components/ui/Button';
-import { useAuth } from '@/context/AuthContext';
+
 import SectionWrapper from '@/components/Cards/SectionWrapper';
+import { roleStore } from '@/store/roleStore';
 
 
 
@@ -40,7 +41,7 @@ const Page = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isFetchingUser, setIsFetchingUser] = useState(true);
   const router = useRouter();
-  const { isAuthorized, loadingProfile } = useAuth();
+  const { isAuthorized } = roleStore();
 
   useEffect(() => {
 
@@ -245,7 +246,7 @@ const Page = () => {
     
   };
 
-  if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
+  if (!isAuthorized(MANAGER_PROFILE_LIST)) {
     return <div>Unauthorized</div>;
   }
   return (

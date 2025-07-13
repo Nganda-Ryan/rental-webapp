@@ -11,7 +11,7 @@ const Page = () => {
     const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const router = useRouter();
-    const tenants = [
+    const renter = [
         {
         name: "NGANDA Ryan",
         email: "ryan.nganda@email.com",
@@ -49,7 +49,7 @@ const Page = () => {
     };
     const handleGoToDetail = (e: any) => {
         console.log('ID', e)
-        router.push('tenants/detail')
+        router.push('renter/detail')
     }
 
     
@@ -66,7 +66,7 @@ const Page = () => {
                 />
                 <input
                     type="text"
-                    placeholder="Search tenants..."
+                    placeholder="Search renter..."
                     className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 </div>
@@ -91,7 +91,7 @@ const Page = () => {
                 </div>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:hidden">
-                {tenants.map((tenant, index) => (
+                {renter.map((tenant, index) => (
                 <TenantCard
                     key={index}
                     tenant={tenant}
@@ -130,7 +130,7 @@ const Page = () => {
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                    {tenants.map((tenant, index) => (
+                    {renter.map((tenant, index) => (
                         <tr key={index}>
                             <td className="px-3 md:px-6 py-4" onClick={() =>(handleGoToDetail(tenant))}>
                                 <div className="font-medium text-gray-900 truncate max-w-[150px]">

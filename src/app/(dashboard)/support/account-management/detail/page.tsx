@@ -82,7 +82,7 @@ const UserDetailView = () => {
         permissions: [
         "view_properties",
         "edit_properties",
-        "manage_tenants",
+        "manage_landlords",
         "view_reports"
         ],
         properties: [

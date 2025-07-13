@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "next/link"
 import Image from "next/image";
 import ClickOutside from "@/components/ClickOutside";
 import { Settings, Home, Building, Briefcase, Headset } from "lucide-react";
@@ -11,7 +10,8 @@ import { useUser } from "@/hooks/useUser";
 import SidebarItemSkeleton from "../skeleton/SidebarItemSkeleton";
 import { useAuth } from "@/context/AuthContext";
 import { logout } from "@/actions/authAction";
-
+import { roleStore } from "@/store/roleStore";
+import { useRouter } from "next/navigation";
 
 interface ProfileMenu {
   label: string;
@@ -24,7 +24,7 @@ const ALL_PROFILE_MENU: ProfileMenu[] = [
   {
     label: 'Tenant Profile',
     profileName: ["RENTER"],
-    route: '/tenants',
+    route: '/renter',
     icone: (<Home size={20}/>),
   },
   {
@@ -41,45 +41,42 @@ const ALL_PROFILE_MENU: ProfileMenu[] = [
   },
   {
     label: 'Support Profile',
-    profileName: ["SUPPORT", "ADMIN"],
+    profileName: ["ADMIN", "SUPPORT"],
     route: '/support',
     icone: (<Headset size={20}/>),
   }
-]
+];
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  
   const [profileMenu, setProfileMenu] = useState<ProfileMenu[]>([]);
 
-  const pathname = usePathname();
-  const { user } = useUser();
   const router = useRouter();
+  const { activeRole, user , setActiveRole} = roleStore();
 
-  const auth = useAuth();
-  useEffect(() =>{
-    if(auth.profileList && auth.profileList.length > 0){
-
+  useEffect(() => {
+    console.log('Dropdown activeRole changed', activeRole)
+    if (user?.roles && user?.roles.length > 0) {
       const filteredMenu = ALL_PROFILE_MENU.filter(menu =>
-        menu.profileName.some(name => auth.profileList.includes(name))
+        menu.profileName.some(name => user?.roles.includes(name))
       );
       setProfileMenu(filteredMenu);
       setIsReady(true);
+    } else {
+      setIsReady(false);
     }
-  }, [auth.activeProfile])
-  
-  const handleSetActiveProfile = async (
-    e: React.MouseEvent<HTMLAnchorElement>,
+  }, [activeRole]);
+
+  const handleSetActiveProfile = (
     route: string,
     profileName: string[]
   ) => {
-    e.preventDefault();
-    console.log('-->profileName', profileName);
-    auth.setActiveProfile(profileName[0]);
-    router.push(route);
+    if(activeRole)
+      router.push(route);
+      // setActiveRole(profileName[0]);
+      setDropdownOpen(false);
   };
-
 
   const handleLogOut = async () => {
     localStorage.removeItem("activeProfile");
@@ -97,9 +94,9 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
-            {user.firstName} {user.lastName}
+            {user?.Firstname} {user?.Lastname}
           </span>
-          <span className="block text-xs">{user.profiles.join(" - ") }</span>
+          <span className="block text-xs">{user?.roles.join(" - ")}</span>
         </span>
 
         <span className="h-10 w-10 rounded-full">
@@ -133,66 +130,54 @@ const DropdownUser = () => {
         </svg>
       </Link>
 
-      {/* <!-- Dropdown Start --> */}
-      {dropdownOpen && (
+      {/* Dropdown Start */}
+      {true && (
         <div
           className={`absolute right-0 mt-4 flex w-62.5 flex-col rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark`}
         >
-          {
-            !isReady ?
+          {!isReady ? (
             <div>
               <SidebarItemSkeleton />
             </div>
-            :
+          ) : (
             <ul className="flex flex-col border-b border-stroke dark:border-strokedark">
-              {/* <li className={`px-6 py-2 ${pathname.includes('/tenants') ? 'bg-slate-200' : ''}`}>
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+              {profileMenu.map((item, index) => (
+                <li 
+                  key={index} 
+                  className={`px-6 py-2 ${
+                    activeRole === item.profileName[0] ? 'bg-slate-200 dark:bg-slate-700' : ''
+                  }`}
                 >
-                  <Building2 size={20} />
-                  Tenant Profile
-                </Link>
-              </li> */}
-              {
-                profileMenu.map((item, index) => (
-                  <li key={index} className={`px-6 py-2 ${pathname.includes(item.route) ? 'bg-slate-200' : ''}`}>
-                    <Link
-                      href={item.route}
-                      onClick={(e) => handleSetActiveProfile(e, item.route, item.profileName)}
-                      className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
-                    >
-                      {item.icone}
-                      {item.label}
-                    </Link>
-                  </li>
-                ))
-              }
+                  <span
+                    onClick={(e) => handleSetActiveProfile(item.route, item.profileName)}
+                    className={`flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base ${
+                      activeRole === item.profileName[0] ? 'text-primary font-semibold' : ''
+                    }`}
+                  >
+                    {item.icone}
+                    {item.label}
+                    {activeRole === item.profileName[0] && (
+                      <span className="ml-auto text-xs text-primary">●</span>
+                    )}
+                  </span>
+                </li>
+              ))}
               <li className="px-6 py-2">
                 <Link
                   href="/settings"
                   className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
                 >
-                  <Settings
-                  
-                  />
+                  <Settings size={20} />
                   Account Settings
                 </Link>
               </li>
-              {/* <li className={`px-6 py-2 ${pathname.includes('/support') ? 'bg-slate-200' : ''}`}>
-                <Link
-                  href="#"
-                  className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
-                >
-                  <UserCog size={20} />
-                  Support Profile
-                </Link>
-              </li> */}
             </ul>
-          }
+          )}
           
-          <button onClick={handleLogOut}
-            className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+          <button 
+            onClick={handleLogOut}
+            className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+          >
             <svg
               className="fill-current"
               width="22"
@@ -214,7 +199,7 @@ const DropdownUser = () => {
           </button>
         </div>
       )}
-      {/* <!-- Dropdown End --> */}
+      {/* Dropdown End */}
     </ClickOutside>
   );
 };

@@ -38,6 +38,7 @@ import ImageLoading from "@/components/ImageLoading";
 import { IUser, IUserPermission } from "@/types/user";
 import SectionWrapper from "@/components/Cards/SectionWrapper";
 import { IContractColumn } from "@/types/TableTypes";
+import { roleStore } from "@/store/roleStore";
 
 
 
@@ -69,7 +70,7 @@ const PropertyDetail = () => {
 
     const params = useParams();
     const router = useRouter();
-    const { isAuthorized, loadingProfile } = useAuth();
+    const { isAuthorized } = roleStore();
 
     useEffect(() => {
         init();
@@ -666,7 +667,7 @@ const PropertyDetail = () => {
     }
 
 
-    if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+    if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
         return <div>Unauthorized</div>;
     }
     return (
@@ -820,7 +821,7 @@ const PropertyDetail = () => {
                                         {showShareLink && (
                                             <div className={`mt-4 p-3 bg-gray-50 rounded-lg transform ${showShareLink ? "block" : "hidden"}`}>
                                                 <p className="text-sm text-gray-600 mb-2">
-                                                    Share this link with potential tenants:
+                                                    Share this link with potential renter:
                                                 </p>
                                                 <div className="flex gap-2">
                                                     <input
@@ -972,7 +973,7 @@ const PropertyDetail = () => {
                             {showShareLink && (
                                 <div className={`mt-4 p-3 bg-gray-50 rounded-lg transform ${showShareLink ? "block" : "hidden"}`}>
                                     <p className="text-sm text-gray-600 mb-2">
-                                        Share this link with potential tenants:
+                                        Share this link with potential renter:
                                     </p>
                                     <div className="flex gap-2">
                                         <input

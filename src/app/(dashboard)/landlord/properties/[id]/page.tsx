@@ -43,6 +43,7 @@ import SectionWrapper from "@/components/Cards/SectionWrapper";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { ContractPdf } from "@/components/pdf/ContractPdf";
 import Nodata from "@/components/error/Nodata";
+import { roleStore } from "@/store/roleStore";
 
 
 
@@ -78,8 +79,7 @@ const PropertyDetail = () => {
 
     const params = useParams();
     const router = useRouter();
-    const { isAuthorized, loadingProfile, user, profilesDetails } = useAuth();
-    const userObj = JSON.parse(user);
+    const { isAuthorized, user } = roleStore();
     
     useEffect(() => {
         init();
@@ -169,10 +169,7 @@ const PropertyDetail = () => {
             render: (_: any, contract: IContractDetail) => (
                 <>
                     {asset && 
-                        <PDFDownloadLink
-                            document={<ContractPdf contract={contract} asset={asset} contractor={userObj} />}
-                            fileName={`contrat-${contract.id}.pdf`}
-                            >
+                        <PDFDownloadLink document={<ContractPdf contract={contract} asset={asset} contractor={user} />} fileName={`contrat-${contract.id}.pdf`}>
                             {({ loading, url }) => (
                                 <Button
                                     variant="info"
@@ -180,7 +177,7 @@ const PropertyDetail = () => {
                                     fullWidth={false}
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        e.stopPropagation(); //
+                                        e.stopPropagation();
                                         if (url) {
                                             const link = document.createElement("a");
                                             link.href = url;
@@ -448,7 +445,7 @@ const PropertyDetail = () => {
                 const payload: IInviteManagerRequest = {
                     assetCode: asset.Code,
                     managerCode: manager.userInfo.id,
-                    profilCode: profilesDetails.find(profile => profile.RoleCode == "LANDLORD")?.Code ?? "",
+                    profilCode: user?.Profiles.find(profile => profile.RoleCode == "LANDLORD")?.Code ?? "",
                     notes: "",
                     title: asset.Title,
                     body: mapPermissionsToObject(manager.permissions),
@@ -827,7 +824,7 @@ const PropertyDetail = () => {
         }, {} as Record<string, boolean>);
     }
 
-    if (!loadingProfile && !isAuthorized(PROFILE_LANDLORD_LIST)) {
+    if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
         return <div>Unauthorized</div>;
     }
 
@@ -1013,7 +1010,7 @@ const PropertyDetail = () => {
                                         {showShareLink && (
                                             <div className={`mt-4 p-3 bg-gray-50 rounded-lg transform ${showShareLink ? "block" : "hidden"}`}>
                                                 <p className="text-sm text-gray-600 mb-2">
-                                                    Share this link with potential tenants:
+                                                    Share this link with potential renter:
                                                 </p>
                                                 <div className="flex gap-2">
                                                     <input
@@ -1225,7 +1222,7 @@ const PropertyDetail = () => {
                             {showShareLink && (
                                 <div className={`mt-4 p-3 bg-gray-50 rounded-lg`}>
                                     <p className="text-sm text-gray-600 mb-2">
-                                        Share this link with potential tenants:
+                                        Share this link with potential renter:
                                     </p>
                                     <div className="flex gap-2">
                                         <input

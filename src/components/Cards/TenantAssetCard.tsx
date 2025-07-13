@@ -2,30 +2,28 @@ import React, { useState } from "react";
 import { Calendar, Lock, CheckCircle } from "lucide-react";
 import Image from "next/image";
 import { formatDateToText, formatPrice } from "@/lib/utils";
-import { getCurrencyIcon } from "@/lib/utils-component";
-import { IContract } from "@/types/Property";
+import { ILoan } from "@/types/Property";
 
 const TenantAssetCard = ({
-  contract,
+  loan,
   handleClick,
   className = "",
 }: {
-  contract: IContract;
-  handleClick: (contract: IContract) => void;
+  loan: ILoan;
+  handleClick: (loan: ILoan) => void;
   className?: string;
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
-  const { asset, owner, startDate, endDate, status } = contract;
+  const { Amount, CoverUrl, Currency, EndDate, StartDate, Title } = loan;
 
-  const isRented = status === "RENTED";
 
   return (
     <div
       className={`group relative overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-lg dark:border-gray-700 dark:bg-boxdark transition-all max-w-lg w-full cursor-pointer ${className}`}
-      onClick={() => handleClick(contract)}
+      onClick={() => handleClick(loan)}
     >
       {/* Badge Statut */}
-      {status === "RENTED" && (
+      {/* {status === "RENTED" && (
         <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-yellow-100 text-yellow-800 px-2 py-0.5 text-xs font-semibold shadow-sm dark:bg-yellow-900/30 dark:text-yellow-300">
           <Lock size={14} /> Loué
         </div>
@@ -35,14 +33,13 @@ const TenantAssetCard = ({
         <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-xs font-semibold shadow-sm dark:bg-blue-900/30 dark:text-blue-300">
           <CheckCircle size={14} /> Disponible
         </div>
-      )}
+      )} */}
 
       {/* Image */}
       <div className="relative h-56 w-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-        {asset?.CoverUrl ? (
-          <Image
-            src={asset.CoverUrl}
-            alt={asset.Title || "Property image"}
+        <Image
+            src={CoverUrl}
+            alt={Title}
             width={800}
             height={600}
             className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
@@ -51,35 +48,30 @@ const TenantAssetCard = ({
             onLoad={() => setIsImageLoading(false)}
             priority
           />
-        ) : (
-          <div className="h-full flex items-center justify-center animate-pulse">
-            <div className="text-gray-400 dark:text-gray-500">Image indisponible</div>
-          </div>
-        )}
       </div>
 
       {/* Contenu */}
       <div className="py-4 px-3">
         {/* Titre */}
         <h3 className="mb-1 text-md font-semibold text-gray-900 truncate dark:text-white">
-          {asset?.Title || "Titre non défini"}
+          {Title || "Titre non défini"}
         </h3>
 
         {/* Propriétaire */}
-        <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+        {/* <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
           Lessor : {owner?.firstName} {owner?.lastname}
-        </p>
+        </p> */}
 
         {/* Dates */}
         <div className="mb-2 flex items-center text-sm text-gray-600 dark:text-gray-300">
           <Calendar className="mr-1.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
-          {formatDateToText(startDate)} — {formatDateToText(endDate)}
+          {formatDateToText(StartDate)} — {formatDateToText(EndDate)}
         </div>
 
         {/* Bas de la carte */}
         <div className="flex items-center justify-between mt-3">
           <div className="font-bold text-gray-900 dark:text-white">
-            {asset?.Price ? formatPrice(asset.Price) : "-"} {asset?.Currency}
+            {formatPrice(Amount)} {Currency}
             <span className="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">/mois</span>
           </div>
 

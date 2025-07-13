@@ -2,7 +2,7 @@
 import React, { useState, ReactNode, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { AuthProvider } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DefaultLayout({
   children,
@@ -10,13 +10,14 @@ export default function DefaultLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const auth = useAuth();
   return (
     <>
       {/* <AuthProvider> */}
         {/* <!-- ===== Page Wrapper Start ===== --> */}
         <div className="flex">
           {/* <!-- ===== Sidebar Start ===== --> */}
-          <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <Sidebar key={auth.activeProfile} sidebarOpen={true} setSidebarOpen={setSidebarOpen} />
           {/* <!-- ===== Sidebar End ===== --> */}
 
           {/* <!-- ===== Content Area Start ===== --> */}

@@ -24,6 +24,7 @@ import { formatDateToText } from '@/lib/utils'
 import Button from '@/components/ui/Button'
 import { MANAGER_PROFILE_LIST } from '@/constant'
 import { useAuth } from '@/context/AuthContext'
+import { roleStore } from '@/store/roleStore'
 
 interface VerificationRequest {
   id: string
@@ -52,7 +53,7 @@ const LessorVerification = () => {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [isReady, setIsReady] = useState(false);
   const router = useRouter();
-  const { isAuthorized, loadingProfile } = useAuth();
+  const { isAuthorized } = roleStore();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -228,7 +229,7 @@ const LessorVerification = () => {
   }
 
   
-  if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
+  if (!isAuthorized(MANAGER_PROFILE_LIST)) {
     return <div>Unauthorized</div>;
   }
   

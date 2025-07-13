@@ -1,5 +1,5 @@
 "use client"
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   Users,
   Building2,
@@ -26,6 +26,8 @@ import DefaultLayout from '@/components/Layouts/DefaultLayout'
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
 import { useAuth } from '@/context/AuthContext'
 import { MANAGER_PROFILE_LIST } from '@/constant'
+import { useRouter } from '@bprogress/next/app'
+import { roleStore } from '@/store/roleStore'
 interface StatCardProps {
   title: string
   value: string | number
@@ -55,7 +57,8 @@ const StatCard = ({ title, value, change, icon, color }: StatCardProps) => (
   </div>
 )
 const SystemOverview = () => {
-  const { isAuthorized, loadingProfile } = useAuth();
+  const { isAuthorized } = roleStore();
+  const router = useRouter();
   const userGrowthData = [
     {
       month: 'Jan',
@@ -84,7 +87,7 @@ const SystemOverview = () => {
   ]
   const userDistributionData = [
     {
-      name: 'Tenants',
+      name: 'renter',
       value: 450,
       color: '#4299E1',
     },
@@ -150,9 +153,15 @@ const SystemOverview = () => {
       icon: <Home size={16} className="text-purple-500" />,
     },
   ]
-  if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
-    return <div>Unauthorized</div>;
-  }
+
+  useEffect(() => {
+    if (!isAuthorized(MANAGER_PROFILE_LIST)) {
+      router.push("/not-authorized"); // ou page de fallback
+    }
+  }, []);
+  // if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
+  //   return <div>Unauthorized</div>;
+  // }
   return (
     <DefaultLayout>
       <Breadcrumb previousPage={false} pageName="System Overview" />

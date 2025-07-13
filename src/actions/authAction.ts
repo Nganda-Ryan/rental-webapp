@@ -9,7 +9,7 @@ import { CreateUserType } from "@/types/user";
 import axios, { isAxiosError } from "axios";
 import { FirebaseError } from "firebase/app";
 import { getCloudflareUser } from "@/database/userService";
-import { SessionPayload } from "@/types/authTypes";
+import { ProfileDetail, SessionPayload } from "@/types/authTypes";
 import { cookies } from 'next/headers'
 import { PROFILE_LIST } from "@/constant";
 
@@ -67,7 +67,7 @@ export async function login(formData: FormData) {
       'ADMIN': '/support',
       'SUPPORT': '/support',
       'LANDLORD': '/landlord',
-      'RENTER': '/tenants',
+      'RENTER': '/renter',
     };
     console.log('--->redirectMap[activeRole]', redirectMap[activeRole])
     return {
@@ -138,7 +138,7 @@ export async function signUpAction(_payload: any){
               user: null,
               error: null,
               code: "redirect",
-              redirectTo: "/tenants"
+              redirectTo: "/renter"
             }
           }
 
@@ -189,7 +189,7 @@ export async function signUpAction(_payload: any){
         'ADMIN': '/support',
         'SUPPORT': '/support',
         'LANDLORD': '/landlord',
-        'RENTER': '/tenants',
+        'RENTER': '/renter',
       };
       console.log('--->redirectMap[activeRole]', redirectMap[activeRole])
       return {
@@ -218,20 +218,10 @@ export async function getProfile(){
     const sortedRoles = [...(session?.roles || [])].sort(
       (a, b) => rolePriority.indexOf(a) - rolePriority.indexOf(b)
     );
+    const _data: ProfileDetail = session;
+    _data.roles = sortedRoles;
     return {
-      data: {
-        roles: sortedRoles,
-        userId: session?.Code,
-        Profiles: session?.Profiles,
-        activeRole: sortedRoles[0],
-        expiresAt: session?.expiresAt,
-        firstname: session?.Firstname,
-        lastname: session?.Lastname,
-        email: session?.Email,
-        avatarUrl: session?.AvatarUrl,
-        phone: session?.Phone,
-        address: session?.Address,
-      },
+      data: _data,
       error: null,
       code: null
     };

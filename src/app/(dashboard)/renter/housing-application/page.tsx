@@ -168,7 +168,7 @@ const Applications = () => {
   }
 
   const handleGotoDetail = (applicationId: string) => {
-    router.push(`/tenants/housing-application/${applicationId}`)
+    router.push(`/renter/housing-application/${applicationId}`)
     // console.log('id', applicationId);
   }
   return (

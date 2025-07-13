@@ -1,7 +1,7 @@
 "use server";
 
-import axios, { AxiosInstance, isAxiosError } from "axios";
-import { CreatePropertyType, IContractForm, IDashBoardParams, IInvoice, IPropertyVerification, IUpdateAssetRequest, IUpdateInvoiceParam, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
+import axios, { AxiosInstance } from "axios";
+import { CreatePropertyType, IAssetApplication, IContractForm, IDashBoardParams, IInvoice, IPropertyVerification, IUpdateAssetRequest, IUpdateInvoiceParam, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
 import { verifySession } from "@/lib/session";
 import { getExtension } from "@/lib/utils";
 import { uploadFile } from "@/lib/fileUpload";
@@ -553,6 +553,64 @@ export async function dashboard (params: IDashBoardParams) {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
       data: null
+    }
+  }
+}
+
+export async function applyHouse (param: IAssetApplication ) {
+  try {
+    const session = await verifySession();
+    
+    const token = session.accessToken;
+
+    const response = await axios.post(`${process.env.ASSET_WORKER_ENDPOINT}/api/v1/Asset`, {
+      Request: {
+        "profilCode": param.profilCode,
+        "assetCode": param.assetCode,
+        "title": param.title,
+        "body": [
+            {
+                "Code": "DUAL",
+                "isSelected": 1
+            },
+            {
+                "Code": "RENTALSCORE",
+                "isSelected": 1
+            },
+            {
+                "Code": "HISTORY",
+                "isSelected": 1
+            }
+        ],
+        "notes": `Application ${param.title}  of ${param.username}`
+      }
+    },{
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log('-->result', response);
+    
+    return {
+      code: 200,
+      error: null,
+      asset: response.data
+    }
+  } catch (error: any) {
+    console.log('-->createAsset.error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      asset: null
     }
   }
 }

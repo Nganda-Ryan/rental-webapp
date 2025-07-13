@@ -44,8 +44,10 @@ export const USERS_STATUS = [
 ];
 
 export const PROFILE_LIST = ['ADMIN', 'SUPPORT', 'LANDLORD', 'MANAGER', 'RENTER'];
+export const STANDARD_PROFILE_LIST = ['SUPPORT', 'LANDLORD', 'RENTER'];
 export const MANAGER_PROFILE_LIST = ['ADMIN', 'SUPPORT'];
 export const PROFILE_LANDLORD_LIST = ['LANDLORD'];
+export const PROFILE_RENTER_LIST = ['RENTER'];
 
 
 //Property constants
