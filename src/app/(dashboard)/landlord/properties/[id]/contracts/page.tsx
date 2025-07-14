@@ -104,7 +104,7 @@ const Page = () => {
       render: (_: any, contract: IContractDetail) => (
         <>
           {
-            asset && 
+            (asset && user) && 
             <PDFDownloadLink
                 document={<ContractPdf contract={contract} asset={asset} contractor={user} />}
                 fileName={`contrat-${contract.id}.pdf`}
