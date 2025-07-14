@@ -1,14 +1,15 @@
 import React, { useState } from "react";
-import { X, Upload, FileText, Building2 } from "lucide-react";
-import { Controller, useForm} from "react-hook-form"
+import { X, FileText } from "lucide-react";
+import { useForm} from "react-hook-form"
 import Button from "@/components/ui/Button";
 import { IPropertyVerification, IPropertyVerificationDoc, IPropertyVerificationForm } from "@/types/Property";
 import { requestPropertyVerification } from "@/actions/requestAction";
 import toast from "react-hot-toast";
+import { AVAILABLE_FILE_EXTENSION } from "@/constant";
 
 interface VerificationFormProps {
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: IPropertyVerificationDoc[], note: string ) => void;
   propertyId: string;
   propertyTitle: string;
 }
@@ -25,7 +26,6 @@ export const VerificationForm = ({
     handleSubmit,
     register,
     getValues,
-    trigger,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -41,62 +41,46 @@ export const VerificationForm = ({
   const handleFormSubmit = async (data: IPropertyVerificationForm) => {
     try {
       setIsSubmitting(true);
-      let temp_body: IPropertyVerificationDoc[] = [];
+      let body: IPropertyVerificationDoc[] = [];
       if(data.bithCertificate){
-        temp_body.push({
+        body.push({
           Title: "Birth Certificate",
           ContentUrl: data.bithCertificate?.[0],
           Type: "BIRTH_CERTIFICATE"
         });
       }
       if(data.certificateOfInheritance){
-        temp_body.push({
+        body.push({
           Title: "Certificate of Inheritance",
           ContentUrl: data.certificateOfInheritance?.[0],
           Type: "INHERITANCE_CERTIFICATE"
         });
       }
       if(data.propertyDeed){
-        temp_body.push({
+        body.push({
           Title: "Property Deed",
           ContentUrl: data.propertyDeed?.[0],
           Type: "LAND_TITLE"
         });
       }
       if(data.buildindPermit){
-        temp_body.push({
+        body.push({
           Title: "Building Permit",
           ContentUrl: data.buildindPermit?.[0],
           Type: "BUILDING_PERMIT"
         });
       }
       if(data.deedOfSales){
-        temp_body.push({
+        body.push({
           Title: "Deed of Sale",
           ContentUrl: data.deedOfSales?.[0],
           Type: "DEED_SALE"
         });
       }
 
+      onSubmit(body, data.notes ?? "");
 
 
-      const payload: IPropertyVerification = {
-        assetCode: propertyId,
-        body: temp_body,
-        notes: data.notes ?? "",
-        title: `Verification of ${propertyTitle}`,
-        userId: ""
-      }
-      // console.log('-->payload', payload);
-
-      const result = await requestPropertyVerification(payload);
-      console.log('-->Result error', result);
-      if(result.data){
-        toast.success(`Votre propriété ${payload.title} a été crée avec succès`, { position: 'bottom-right' });
-        onSubmit({});
-      } else {
-        toast.error(`Something went wrong during the process`, { position: 'bottom-right' });
-      }
     } catch (error) {
       
     } finally {
@@ -141,7 +125,7 @@ export const VerificationForm = ({
                 </div>
                 <input
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept={AVAILABLE_FILE_EXTENSION}
                   className="text-sm text-gray-500 dark:text-gray-400 w-full sm:w-auto
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-full file:border-0
@@ -159,7 +143,7 @@ export const VerificationForm = ({
                 </div>
                 <input
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept={AVAILABLE_FILE_EXTENSION}
                   className="text-sm text-gray-500 dark:text-gray-400 w-full sm:w-auto
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-full file:border-0
@@ -177,7 +161,7 @@ export const VerificationForm = ({
                 </div>
                 <input
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept={AVAILABLE_FILE_EXTENSION}
                   className="text-sm text-gray-500 dark:text-gray-400 w-full sm:w-auto
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-full file:border-0
@@ -209,7 +193,7 @@ export const VerificationForm = ({
                 </div>
                 <input
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept={AVAILABLE_FILE_EXTENSION}
                   className="text-sm text-gray-500 dark:text-gray-400 w-full sm:w-auto
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-full file:border-0
@@ -227,7 +211,7 @@ export const VerificationForm = ({
                 </div>
                 <input
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept={AVAILABLE_FILE_EXTENSION}
                   className="text-sm text-gray-500 dark:text-gray-400 w-full sm:w-auto
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-full file:border-0

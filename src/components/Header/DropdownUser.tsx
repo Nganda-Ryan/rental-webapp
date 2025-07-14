@@ -11,7 +11,7 @@ import SidebarItemSkeleton from "../skeleton/SidebarItemSkeleton";
 import { useAuth } from "@/context/AuthContext";
 import { logout } from "@/actions/authAction";
 import { roleStore } from "@/store/roleStore";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@bprogress/next/app";
 
 interface ProfileMenu {
   label: string;
@@ -79,8 +79,7 @@ const DropdownUser = () => {
   };
 
   const handleLogOut = async () => {
-    localStorage.removeItem("activeProfile");
-    localStorage.removeItem("selectedProfile");
+    localStorage.removeItem("role-store");
     localStorage.removeItem("selectedMenu");
     await logout();
   };

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { PropertyCardProps } from '@/types/Property';
 import { formatPrice } from '@/lib/utils';
 import { getStatusBadge } from '@/lib/utils-component';
+import { ASSET_TYPE_COMPLEXE } from '@/constant';
 
 
 
@@ -92,8 +93,14 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
         {/* Bas de la carte */}
         <div className="flex items-center justify-between mt-2">
           <div className="font-bold text-gray-900 dark:text-white">
-            {formatPrice(Price)} {Currency}
-            <span className="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">/mois</span>
+            
+            {
+              TypeCode != ASSET_TYPE_COMPLEXE && <>
+                {formatPrice(Price)} {Currency}
+                <span className="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">/month</span>
+              </>
+            }
+            
           </div>
           <div className="rounded-lg bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-300 transition-colors group-hover:bg-blue-600 group-hover:text-white dark:group-hover:bg-blue-700">
             Voir détails

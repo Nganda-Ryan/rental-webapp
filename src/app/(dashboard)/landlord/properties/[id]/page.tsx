@@ -26,7 +26,7 @@ import Overlay from "@/components/Overlay";
 import InvoiceGenerator from "@/components/feature/Properties/InvoiceGenerator";
 import { useParams } from 'next/navigation';
 import { createContract, createInvoice, getAsset, inviteManager, searchInvoice, terminateLease } from "@/actions/assetAction";
-import { AssetData, AssetDataDetailed, IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, SeachInvoiceParams } from "@/types/Property";
+import { AssetData, AssetDataDetailed, IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, IPropertyVerification, IPropertyVerificationDoc, SeachInvoiceParams } from "@/types/Property";
 import { getStatusBadge } from "@/lib/utils-component";
 import { PropertySkeletonPageSection1, RightSideAction } from "@/components/skeleton/pages/PropertySkeletonPage";
 import Button from "@/components/ui/Button";
@@ -44,6 +44,7 @@ import { PDFDownloadLink } from "@react-pdf/renderer";
 import { ContractPdf } from "@/components/pdf/ContractPdf";
 import Nodata from "@/components/error/Nodata";
 import { roleStore } from "@/store/roleStore";
+import { requestPropertyVerification } from "@/actions/requestAction";
 
 
 
@@ -168,7 +169,7 @@ const PropertyDetail = () => {
             priority: 'high' as const,
             render: (_: any, contract: IContractDetail) => (
                 <>
-                    {asset && 
+                    {(asset && user) && 
                         <PDFDownloadLink document={<ContractPdf contract={contract} asset={asset} contractor={user} />} fileName={`contrat-${contract.id}.pdf`}>
                             {({ loading, url }) => (
                                 <Button
@@ -319,8 +320,45 @@ const PropertyDetail = () => {
         setContractFormOpen(true);
         setShowMobileActions(false);
     };
-    const handleVerificationSubmit = (data: any) => {
-        setIsModalOpen(false);
+    const handleVerificationSubmit = async (body: IPropertyVerificationDoc[], note: string) => {
+        if(asset && user){
+            try {
+                const payload: IPropertyVerification = {
+                    assetCode: asset.Code,
+                    body: body,
+                    notes: note,
+                    title: `Verification of ${asset.Title}`,
+                    userId: user.Code
+                }
+
+                const result = await requestPropertyVerification(payload);
+                console.log('-->Result error', result);
+                setLoadingMessage("Processing..."); 
+                setIsLoading(true);
+                setIsModalOpen(false);
+                if(result.data){
+                    setIsModalOpen(false);
+                    setIsLoading(false);
+                    setSuccessMessage("Request sent successfully");
+                    setShowSuccessModal(true);
+                    setLoadingMessage("Loadind...");  
+                    toast.success(`Request for ${payload.title} property sent succesfully`, { position: 'bottom-right' });
+                } else if (result.error) {
+                    if (result.code === 'SESSION_EXPIRED') {
+                        router.push('/signin');
+                        return;
+                    }
+                    setLoadingMessage("Loadind...");
+                    setIsLoading(false);
+                    toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+                }
+            } catch (error) {
+                console.log('AssetDetail.handleVerificationSubmit.error', error);
+                toast.error("Something went wrong during the process. Try again or contact the administrator", { position: 'bottom-right' });
+            } finally {
+                setIsLoading(false);
+            }
+        }
     };
     const handleVerificationFormOpen = () => {
         setIsModalOpen(true);

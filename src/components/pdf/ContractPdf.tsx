@@ -11,6 +11,7 @@ import {
 } from '@react-pdf/renderer'
 import { AssetDataDetailed, IContractDetail } from '@/types/Property'
 import { capitalize, capitalizeEachWord, formatDateToText, toUpperCase } from '@/lib/utils';
+import { ProfileDetail } from '@/types/authTypes';
 
 const styles = StyleSheet.create({
   page: { 
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
 interface Props {
   contract: IContractDetail,
   asset: AssetDataDetailed,
-  contractor: any,
+  contractor: ProfileDetail,
 }
 
 export const ContractPdf = ({ contract, asset, contractor }: Props) => {
@@ -105,13 +106,13 @@ export const ContractPdf = ({ contract, asset, contractor }: Props) => {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, styles.bold]}>ENTRE LES SOUSSIGNES :</Text>
           <Text style={styles.paragraph}>
-            <Text style={styles.bold}>Nom :</Text> {capitalizeEachWord(contractor.firstname)} {toUpperCase(contractor.lastname)}
+            <Text style={styles.bold}>Nom :</Text> {capitalizeEachWord(contractor.Firstname)} {toUpperCase(contractor.Lastname)}
           </Text>
           <Text style={styles.paragraph}>
-            <Text style={styles.bold}>CNI : N° </Text>_________________ domiciliée à {contractor?.address?.City} lieudit {contractor?.address?.Street} ,
+            <Text style={styles.bold}>CNI : N° </Text>_________________ domiciliée à {contractor.Address.City} lieudit {contractor.Address.Street} ,
           </Text>
           <Text style={styles.paragraph}>
-            Tél. {contractor.phone} désignée dans tout ce qui va suivre, <Text style={styles.bold}>« le bailleur »</Text>
+            Tél. {contractor.Phone} désignée dans tout ce qui va suivre, <Text style={styles.bold}>« le bailleur »</Text>
           </Text>
 
           <Text style={styles.paragraph}>D'une part ;</Text>
@@ -154,20 +155,20 @@ export const ContractPdf = ({ contract, asset, contractor }: Props) => {
         </View>
 
         {/* Article 2 */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.articleTitle}>Article 2 : DESIGNATION DES LIEUX LOUÉS</Text>
           <Text style={styles.paragraph}>
             Le bailleur donne à bail au locataire qui accepte, un {asset.TypeCode} constitué de :
           </Text>
+
           <Text style={styles.bulletPoint}>- Un (01) salon ;</Text>
-          <Text style={styles.bulletPoint}>- Une (01) cuisine ;</Text>
-          <Text style={styles.bulletPoint}>- Deux (02) chambres à coucher ;</Text>
-          <Text style={styles.bulletPoint}>- Une (01) douche ;</Text>
+
+
           <Text style={styles.paragraph}>
             Il n'est pas fait plus ample description, le locataire déclarant bien 
             connaître les lieux pour les avoir visités.
           </Text>
-        </View>
+        </View> */}
 
         {/* Article 4 */}
         <View style={styles.section}>
@@ -397,7 +398,7 @@ export const ContractPdf = ({ contract, asset, contractor }: Props) => {
             Fait en cinq (02) exemplaires dont un exemplaire pour chaque 
             partie.
           </Text>
-          <Text style={styles.paragraph}>{contractor?.address?.City}, le {formatDateToText(contract.startDate)}</Text>
+          <Text style={styles.paragraph}>{contractor.Address.City}, le {formatDateToText(contract.startDate)}</Text>
         </View>
 
         {/* Bloc de signatures */}
@@ -405,7 +406,7 @@ export const ContractPdf = ({ contract, asset, contractor }: Props) => {
           <View style={styles.signatureBlock}>
             <Text>Lu et approuvé</Text>
             <Text>Le Bailleur</Text>
-            <Text style={styles.bold}>{capitalizeEachWord(contractor.firstname)} {toUpperCase(contractor.lastname)}</Text>
+            <Text style={styles.bold}>{capitalizeEachWord(contractor.Firstname)} {toUpperCase(contractor.Lastname)}</Text>
           </View>
           <View style={styles.signatureBlock}>
             <Text>Lu et approuvé</Text>

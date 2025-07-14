@@ -6,11 +6,9 @@ import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
 import Overlay from '@/components/Overlay'
 import { ProfileApplication_T } from '@/types/requestTypes'
 import { requestLessorProfile } from '@/actions/requestAction'
-import useLocalStorage from '@/hooks/useLocalStorage';
 import toast from 'react-hot-toast';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal'
 import { useRouter } from '@bprogress/next/app'
-import { useAuth } from '@/context/AuthContext'
 import { IDashBoardParams } from '@/types/Property'
 import { dashboard } from '@/actions/assetAction'
 import { PROFILE_RENTER_LIST } from '@/constant'
@@ -109,8 +107,13 @@ const TenantDashboard = () => {
         }
     }
 
-    if (!isClient) return null;
+    useEffect(() => {
+        if (!isAuthorized(PROFILE_RENTER_LIST)) {
+            router.push("/not-authorized");
+        }
+    }, []);
 
+    if (!isClient) return null;
 
   return (
     <DefaultLayout>

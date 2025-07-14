@@ -84,6 +84,8 @@ export const getStatusBadge = (status: string) => {
   );
 };
 
+
+
 export const getRoleBadge = (role: string) => {
   const baseClass = "py-1 px-2 rounded-xl text-sm capitalize";
 
