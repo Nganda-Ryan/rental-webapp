@@ -9,17 +9,22 @@ import { requestLessorProfile } from '@/actions/requestAction'
 import toast from 'react-hot-toast';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal'
 import { useRouter } from '@bprogress/next/app'
-import { IDashBoardParams } from '@/types/Property'
+import { IContract, IDashBoardParams, ILoan } from '@/types/Property'
 import { dashboard } from '@/actions/assetAction'
 import { PROFILE_RENTER_LIST } from '@/constant'
 import Link from 'next/link'
 import { LessorRequestForm } from '@/components/feature/tenants/LessorRequestForm'
 import { roleStore } from '@/store/roleStore'
+import TenantAssetCard from '@/components/Cards/TenantAssetCard'
+import Nodata from '@/components/error/Nodata'
+import PropertySkeletonCard from '@/components/skeleton/PropertySkeletonCard'
 
 const TenantDashboard = () => {
     const [showLessorRequestForm, setShowLessorRequestForm] = useState(false);
     const [isClient, setIsClient] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [loanList, setLoanList] = useState<ILoan[]>([]);
+    const [isLoading2, setIsLoading2] = useState(false);
     const [counts, setCounts] = useState({
         "properties": 0,
         "pendingInvoices": 0,
@@ -34,9 +39,9 @@ const TenantDashboard = () => {
         init();
     }, []);
     useEffect(() => {
-        if (!isAuthorized(PROFILE_RENTER_LIST)) {
-            router.push("/not-authorized"); // ou page de fallback
-        }
+        console.log('-->user', user)
+        setIsClient(true);
+        init2();
     }, []);
 
 
@@ -48,7 +53,8 @@ const TenantDashboard = () => {
             const application = data as ProfileApplication_T;
             const result =  await requestLessorProfile(application);
             if(result.data){
-                setIsLoading(false)
+                await init();
+                setIsLoading(false);
                 toast.success("Request submitted successfully", { position: 'bottom-right' });
             } else if(result.error){
                 setIsLoading(false)
@@ -64,6 +70,15 @@ const TenantDashboard = () => {
         }
         
     });
+
+    const handleNavigateToDetail = (_contract: ILoan) => {
+        console.log('-->_contract', _contract);
+        router.push(`/renter/${_contract.Code}`);
+    }
+
+    const handleClickBecomeLessor = async () => {
+        setShowLessorRequestForm(true);
+    }
 
     const init = async () => {
         const profileCode = getProfileCode("RENTER");
@@ -107,27 +122,58 @@ const TenantDashboard = () => {
         }
     }
 
-    useEffect(() => {
-        if (!isAuthorized(PROFILE_RENTER_LIST)) {
-            router.push("/not-authorized");
+    const init2 = async () => {
+        const profileCode = getProfileCode("RENTER");
+        if(profileCode){
+        try {
+            setIsLoading2(true);
+            const params: IDashBoardParams = {
+                offset: 0,
+                page: 1,
+                limit: 1000,
+                profileCode: profileCode,
+                endDate: "",
+                startDate: "",
+                term: "",
+                type: ""
+            };
+            const dashboardData = await dashboard(params);
+            console.log('-->result2', dashboardData);
+            if (dashboardData.data && dashboardData.data.body.dashboard.Counts.properties > 0) {
+                setLoanList(dashboardData.data.body.dashboard.CurrentLoans);
+            } else if (dashboardData.error) {
+            if (dashboardData.code === 'SESSION_EXPIRED') {
+                router.push('/signin');
+                return;
+            }
+            toast.error(dashboardData.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            }
+        } catch (error) {
+            console.log('-->error', error);
+        } finally {
+            setIsLoading2(false)
         }
-    }, []);
+        }
+    }
 
     if (!isClient) return null;
+
+    if (!isAuthorized(PROFILE_RENTER_LIST)) {
+        router.push("/not-authorized"); // ou page de fallback
+    }
 
   return (
     <DefaultLayout>
         <Breadcrumb pageName='Dashboard' previousPage={false}/>
         <div className="w-full">
             {
-                
                 user?.roles && !user.roles.includes("LANDLORD")
                 
                 && 
 
                 <div className="flex justify-between items-center mb-6">
                     <button
-                        onClick={() => setShowLessorRequestForm(true)}
+                        onClick={handleClickBecomeLessor}
                         className="flex items-center gap-2 px-4 py-2 bg-[#2A4365] text-white rounded-lg hover:bg-blue-800"
                     >
                         <ArrowUpRight size={20} />
@@ -136,10 +182,9 @@ const TenantDashboard = () => {
                 </div>
             }
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                 {/* Card 1 */}
-                <Link
-                    href="/renter/mylisting"
+                <span
                     className="rounded-lg bg-white dark:bg-gray-800 border border-neutral-300 dark:border-neutral-700 p-6 shadow hover:shadow-md transition-shadow"
                 >
                     <div className="flex items-center gap-4">
@@ -151,24 +196,11 @@ const TenantDashboard = () => {
                         <p className="text-xl font-semibold text-neutral-900 dark:text-white">{counts.properties}</p>
                     </div>
                     </div>
-                </Link>
+                </span>
+
 
                 {/* Card 2 */}
-                <div className="rounded-lg bg-white dark:bg-gray-800 border border-neutral-300 dark:border-neutral-700 p-6 shadow hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-4">
-                    <div className="p-2.5 bg-green-200 dark:bg-green-600/30 rounded-md">
-                        <Star className="text-green-700 dark:text-green-300" size={24} />
-                    </div>
-                    <div>
-                        <h3 className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">Rental Score</h3>
-                        <p className="text-xl font-semibold text-neutral-900 dark:text-white">4.8</p>
-                    </div>
-                    </div>
-                </div>
-
-                {/* Card 3 */}
-                <Link
-                    href="/renter/housing-application"
+                <span
                     className="rounded-lg bg-white dark:bg-gray-800 border border-neutral-300 dark:border-neutral-700 p-6 shadow hover:shadow-md transition-shadow"  
                 
                 >
@@ -181,8 +213,22 @@ const TenantDashboard = () => {
                         <p className="text-xl font-semibold text-neutral-900 dark:text-white">{counts.pendingRequests}</p>
                     </div>
                     </div>
-                </Link>
+                </span>
             </div>
+
+            {
+                isLoading2 == false ?
+                (
+                    loanList.length > 0 ? <div className="justify-items-center grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 mt-5">
+                    {loanList.map((loan, index) => (loan && <TenantAssetCard loan={loan} key={index} handleClick={handleNavigateToDetail} />))}
+                    </div>
+                    :
+                    (<Nodata />)
+                )
+                : <div className="justify-items-center grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 mt-5">
+                    {Array.from({ length: 4 }).map((_, index) => (<PropertySkeletonCard key={index} />))}
+                </div>
+            }
 
 
 

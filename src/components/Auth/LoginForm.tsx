@@ -1,6 +1,6 @@
 "use client"
 import React, { useActionState, useState } from 'react';
-import { Building2, Lock, Mail} from 'lucide-react';
+import { Building2, Eye, EyeOff, Lock, Mail} from 'lucide-react';
 import { login } from '@/actions/authAction';
 import { useFormStatus } from 'react-dom';
 import toast from 'react-hot-toast';
@@ -28,6 +28,7 @@ export const LoginForm = () => {
   // const [state, loginAction] = useActionState(login, undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState(INITIAL_STATE);
+    const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
 
@@ -129,11 +130,18 @@ export const LoginForm = () => {
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent"
                 placeholder="Enter your password"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
             {formError.password && <p className="text-red-500">{formError.password}</p>}
           </div>

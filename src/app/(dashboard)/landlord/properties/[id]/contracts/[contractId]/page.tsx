@@ -290,7 +290,7 @@ const ContractDetail = () => {
         
     }
     const   handleClickUpdateInvoice = (data: IInvoiceTableData) => {
-        // console.log('-->data', data);
+        console.log('-->data', data);
         if(invoiceTableData && invoiceTableData.length > 0){
             const foundInvoice = invoiceTableData.find(inv => inv.id == data.id);
             if (!foundInvoice) {
@@ -304,8 +304,8 @@ const ContractDetail = () => {
             }
             console.log('-->_invoice', _invoice);
 
-            setFormDefaultInvoice(_invoice);
             setAction("UPDATE");
+            setFormDefaultInvoice(_invoice);
             setShowInvoiceGenerator(true);
         }
     }
@@ -420,7 +420,7 @@ const ContractDetail = () => {
                 isLoading ? 
                 <ContractDetailSkeleton />
                 :
-                <div className="w-full mt-10">
+                <div className="w-full mt-7">
                     {
                         contract ? 
                         <>

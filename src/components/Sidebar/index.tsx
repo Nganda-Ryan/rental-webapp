@@ -20,6 +20,7 @@ import SidebarItemSkeleton from "../skeleton/SidebarItemSkeleton";
 import { usePathname } from "next/navigation";
 import logoImage from "../../../public/images/logo.svg";
 import { roleStore } from "@/store/roleStore";
+import { PROFILE_RENTER_LIST } from "@/constant";
 
 type MenuItem = {
   icon: React.ReactNode;
@@ -41,18 +42,6 @@ const ALL_MENU_GROUPS = [
         icon: <LayoutDashboard size={20} />,
         label: "Dashboard",
         route: "/renter",
-        profiles: ["RENTER"],
-      },
-      {
-        icon: <Building2 size={20} />,
-        label: "My Listing",
-        route: "/renter/mylisting",
-        profiles: ["RENTER"],
-      },
-      {
-        icon: <Home size={20} />,
-        label: "Housing application",
-        route: "/renter/housing-application",
         profiles: ["RENTER"],
       },
       {
@@ -115,6 +104,7 @@ interface SidebarProps {
 const Sidebar = memo(function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const [pageName, setPageName] = useLocalStorage("selectedMenu", "dashboard");
   const [menuGroups, setMenuGroups] = useState<MenuGroup[]>([]);
+    const { isAuthorized } = roleStore();
   const [filtering, setFiltering] = useState(false);
   
   const { activeRole } = roleStore();
@@ -157,6 +147,10 @@ const Sidebar = memo(function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarPr
     }
     return false;
   };
+
+  if (!isAuthorized(PROFILE_RENTER_LIST)) {
+    return <div>Unauthorized</div>;
+  }
 
   return (
     <ClickOutside onClick={() => setSidebarOpen(false)}>

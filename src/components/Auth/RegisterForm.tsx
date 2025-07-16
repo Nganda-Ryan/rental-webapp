@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react';
-import { Building2, Mail } from 'lucide-react';
+import { Building2, Eye, EyeOff, Key, Mail } from 'lucide-react';
 import PhoneInput from 'react-phone-input-2';
 import Select from 'react-select';
 import { getNames, getCode } from 'country-list';
@@ -26,6 +26,7 @@ export const RegisterForm = () => {
   const [phone, setPhone] = useState('')
   const [selectedCountry, setSelectedCountry] = useState<{ label: string; value: string } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState({
     isError: false,
     message: "",
@@ -123,6 +124,9 @@ export const RegisterForm = () => {
   
   return (
     <div className="w-full max-w-md space-y-8">
+      <Overlay isOpen={isLoading} onClose={() => {}}>
+        <ProcessingModal message="Creating your account..." />
+      </Overlay>
       <div className="text-center">
         <div className="flex justify-center mb-4">
           <Building2 className="h-12 w-12 text-blue-900" />
@@ -130,7 +134,7 @@ export const RegisterForm = () => {
         <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
         <p className="mt-2 text-gray-600">Please fill in your information</p>
       </div>
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+      <form onSubmit={handleSubmit} className="mt-8 space-y-2">
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="block text-sm font-medium text-gray-700">First Name</label>
@@ -154,17 +158,6 @@ export const RegisterForm = () => {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Password</label>
-          <input
-            type="password"
-            required
-            name="password"
-            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-          />
-          {formError.password && <p className="text-red-500">{formError.password}</p>}
-        </div>
-        
 
         <div>
           <label className="block text-sm font-medium text-gray-700">Gender</label>
@@ -181,61 +174,67 @@ export const RegisterForm = () => {
           {formError.gender && <p className="text-red-500">{formError.gender}</p>}
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
-          <div className="mt-1 relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <div className="mt-1 relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Mail className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="email"
+                name="email"
+                required
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md"
+              />
+            {formError.email && <p className="text-red-500">{formError.email}</p>}
             </div>
-            <input
-              type="email"
-              name="email"
-              required
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md"
-            />
-          {formError.email && <p className="text-red-500">{formError.email}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Primary Phone</label>
+            <div className="mt-1 relative">
+              <PhoneInput
+                country={'cm'}
+                value={phone}
+                onChange={(phone) => handlePhoneChange(phone)}
+                inputStyle={{ width: '100%', height: "41px", borderRadius: "6px" }}
+                specialLabel=""
+                enableSearch
+              />
+            {formError.phone && <p className="text-red-500">{formError.phone}</p>}
+            </div>
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Primary Phone</label>
-          <div className="mt-1 relative">
-            <PhoneInput
-              country={'cm'}
-              value={phone}
-              onChange={(phone) => handlePhoneChange(phone)}
-              inputClass="w-full pl-10 !py-2 !text-sm"
-              inputStyle={{ width: '100%' }}
-              specialLabel=""
-              enableSearch
+        
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Country</label>
+            <select
+              name="country"
+              required
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+            >
+              {countryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {formError.country && <p className="text-red-500">{formError.country}</p>}
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">City</label>
+            <input
+              type="text"
+              required
+              name="city"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-[7px]"
             />
-          {formError.phone && <p className="text-red-500">{formError.phone}</p>}
+            {formError.city && <p className="text-red-500">{formError.city}</p>}
           </div>
         </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Country</label>
-          <Select
-            options={countryOptions}
-            instanceId="country-select"
-            placeholder="Select country"
-            value={selectedCountry}
-            onChange={(option) => setSelectedCountry(option)}
-          />
-          {formError.country && <p className="text-red-500">{formError.country}</p>}
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700">City</label>
-          <input
-            type="text"
-            required
-            name="city"
-            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-          />
-          {formError.city && <p className="text-red-500">{formError.city}</p>}
-        </div>
-        
         <div>
           <label className="block text-sm font-medium text-gray-700">Street</label>
           <input
@@ -246,6 +245,32 @@ export const RegisterForm = () => {
           />
           {formError.street && <p className="text-red-500">{formError.street}</p>}
         </div>
+
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Password</label>
+          <div className="relative">
+            <Key
+              size={16}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              name="password"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-9 py-2"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {formError.password && <p className="text-red-500">{formError.password}</p>}
+        </div>
+        
 
         <div className="space-y-4">
           <button
@@ -267,7 +292,7 @@ export const RegisterForm = () => {
           <div className="text-center">
             <span className="text-sm text-gray-600">Already have an account? </span>
             <a
-              href="/login"
+              href="/signin"
               className="text-sm font-medium text-blue-900 hover:text-blue-800"
             >
               Sign in
@@ -275,9 +300,6 @@ export const RegisterForm = () => {
           </div>
         </div>
       </form>
-      <Overlay isOpen={isLoading} onClose={() => setIsLoading(false)}>
-        <ProcessingModal message="Creating your account..." />
-      </Overlay>
     </div>
   )
 }

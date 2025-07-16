@@ -225,14 +225,17 @@ const SupportUsers = () => {
             {
               !isFetchingUser ? 
                 userList.length > 0 && isFetchingUser == false ? (
-                  <ResponsiveTable
-                    columns={usersTableColumn}
-                    data={userList.slice(0, 100)}
-                    onRowClick={(user: IUser) => handleSelectUSer(user.id)}
-                    keyField="id"
-                    searchKey='name'
-                    paginate={10}
-                  />
+                  <>
+                    <ResponsiveTable
+                      columns={usersTableColumn}
+                      data={userList.slice(0, 100)}
+                      onRowClick={(user: IUser) => handleSelectUSer(user.id)}
+                      keyField="id"
+                      searchKey='name'
+                      paginate={10}
+                    />
+                    
+                  </>
                   ) : (
                   <Nodata message="No user to display" />
                 )

@@ -25,6 +25,7 @@ export const InvoiceGenerator = ({
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<IInvoiceForm>({
     defaultValues: {
@@ -41,6 +42,7 @@ export const InvoiceGenerator = ({
   });
   const startDate = useWatch({ name: "startDate", control });
   const endDate = useWatch({ name: "endDate", control });
+  const assetStatus = watch("status");
   const { fields } = useFieldArray({
     control,
     name: "billingElements"
@@ -192,8 +194,8 @@ export const InvoiceGenerator = ({
             Description
           </label>
           <textarea
-            disabled={action == "UPDATE"  || action === "DETAILS"}
-            readOnly={action == "UPDATE"  || action === "DETAILS"}
+            disabled={(action == "UPDATE" && assetStatus == "DRAFT") || action === "DETAILS"}
+            readOnly={(action == "UPDATE" && assetStatus == "DRAFT")  || action === "DETAILS"}
             className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={4}
             {...register("notes")}
@@ -232,9 +234,9 @@ export const InvoiceGenerator = ({
 const BillingElementField = ({ index, item, register, errors, defaultValue, control, action }: { index: number, item: any, register: any, errors: any, defaultValue: any, control: any, action: "CREATE" | "UPDATE" | "DETAILS" }) => {
   const status = useWatch({ name: `billingElements.${index}.status`, control });
   const isChecked = status === true;
-  // console.log('Checkable ?', action == 'UPDATE' && defaultValue.status == true)
-  console.log('-->BillingElementField', item)
   const today = new Date().toISOString().split("T")[0];
+
+  const disable = action == 'UPDATE' && item.status == true;
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-x">
@@ -242,8 +244,8 @@ const BillingElementField = ({ index, item, register, errors, defaultValue, cont
       <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 mr-8">
         {action != "DETAILS" && <input
           type="checkbox"
-          disabled={action == 'UPDATE' && item.status == true}
-          readOnly={action == 'UPDATE' && item.status == true}
+          disabled={disable}
+          readOnly={disable}
           className="rounded border-gray-300 dark:border-gray-600"
           {...register(`billingElements.${index}.status`)}
         />}
@@ -271,10 +273,10 @@ const BillingElementField = ({ index, item, register, errors, defaultValue, cont
             min="0"
             step="0.01"
             placeholder="0.00"
-            disabled={action == "UPDATE"  || action === "DETAILS"}
-            readOnly={action == "UPDATE"  || action === "DETAILS"}
+            disabled={disable || action === "DETAILS"}
+            readOnly={disable  || action === "DETAILS"}
             className={`w-full pl-14 pr-4 py-2 border rounded dark:text-white "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 ${errors.billingElements?.[index]?.amount ? "border-red-500" : ""}
-              ${action == "UPDATE"  || action === "DETAILS" ? "dark:text-white bg-gray-200 dark:bg-gray-600 cursor-not-allowed border-gray-200 dark:border-gray-600" : ""}  
+              ${disable  || action === "DETAILS" ? "dark:text-white bg-gray-200 dark:bg-gray-600 cursor-not-allowed border-gray-200 dark:border-gray-600" : ""}  
             `}
             {...register(`billingElements.${index}.amount`, {
               required: isChecked ? "Please enter the paid amount" : false,
@@ -290,8 +292,8 @@ const BillingElementField = ({ index, item, register, errors, defaultValue, cont
             type="date"
             max={today}
             // min={defaultValue?.startDate}
-            disabled={action == "UPDATE"  || action === "DETAILS" && item.status == true}
-            readOnly={action == "UPDATE"  || action === "DETAILS" && item.status == true}
+            disabled={disable  || action === "DETAILS" && item.status == true}
+            readOnly={disable  || action === "DETAILS" && item.status == true}
             className={`w-full sm:w-44 px-4 py-2 border rounded ${errors.billingElements?.[index]?.paidDate ? "border-red-500" : ""} ${item.status == true ? "dark:text-white bg-gray-200 dark:bg-gray-600 cursor-not-allowed border-gray-200 dark:border-gray-600" : ""}`}
             {...register(`billingElements.${index}.paidDate`, {
               required: isChecked ? "Please enter the paid date" : false,

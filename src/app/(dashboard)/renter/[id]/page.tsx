@@ -17,7 +17,6 @@ import { useParams } from 'next/navigation';
 import { getContract, searchInvoice } from '@/actions/assetAction';
 import { IContractDetail, IInvoiceForm, IInvoiceTableData, SeachInvoiceParams } from '@/types/Property';
 import { getStatusBadge } from '@/lib/utils-component';
-import Button from '@/components/ui/Button';
 import Overlay from '@/components/Overlay';
 import InvoiceGenerator from '@/components/feature/Properties/InvoiceGenerator';
 import { SuccessModal } from '@/components/Modal/SucessModal';
@@ -27,15 +26,13 @@ import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
 import { useRouter } from '@bprogress/next/app';
 import { formatDateToText, formatNumberWithSpaces } from '@/lib/utils';
 import Nodata from '@/components/error/Nodata';
-import { useAuth } from "@/context/AuthContext";
-import { PROFILE_LANDLORD_LIST } from "@/constant";
+import { PROFILE_RENTER_LIST } from "@/constant";
 import { roleStore } from '@/store/roleStore';
 
 const ContractDetail = () => {
     const [contract, setContract] = useState<IContractDetail>();
     const [formDefaultInvoice, setFormDefaultInvoice] = useState<IInvoiceForm>();
     const [tempFormDefaultInvoice, setTempFormDefaultInvoice] = useState<IInvoiceForm>();
-    const [isTerminatingContract, setIsTerminatingContract] = useState(false);
     const [invoiceTableData, setInvoiceTableData] = useState<IInvoiceForm[]>([]);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showActionModal, setShowActionModal] = useState(false);
@@ -252,7 +249,7 @@ const ContractDetail = () => {
     
 
 
-    if (!!isAuthorized(PROFILE_LANDLORD_LIST)) {
+    if (!isAuthorized(PROFILE_RENTER_LIST)) {
         return <div>Unauthorized</div>;
     }
     return (

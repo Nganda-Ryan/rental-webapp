@@ -21,15 +21,22 @@ export const LessorRequestForm = ({
   const [selfiePreview, setSelfiePreview] = useState(initialData?.image || "");
   const [description, setDescription] = useState('')
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+
+    if (!idCardRecto || !idCardVerso || !selfie || !description.trim()) {
+      return;
+    }
+
     const formData = {
       idCardRecto,
       idCardVerso,
       selfie,
       description,
-    }
-    onSubmit(formData)
-  }
+    };
+
+    onSubmit(formData);
+  };
+
 
   const handleRectoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -98,8 +105,10 @@ export const LessorRequestForm = ({
                 className="hidden"
                 name="idCardRecto"
                 id="idCardRecto"
-                required
               />
+              {!idCardRecto && <p className="text-xs text-red-500 mt-1">Required</p>}
+
+
               <label
                 htmlFor="idCardRecto"
                 className="flex flex-col items-center cursor-pointer"
@@ -138,8 +147,9 @@ export const LessorRequestForm = ({
                 className="hidden"
                 id="idCardVerso"
                 name="idCardVerso"
-                required
               />
+              {!idCardVerso && <p className="text-xs text-red-500 mt-1">Required</p>}
+
               <label
                 htmlFor="idCardVerso"
                 className="flex flex-col items-center cursor-pointer"
@@ -173,8 +183,8 @@ export const LessorRequestForm = ({
                 id="selfie"
                 name="selfie"
                 onChange={handleSelfieFileChange}
-                required
               />
+              {!selfie && <p className="text-xs text-red-500 mt-1">Required</p>}
               <label
                 htmlFor="selfie"
                 className="flex flex-col items-center cursor-pointer"
@@ -206,7 +216,6 @@ export const LessorRequestForm = ({
               placeholder="Tell us why you want to become a lessor..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              required
             />
           </div>
         </div>
