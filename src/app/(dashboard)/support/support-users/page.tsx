@@ -25,7 +25,6 @@ import { SuccessModal } from '@/components/Modal/SucessModal';
 import { SkeletonTable } from '@/components/skeleton/SkeletonTable';
 import Button from '@/components/ui/Button';
 import { MANAGER_PROFILE_LIST } from '@/constant'
-import { useAuth } from '@/context/AuthContext'
 import { roleStore } from '@/store/roleStore';
 
 
@@ -212,7 +211,7 @@ const SupportUsers = () => {
   };
 
   if (!isAuthorized(MANAGER_PROFILE_LIST)) {
-    return <div>Unauthorized</div>;
+    return router.push("/unauthorized");
   }
 
   return (

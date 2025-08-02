@@ -1,12 +1,10 @@
 "use client"
-import Image from 'next/image';
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { X, Building2, Trash, Trash2 } from "lucide-react";
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import { getNames, getCode } from 'country-list';
-import { Select } from '@/components/ui/Select'; 
-import { Controller, useForm, useFieldArray  } from "react-hook-form";
+import { useForm, useFieldArray, Controller  } from "react-hook-form";
 import { AssetFormValue, CreatePropertyType, SubProperty, SubProperty2 } from "@/types/Property";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
@@ -17,6 +15,9 @@ import { createAsset } from '@/actions/assetAction';
 import toast from 'react-hot-toast';
 import { useRouter } from '@bprogress/next/app';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal';
+import { useConfigStore } from "@/lib/store/configStore";
+import { ICity, IState, IStreet } from "@/types/locationType";
+import { Select } from "@/components/ui/Select";
 
 interface PropertyFormProps {
   onClose: () => void;
@@ -61,14 +62,15 @@ const propertyTypes = [
 
 
 const Page = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState<{ label: string; value: string } | null>(null);
   const [isCplxAsset, setIsCplxAsset] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
   const [manualRemoval, setManualRemoval] = useState(false);
   const [categories, setCategories] = useState(["Basic Information", "Billing Items"]);
+  const [filteredStates, setFilteredStates] = useState<IState[]>([]);
+  const [filteredCities, setFilteredCities] = useState<ICity[]>([]);
+  const [filteredStreets, setFilteredStreet] = useState<IStreet[]>([]);
   const [dropdownOpenList, setDropdownOpenList] = useState<boolean[]>([]);
   const [selectedPropertyType, setSelectedPropertyType] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -76,6 +78,7 @@ const Page = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const router = useRouter();
+  const configStore = useConfigStore();
   
   const {
     control,
@@ -87,6 +90,7 @@ const Page = () => {
   } = useForm({
     defaultValues: {
       country: "",
+      state: "",
       propertyName: "",
       propertyType: "", 
       city: "",
@@ -188,6 +192,37 @@ const Page = () => {
     }
   }, [selectedFile]);
 
+
+  const selectedCountry = watch('country')
+  const selectedState = watch('state')
+  const selectedCity = watch('city')
+
+  // Filtrage dynamique
+  useEffect(
+    () => {
+      console.log('country changed', selectedCountry)
+      const filteredStates = configStore.state.filter((s) => (s. country_id == configStore.country.find((c) => c.sortname === selectedCountry)?.id))
+      console.log('--->filteredStates', filteredStates);
+      setFilteredStates(filteredStates);
+    },
+    [configStore.country, configStore.state, selectedCountry]
+  )
+
+  useEffect(
+    () => {
+      console.log('-->selectedState', selectedState)
+      setFilteredCities(configStore.city.filter((c) => c.state_id === selectedState))
+    },
+    [configStore.city, selectedState]
+  )
+
+  useEffect(
+    () => {
+      console.log('-->selectedState', selectedCity)
+      setFilteredStreet(configStore.street.filter((s) => s.city_id === selectedCity))
+    },
+    [configStore.street, selectedCity]
+  )
   
 
 
@@ -195,9 +230,9 @@ const Page = () => {
     try {
       const payload: CreatePropertyType = {
         addressData: {
-          city: data.city,
-          country: data.country,
-          street: data.street
+          city: configStore.city.find((c) => c.id === data.city)?.name ?? "",
+          country: configStore.country.find((c) => c.sortname === data.country)?.name ?? "",
+          street: configStore.street.find((s) => s.id === data.street)?.name ?? "",
         },
         billingItems: data.billingItem,
         coverUrl: "",
@@ -293,13 +328,6 @@ const Page = () => {
     setValue("numberOfUnit", fields.length - 1);
   }
 
-  const handleBackClick = () => {
-    console.log('back')
-  }
-
-  const handleNextClick = () => {
-    
-  }
 
 
   return (
@@ -340,7 +368,7 @@ const Page = () => {
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Property Image
                           </label>
-                          <div className="w-full h-40 flex bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
+                          <div className="w-full h-49 flex bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
                             {imagePreview ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
@@ -387,23 +415,57 @@ const Page = () => {
                               control={control}
                               render={({ field }) => (
                                 <Select
-                                  options={countryOptions}
-                                  value={countryOptions.find(option => option.value === field.value) ?? null}
+                                  options={configStore.country.map(c => ({ label: c.name, value: c.sortname }))}
+                                  value={configStore.country.map(c => ({ label: c.name, value: c.sortname })).find(c => c.value === field.value) ?? null}
                                   onChange={(selectedOption) => {
                                     field.onChange(selectedOption?.value);
-                                    setSelectedCountry(selectedOption || null);
                                   }}
                                   placeholder="Select a country"
                                 />
                               )}
+                              rules={{ required: 'The country is required' }}
                             />
+                            {errors.country && (
+                              <p className="text-sm text-red-500">{errors.country.message}</p>
+                            )}
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
-                            <input
-                              {...register("city", { required: "The city is required" })}
-                              type="text"
-                              className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State</label>
+                            <Controller
+                              name="state"
+                              control={control}
+                              rules={{ required: 'The state is required' }}
+                              render={({ field }) => (
+                                <Select
+                                  options={filteredStates.map(c => ({ label: c.name, value: c.id }))}
+                                  value={filteredStates.map(c => ({ label: c.name, value: c.id })).find(c => c.value === field.value) ?? null}
+                                  onChange={(selectedOption) => {
+                                    field.onChange(selectedOption?.value);
+                                  }}
+                                  placeholder="Select a state"
+                                />
+                              )}
+                            />
+                            {errors.state && (
+                              <p className="text-sm text-red-500">{errors.state.message}</p>
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="mb-1 text-sm text-gray-700 dark:text-gray-300">City</label>
+                            <Controller
+                              name="city"
+                              control={control}
+                              rules={{ required: 'The city is required' }}
+                              render={({ field }) => (
+                                <Select
+                                  options={filteredCities.map(c => ({ label: c.name, value: c.id }))}
+                                  value={filteredCities.map(c => ({ label: c.name, value: c.id })).find(c => c.value === field.value) ?? null}
+                                  onChange={(selectedOption) => {
+                                    field.onChange(selectedOption?.value);
+                                  }}
+                                  placeholder="Select a city"
+                                />
+                              )}
                             />
                             {errors.city && (
                               <p className="text-sm text-red-500">{errors.city.message}</p>
@@ -411,10 +473,20 @@ const Page = () => {
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Street</label>
-                            <input
-                              {...register("street", { required: "The street is required" })}
-                              type="text"
-                              className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            <Controller
+                              name="street"
+                              rules={{ required: 'The street is required' }}
+                              control={control}
+                              render={({ field }) => (
+                                <Select
+                                  options={filteredStreets.map(c => ({ label: c.name, value: c.id }))}
+                                  value={filteredStreets.map(c => ({ label: c.name, value: c.id })).find(c => c.value === field.value) ?? null}
+                                  onChange={(selectedOption) => {
+                                    field.onChange(selectedOption?.value);
+                                  }}
+                                  placeholder="Select a street"
+                                />
+                              )}
                             />
                             {errors.street && (
                               <p className="text-sm text-red-500">{errors.street.message}</p>
@@ -735,15 +807,6 @@ const Page = () => {
               </TabPanels>
             </TabGroup>
             <div className='mt-5 flex gap-5 justify-center absolute mb-10 bottom-0 left-0 right-0'>
-              <div className='flex gap-2 justify-start'>
-                <Button onClick={handleBackClick} variant='neutral' disable={false} isSubmitBtn={false}>
-                  Back
-                </Button>
-                {/* <button type='submit'>Finished</button> */}
-                <Button onClick={handleNextClick} variant='neutral' disable={false} isSubmitBtn={false}>
-                  Next
-                </Button>
-              </div>
               <Button variant='info' disable={false} isSubmitBtn fullWidth={false}>
                 Finished
               </Button>

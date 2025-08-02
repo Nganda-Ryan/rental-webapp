@@ -10,7 +10,6 @@ import { Search } from "lucide-react";
 import { AssetData } from "@/types/Property";
 import { searchAsset } from "@/actions/assetAction";
 import PropertySkeletonCard from "@/components/skeleton/PropertySkeletonCard";
-import { useAuth } from "@/context/AuthContext";
 import { PROFILE_LANDLORD_LIST } from "@/constant";
 import toast from "react-hot-toast";
 import autoAnimate from "@formkit/auto-animate";
@@ -106,9 +105,9 @@ const PropertiesPage = () => {
     router.push('/landlord/properties/new');
   };
 
-  if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
-    return <div>Unauthorized</div>;
-  }
+  // if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
+  //   return router.push("/unauthorized");
+  // }
 
   return (
     <DefaultLayout>

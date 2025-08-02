@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react'
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
 import Nodata from '@/components/error/Nodata'
 import DefaultLayout from '@/components/Layouts/DefaultLayout'
-import { useAuth } from "@/context/AuthContext";
 import { PROFILE_LANDLORD_LIST } from "@/constant";
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable'
 import { AssetData, AssetDataDetailed, IContractDetail, IInvoiceForm, SeachInvoiceParams } from '@/types/Property'
@@ -13,8 +12,7 @@ import { useParams } from 'next/navigation'
 import { useRouter } from '@bprogress/next/app'
 import Button from '@/components/ui/Button'
 import toast from 'react-hot-toast'
-import { getAsset, searchInvoice } from '@/actions/assetAction'
-import { IUser } from '@/types/user'
+import { getAsset } from '@/actions/assetAction'
 import { SkeletonTable } from '@/components/skeleton/SkeletonTable'
 import { roleStore } from '@/store/roleStore'
 
@@ -156,9 +154,9 @@ const Page = () => {
     }
   }
 
-  if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
-    return <div>Unauthorized</div>;
-  }
+  // if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
+  //   return router.push("/unauthorized");
+  // }
   return (
     <DefaultLayout>
       <Breadcrumb previousPage pageName="Locatif/Units" />

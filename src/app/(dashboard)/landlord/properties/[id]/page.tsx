@@ -34,7 +34,6 @@ import toast from 'react-hot-toast';
 import { ResponsiveTable } from "@/components/feature/Support/ResponsiveTable";
 import { capitalize, capitalizeEachWord, formatDateToText, formatNumberWithSpaces } from "@/lib/utils";
 import { ActionConfirmationModal } from "@/components/Modal/ActionConfirmationModal";
-import { useAuth } from "@/context/AuthContext";
 import { ASSET_TYPE_COMPLEXE, IMAGE_LOADING_SHIMMER, PROFILE_LANDLORD_LIST } from "@/constant";
 import ImageLoading from "@/components/ImageLoading";
 import { IInviteManagerRequest, IUser, IUserPermission } from "@/types/user";
@@ -183,6 +182,7 @@ const PropertyDetail = () => {
                                             const link = document.createElement("a");
                                             link.href = url;
                                             link.download = `contrat-${contract.id}.pdf`;
+                                            console.log('isurl', link)
                                             link.click();
                                         }
                                     }}
@@ -330,12 +330,12 @@ const PropertyDetail = () => {
                     title: `Verification of ${asset.Title}`,
                     userId: user.Code
                 }
-
-                const result = await requestPropertyVerification(payload);
-                console.log('-->Result error', result);
                 setLoadingMessage("Processing..."); 
                 setIsLoading(true);
                 setIsModalOpen(false);
+
+                const result = await requestPropertyVerification(payload);
+                console.log('-->Result error', result);
                 if(result.data){
                     setIsModalOpen(false);
                     setIsLoading(false);
@@ -356,6 +356,7 @@ const PropertyDetail = () => {
                 console.log('AssetDetail.handleVerificationSubmit.error', error);
                 toast.error("Something went wrong during the process. Try again or contact the administrator", { position: 'bottom-right' });
             } finally {
+                init();
                 setIsLoading(false);
             }
         }
@@ -651,6 +652,8 @@ const PropertyDetail = () => {
                     StatusCode: item.StatusCode,
                     IsActive: item.IsActive, // 1 ou 0
                     TypeCode: item.TypeCode,
+                    Notes: item.Notes,
+                    Tag: item.Tag,
                     IsVerified: item.IsVerified, // 1 ou 0
                     Permission: result.data.body.ConfigPermissionList.map((item:any) => (item.Code)),
                     whoIs: result.data.body.whoIs,
@@ -862,9 +865,9 @@ const PropertyDetail = () => {
         }, {} as Record<string, boolean>);
     }
 
-    if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
-        return <div>Unauthorized</div>;
-    }
+    // if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
+    //     return router.push("/unauthorized");
+    // }
 
     return (
         <DefaultLayout>
@@ -913,6 +916,18 @@ const PropertyDetail = () => {
                                                     {getStatusBadge(asset?.StatusCode ?? 'DRAFT')}
                                                 </span>
                                             </div>
+                                            {
+                                                asset.Notes && 
+                                                <div className="flex justify-between items-start mb-4">
+                                                    {asset.Notes}
+                                                </div>
+                                            }
+                                            {
+                                                asset.Tag && 
+                                                <div className="flex justify-between items-start mb-4">
+                                                    {capitalizeEachWord(asset.Tag)}
+                                                </div>
+                                            }
                                             <div className="grid grid-cols-4 gap-4 py-4 border-t border-gray-100 dark:border-gray-700">
                                                 {asset?.BillingItems.map((item) => (
                                                 <div
@@ -1030,13 +1045,6 @@ const PropertyDetail = () => {
                                                 <FileText size={16} /> Create a contract
                                             </Button>
                                         }
-                                        
-                                        {
-                                            // canCreateInvoice() &&
-                                            // <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={false} isSubmitBtn={false}>
-                                            //     <DollarSign size={16} /> Create Invoice
-                                            // </Button>
-                                        }
                                         {
                                             asset?.whoIs == "OWNER" && activeContract?.status == "ACTIVE" && 
                                             (<div className="space-y-3">
@@ -1129,52 +1137,6 @@ const PropertyDetail = () => {
                                     ))}
                                     </SectionWrapper>
                                 }
-
-                                {/* TENANT REQUESTS */}
-                                {/* <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm mt-4">
-                                    <div className="flex items-center gap-2 mb-4">
-                                    <Users size={20} className="text-gray-400" />
-                                    <h3 className="font-medium">Tenant Requests</h3>
-                                    </div>
-                                    <div className="space-y-4">
-                                    {tenantRequests.map((request) => (
-                                        <div
-                                            key={request.id}
-                                            className="border border-gray-100 rounded-lg p-4"
-                                        >
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div>
-                                                <h4 className="font-medium dark:text-gray-300">{request.name}</h4>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">{request.email}</p>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">{request.phone}</p>
-                                            </div>
-                                            <div className="flex flex-col items-end">
-                                            <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                                                {request.status}
-                                            </span>
-                                            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                {request.submitted}
-                                            </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2 mt-3">
-                                            <button
-                                            className="px-3 py-1 text-sm bg-[#2A4365] text-white rounded-lg hover:bg-blue-800"
-                                            onClick={() => {
-                                                setSelectedTenant(request);
-                                                setContractFormOpen(true);
-                                            }}
-                                            >
-                                                Accept
-                                            </button>
-                                            <button className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
-                                                Decline
-                                            </button>
-                                        </div>
-                                        </div>
-                                    ))}
-                                    </div>
-                                </div> */}
                             </div> : 
                             <RightSideAction />
                         }
@@ -1297,11 +1259,6 @@ const PropertyDetail = () => {
                     </button>
                 )}
                 
-                
-                
-                
-                
-                
 
                 {/* Modal Actions */}
                 <Overlay isOpen={showInvoiceGenerator} onClose={() => setShowInvoiceGenerator(false)}>
@@ -1321,8 +1278,6 @@ const PropertyDetail = () => {
                 </Overlay>
                 <Overlay isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                     <VerificationForm
-                        propertyId={asset?.Code ?? ""}
-                        propertyTitle={asset?.Title ?? ""}
                         onClose={() => setIsModalOpen(false)}
                         onSubmit={handleVerificationSubmit}
                     />
@@ -1363,7 +1318,7 @@ const PropertyDetail = () => {
                         message={`Are you sure you want to terminate lease #${activeContract?.id} ?`}
                     />
                 </Overlay>
-                <Overlay isOpen={isLoading} onClose={() => {setIsLoading(false)}}>
+                <Overlay isOpen={isLoading} onClose={() => {}}>
                     <ProcessingModal message={loadingMessage} />
                 </Overlay>
             </div>

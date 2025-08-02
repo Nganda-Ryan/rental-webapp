@@ -32,7 +32,6 @@ import toast from 'react-hot-toast';
 import { ResponsiveTable } from "@/components/feature/Support/ResponsiveTable";
 import { capitalize, formatDateToText } from "@/lib/utils";
 import { ActionConfirmationModal } from "@/components/Modal/ActionConfirmationModal";
-import { useAuth } from "@/context/AuthContext";
 import { ASSET_TYPE_COMPLEXE, PROFILE_LANDLORD_LIST } from "@/constant";
 import ImageLoading from "@/components/ImageLoading";
 import { IUser, IUserPermission } from "@/types/user";
@@ -667,9 +666,9 @@ const PropertyDetail = () => {
     }
 
 
-    if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
-        return <div>Unauthorized</div>;
-    }
+    // if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
+    //     return router.push("/unauthorized");
+    // }
     return (
         <DefaultLayout>
             <Breadcrumb previousPage pageName={`Unit ${asset?.Title ? "- " + capitalize(asset.Title) : ""}`} />
@@ -1023,8 +1022,6 @@ const PropertyDetail = () => {
                 </Overlay>
                 <Overlay isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                     <VerificationForm
-                        propertyId={asset?.Code ?? ""}
-                        propertyTitle={asset?.Title ?? ""}
                         onClose={() => setIsModalOpen(false)}
                         onSubmit={handleVerificationSubmit}
                     />

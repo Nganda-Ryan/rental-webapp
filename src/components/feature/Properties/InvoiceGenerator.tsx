@@ -194,8 +194,8 @@ export const InvoiceGenerator = ({
             Description
           </label>
           <textarea
-            disabled={(action == "UPDATE" && assetStatus == "DRAFT") || action === "DETAILS"}
-            readOnly={(action == "UPDATE" && assetStatus == "DRAFT")  || action === "DETAILS"}
+                  disabled={action == "UPDATE"  || action === "DETAILS"}
+                  readOnly={action == "UPDATE"  || action === "DETAILS"}
             className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={4}
             {...register("notes")}

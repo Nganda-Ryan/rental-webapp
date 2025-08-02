@@ -2,14 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  DollarSign,
   Home,
-  Users,
-  AlertTriangle
 } from "lucide-react";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { useAuth } from "@/context/AuthContext";
 import { PROFILE_LANDLORD_LIST } from "@/constant";
 import { useRouter } from "@bprogress/next/app";
 import { roleStore } from "@/store/roleStore";
@@ -17,8 +13,7 @@ import { IDashBoardParams } from "@/types/Property";
 import { dashboard } from "@/actions/assetAction";
 import toast from "react-hot-toast";
 import { IDashboardResponse } from "@/types/dashboard";
-import { capitalize, formatDateToText, formatNumberWithSpaces } from "@/lib/utils";
-import { getCurrencyIcon } from "@/lib/utils-component";
+import { capitalize, formatNumberWithSpaces } from "@/lib/utils";
 import { StatusDot } from "@/components/StatusDot";
 import Overlay from "@/components/Overlay";
 import { ProcessingModal } from "@/components/Modal/ProcessingModal";
@@ -27,14 +22,11 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [dashboardData, setDashboardData] = useState<IDashboardResponse | null>(null);
   const router = useRouter();
-  const { isAuthorized, user, getProfileCode} = roleStore();
+  const { user, getProfileCode} = roleStore();
 
 
 
   useEffect(() => {
-    if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
-      router.push("/not-authorized");
-    }
     init();
   }, []);
 
@@ -43,69 +35,69 @@ export default function Dashboard() {
   const init = async () => {
     const profileCode = getProfileCode("LANDLORD");
     if(profileCode){
-        try {
-          setIsLoading(true);
-          console.log('-->user', user);
-          const params: IDashBoardParams = {
-              offset: 0,
-              page: 1,
-              limit: 1000,
-              profileCode: profileCode,
-              endDate: "",
-              startDate: "",
-              term: "",
-              type: ""
-          };
-          const result = await dashboard(params);
-          if (result.data) {
-              const data = result.data?.body?.dashboard;
-              console.log('-->data', data)
-              const _dashboardData: IDashboardResponse = {
-                Counts: data.Counts,
-                PropertiesByStatus: data.PropertiesByStatus,
-                RentPaymentsStatus: data.RentPaymentsStatus,
-                AllPendingRequests: data.AllPendingRequests,
-                allApplications: data.allApplications.map((item: any) => ({
-                  Code: item.Code,
-                  TypeCode: item.TypeCode,
-                  CreatedAt: item.CreatedAt,
-                  SubmittedDate: item.SubmittedDate,
-                  ClosedDate: item.ClosedDate,
-                  IsClosed: item.IsClosed,
-                  StatusCode: item.StatusCode,
-                  Description: item.Description,
-                  LevelCode: item.LevelCode,
-                  renter: {
-                    Code: item.creator.user.Code,
-                    Status: item.creator.user.Status,
-                    RoleCode: item.creator.RoleCode,
-                    CreatedAt: item.creator.CreatedAt,
-                    IsActive: item.creator.IsActive,
-                    UserCode: item.creator.UserCode,
-                    Email: item.creator.user.Email,
-                    Firstname: item.creator.user.Firstname,
-                    Gender: item.creator.user.Gender,
-                    Lastname: item.creator.user.Lastname,
-                    NIU: item.creator.user.NIU,
-                    Phone: item.creator.user.Phone,
-                    AvatarUrl: item.creator.user.AvatarUrl,
-                  }
-                }))
+      try {
+        setIsLoading(true);
+        console.log('-->user', user);
+        const params: IDashBoardParams = {
+            offset: 0,
+            page: 1,
+            limit: 1000,
+            profileCode: profileCode,
+            endDate: "",
+            startDate: "",
+            term: "",
+            type: ""
+        };
+        const result = await dashboard(params);
+        if (result.data) {
+          const data = result.data?.body?.dashboard;
+          console.log('-->data', data)
+          const _dashboardData: IDashboardResponse = {
+            Counts: data.Counts,
+            PropertiesByStatus: data.PropertiesByStatus,
+            RentPaymentsStatus: data.RentPaymentsStatus,
+            AllPendingRequests: data.AllPendingRequests,
+            allApplications: data.allApplications.map((item: any) => ({
+              Code: item.Code,
+              TypeCode: item.TypeCode,
+              CreatedAt: item.CreatedAt,
+              SubmittedDate: item.SubmittedDate,
+              ClosedDate: item.ClosedDate,
+              IsClosed: item.IsClosed,
+              StatusCode: item.StatusCode,
+              Description: item.Description,
+              LevelCode: item.LevelCode,
+              renter: {
+                Code: item.creator.user.Code,
+                Status: item.creator.user.Status,
+                RoleCode: item.creator.RoleCode,
+                CreatedAt: item.creator.CreatedAt,
+                IsActive: item.creator.IsActive,
+                UserCode: item.creator.UserCode,
+                Email: item.creator.user.Email,
+                Firstname: item.creator.user.Firstname,
+                Gender: item.creator.user.Gender,
+                Lastname: item.creator.user.Lastname,
+                NIU: item.creator.user.NIU,
+                Phone: item.creator.user.Phone,
+                AvatarUrl: item.creator.user.AvatarUrl,
               }
-              console.log('-->_dashboardData', _dashboardData);
-              setDashboardData(_dashboardData);
-          } else if (result.error) {
-              if (result.code === 'SESSION_EXPIRED') {
-              router.push('/signin');
-              return;
-              }
-              toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            }))
           }
-        } catch (error) {
-            console.log('-->error', error);
-        } finally {
-            setIsLoading(false);
+          console.log('-->_dashboardData', _dashboardData);
+          setDashboardData(_dashboardData);
+        } else if (result.error) {
+            if (result.code === 'SESSION_EXPIRED') {
+            router.push('/signin');
+            return;
+            }
+            toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
         }
+      } catch (error) {
+          console.log('-->error', error);
+      } finally {
+          setIsLoading(false);
+      }
     }
   }
   
@@ -151,28 +143,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Pending request</h2>
-            <div className="space-y-4">
-              {dashboardData && dashboardData.allApplications.map((item) => (
-                <div
-                  key={item.Code}
-                  className="flex items-center py-2 border-b border-gray-100 dark:border-gray-700"
-                >
-                  <StatusDot status={item.StatusCode} />
-                  <div>
-                    <p className="text-sm text-gray-800 dark:text-gray-200">
-                      {item.Description}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{formatDateToText(item.SubmittedDate)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
 

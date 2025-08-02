@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react'
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
 import Nodata from '@/components/error/Nodata'
 import DefaultLayout from '@/components/Layouts/DefaultLayout'
-import { useAuth } from "@/context/AuthContext";
 import { PROFILE_LANDLORD_LIST } from "@/constant";
 import { useParams } from 'next/navigation'
 import { getAsset, terminateLease } from '@/actions/assetAction'
@@ -239,9 +238,9 @@ const Page = () => {
     }
   }
   
-  if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
-    return <div>Unauthorized</div>;
-  }
+  // if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
+  //   return router.push("/unauthorized");
+  // }
 
   return (
     <DefaultLayout>

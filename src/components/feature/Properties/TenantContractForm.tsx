@@ -1,11 +1,13 @@
 "use client"
 import React, { useEffect, useState } from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, X } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { Select } from '@/components/ui/Select'; 
 import { SeachUserParams } from "@/types/user";
 import { searchUser } from "@/actions/userAction";
 import Button from "@/components/ui/Button";
+import toast from "react-hot-toast";
+import { useRouter } from "@bprogress/next/app";
 
 interface TenantContractFormProps {
   onClose: () => void;
@@ -63,6 +65,7 @@ export const TenantContractForm = ({
   const today = new Date().toISOString().split("T")[0]; // format YYYY-MM-DD
   const [isFetchingUser, setIsFetchingUser] = useState(false);
   const [isCreatingContract, setIsCreatingContract] = useState(false);
+  const router = useRouter();
   
   
   useEffect(() => {
@@ -89,6 +92,12 @@ export const TenantContractForm = ({
           }).sort((a:any, b:any) => a.label.localeCompare(b.label));
           console.log('-->datas', datas);
           setTenantList(datas);
+        } else if (result.error) {
+          if (result.code === 'SESSION_EXPIRED') {
+              router.push('/signin');
+              return;
+          }
+          toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
         }
       } catch (error) {
         console.log('-->error', error)
@@ -110,10 +119,19 @@ export const TenantContractForm = ({
   return (
     <div className="rounded-lg w-full max-h-[80vh] overflow-y-auto max-w-2xl mx-auto bg-white dark:bg-gray-800">
       <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <h2 className="text-lg font-semibold dark:text-white">
             Create Tenant Contract
           </h2>
+          <button
+            type="button"
+            onClick={!isCreatingContract ? onClose : undefined}
+            disabled={isCreatingContract}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Close"
+          >
+            <X size={20} />
+          </button>
         </div>
         <form onSubmit={handleSubmit(handleSubmit2)} className="p-6 space-y-6">
           <div>

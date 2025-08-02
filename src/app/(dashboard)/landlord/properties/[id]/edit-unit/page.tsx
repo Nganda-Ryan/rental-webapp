@@ -197,9 +197,9 @@ const Page = () => {
   };
 
 
-  if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
-      return <div>Unauthorized</div>;
-  }
+  // if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
+  //     return router.push("/unauthorized");
+  // }
 
 
   return (

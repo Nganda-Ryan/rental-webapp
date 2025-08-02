@@ -23,7 +23,6 @@ import { SkeletonTable } from '@/components/skeleton/SkeletonTable'
 import { formatDateToText } from '@/lib/utils'
 import Button from '@/components/ui/Button'
 import { MANAGER_PROFILE_LIST } from '@/constant'
-import { useAuth } from '@/context/AuthContext'
 import { roleStore } from '@/store/roleStore'
 
 interface VerificationRequest {
@@ -230,7 +229,7 @@ const LessorVerification = () => {
 
   
   if (!isAuthorized(MANAGER_PROFILE_LIST)) {
-    return <div>Unauthorized</div>;
+    return router.push("/unauthorized");
   }
   
   return (

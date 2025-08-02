@@ -28,7 +28,6 @@ import { useRouter } from '@bprogress/next/app';
 import { formatDateToText } from '@/lib/utils';
 import { ActionConfirmationModal } from '@/components/Modal/ActionConfirmationModal';
 import Nodata from '@/components/error/Nodata';
-import { useAuth } from "@/context/AuthContext";
 import { PROFILE_LANDLORD_LIST } from "@/constant";
 import SectionWrapper from '@/components/Cards/SectionWrapper';
 import { roleStore } from '@/store/roleStore';
@@ -413,9 +412,9 @@ const ContractDetail = () => {
     }
 
 
-    if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
-        return <div>Unauthorized</div>;
-    }
+    // if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
+    //     return router.push("/unauthorized");
+    // }
     return (
         <DefaultLayout>
             <Breadcrumb previousPage pageName="Unit Contract" />

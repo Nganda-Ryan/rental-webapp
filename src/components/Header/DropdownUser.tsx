@@ -5,10 +5,7 @@ import Link from "next/link"
 import Image from "next/image";
 import ClickOutside from "@/components/ClickOutside";
 import { Settings, Home, Building, Briefcase, Headset } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useUser } from "@/hooks/useUser";
 import SidebarItemSkeleton from "../skeleton/SidebarItemSkeleton";
-import { useAuth } from "@/context/AuthContext";
 import { logout } from "@/actions/authAction";
 import { roleStore } from "@/store/roleStore";
 import { useRouter } from "@bprogress/next/app";
@@ -53,10 +50,8 @@ const DropdownUser = () => {
   const [profileMenu, setProfileMenu] = useState<ProfileMenu[]>([]);
 
   const router = useRouter();
-  const { activeRole, user} = roleStore();
-
+  const { activeRole, user, resetAuth} = roleStore();
   useEffect(() => {
-    console.log('Dropdown activeRole changed', activeRole)
     if (user?.roles && user?.roles.length > 0) {
       const filteredMenu = ALL_PROFILE_MENU.filter(menu =>
         menu.profileName.some(name => user?.roles.includes(name))
@@ -69,8 +64,7 @@ const DropdownUser = () => {
   }, [activeRole]);
 
   const handleSetActiveProfile = (
-    route: string,
-    profileName: string[]
+    route: string
   ) => {
     if(activeRole)
       router.push(route);
@@ -79,9 +73,9 @@ const DropdownUser = () => {
   };
 
   const handleLogOut = async () => {
-    localStorage.removeItem("role-store");
-    localStorage.removeItem("selectedMenu");
     await logout();
+    resetAuth();
+    // router.push("/signin");
   };
 
   return (
@@ -144,8 +138,8 @@ const DropdownUser = () => {
                   }`}
                 >
                   <span
-                    onClick={(e) => handleSetActiveProfile(item.route, item.profileName)}
-                    className={`flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base ${
+                    onClick={(e) => handleSetActiveProfile(item.route)}
+                    className={`flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base cursor-pointer ${
                       activeRole === item.profileName[0] ? 'text-primary font-semibold' : ''
                     }`}
                   >

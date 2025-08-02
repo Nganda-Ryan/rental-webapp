@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ProfileDetail } from '@/types/authTypes';
+import { redirect } from 'next/navigation';
 
 interface RoleState {
   activeRole: string;
@@ -21,7 +22,10 @@ export const roleStore = create<RoleState>()(
       setActiveRole: (value) => set({ activeRole: value }),
       setUser: (value) => set({ user: value }),
 
-      resetAuth: () => set({activeRole: '', user: undefined,}),
+      resetAuth: () => {
+        set({ activeRole: '', user: undefined });
+        localStorage.removeItem('role-store');redirect("/signin")
+      },
 
       isAuthorized: (requiredRoles: string[]) => {
         const user = get().user;

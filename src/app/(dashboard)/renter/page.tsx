@@ -158,9 +158,9 @@ const TenantDashboard = () => {
 
     if (!isClient) return null;
 
-    if (!isAuthorized(PROFILE_RENTER_LIST)) {
-        router.push("/not-authorized"); // ou page de fallback
-    }
+    // if (!isAuthorized(PROFILE_RENTER_LIST)) {
+    //     router.push("/unauthorized"); // ou page de fallback
+    // }
 
   return (
     <DefaultLayout>

@@ -24,7 +24,6 @@ import {
 } from 'recharts'
 import DefaultLayout from '@/components/Layouts/DefaultLayout'
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
-import { useAuth } from '@/context/AuthContext'
 import { MANAGER_PROFILE_LIST } from '@/constant'
 import { useRouter } from '@bprogress/next/app'
 import { roleStore } from '@/store/roleStore'
@@ -156,12 +155,9 @@ const SystemOverview = () => {
 
   useEffect(() => {
     if (!isAuthorized(MANAGER_PROFILE_LIST)) {
-      router.push("/not-authorized"); // ou page de fallback
+      router.push("/unauthorized");
     }
   }, []);
-  // if (!loadingProfile && !isAuthorized(MANAGER_PROFILE_LIST)) {
-  //   return <div>Unauthorized</div>;
-  // }
   return (
     <DefaultLayout>
       <Breadcrumb previousPage={false} pageName="System Overview" />

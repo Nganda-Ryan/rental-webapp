@@ -70,6 +70,7 @@ export interface IUpdateAssetRequest {
 }
 
 
+
 export interface AssetFormValue {
   country: string;
   propertyName: string;

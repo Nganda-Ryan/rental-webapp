@@ -247,7 +247,7 @@ const Page = () => {
   };
 
   if (!isAuthorized(MANAGER_PROFILE_LIST)) {
-    return <div>Unauthorized</div>;
+    return router.push("/unauthorized");
   }
   return (
     <DefaultLayout>

@@ -1,8 +1,12 @@
 "use client";
-import React, { useState, ReactNode, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { useAuth } from "@/context/AuthContext";
+import { locationConfigs } from "@/actions/configsAction";
+import { useRouter } from "@bprogress/next/app";
+import toast from "react-hot-toast";
+import { useConfigStore } from "@/lib/store/configStore";
+import { roleStore } from "@/store/roleStore";
 
 export default function DefaultLayout({
   children,
@@ -10,14 +14,36 @@ export default function DefaultLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const auth = useAuth();
+  const configStore = useConfigStore();
+  const router = useRouter();
+  const { activeRole } = roleStore();
+  useEffect(() => {
+    init();
+  }, []);
+
+  const init = async () => {
+    try {
+      const result = await locationConfigs();
+      if(result.data){
+        configStore.setConfig(result.data);
+      } else if (result.error) {
+        if (result.code === 'SESSION_EXPIRED') {
+          router.push('/signin');
+          return;
+        }
+        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des adresses :', error)
+    }
+  }
   return (
     <>
       {/* <AuthProvider> */}
         {/* <!-- ===== Page Wrapper Start ===== --> */}
         <div className="flex">
           {/* <!-- ===== Sidebar Start ===== --> */}
-          <Sidebar key={auth.activeProfile} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <Sidebar key={activeRole} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           {/* <!-- ===== Sidebar End ===== --> */}
 
           {/* <!-- ===== Content Area Start ===== --> */}

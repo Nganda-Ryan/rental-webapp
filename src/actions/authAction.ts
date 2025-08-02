@@ -1,16 +1,14 @@
 "use server";
 
 
-import { createSession, decrypt, deleteSession, verifySession } from "@/lib/session";
+import { createSession, deleteSession, verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { signIn, signUp } from "@/lib/auth";
 import { loginSchema, signUpSchema } from "@/lib/validations";
 import { CreateUserType } from "@/types/user";
-import axios, { isAxiosError } from "axios";
-import { FirebaseError } from "firebase/app";
+import axios from "axios";
 import { getCloudflareUser } from "@/database/userService";
 import { ProfileDetail, SessionPayload } from "@/types/authTypes";
-import { cookies } from 'next/headers'
 import { PROFILE_LIST } from "@/constant";
 
 
@@ -220,6 +218,7 @@ export async function getProfile(){
     );
     const _data: ProfileDetail = session;
     _data.roles = sortedRoles;
+    console.log('-->_data', _data)
     return {
       data: _data,
       error: null,
@@ -246,7 +245,7 @@ export async function getProfile(){
 
 export async function logout() {
   await deleteSession();
-  redirect("/signin");
+  // redirect("/signin");
 }
 
 

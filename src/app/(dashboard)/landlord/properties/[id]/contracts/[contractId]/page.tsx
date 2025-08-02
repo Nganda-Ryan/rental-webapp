@@ -28,7 +28,6 @@ import { useRouter } from '@bprogress/next/app';
 import { formatDateToText, formatNumberWithSpaces } from '@/lib/utils';
 import { ActionConfirmationModal } from '@/components/Modal/ActionConfirmationModal';
 import Nodata from '@/components/error/Nodata';
-import { useAuth } from "@/context/AuthContext";
 import { PROFILE_LANDLORD_LIST } from "@/constant";
 import SectionWrapper from '@/components/Cards/SectionWrapper';
 import { roleStore } from '@/store/roleStore';
@@ -223,7 +222,7 @@ const ContractDetail = () => {
                                 bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300 
                                 dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800 dark:active:bg-blue-700"
                     >
-                    {contract?.status && contract.status == "INACTIVE" ? "Details" : "Update"}
+                    {invoice?.status && invoice.status.toLowerCase() == "paid" ? "Details" : "Update"}
                 </button>
 
             ),
@@ -410,9 +409,9 @@ const ContractDetail = () => {
     }
 
 
-    if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
-        return <div>Unauthorized</div>;
-    }
+    // if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
+    //     return router.push("/unauthorized");
+    // }
     return (
         <DefaultLayout>
             <Breadcrumb previousPage pageName="Locatif" />

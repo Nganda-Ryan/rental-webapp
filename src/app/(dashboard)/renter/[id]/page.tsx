@@ -249,9 +249,9 @@ const ContractDetail = () => {
     
 
 
-    if (!isAuthorized(PROFILE_RENTER_LIST)) {
-        return <div>Unauthorized</div>;
-    }
+    // if (!isAuthorized(PROFILE_RENTER_LIST)) {
+    //     return router.push("/unauthorized");
+    // }
     return (
         <DefaultLayout>
             <Breadcrumb previousPage pageName="Locatif" />

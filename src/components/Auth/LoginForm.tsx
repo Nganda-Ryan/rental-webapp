@@ -40,7 +40,6 @@ export const LoginForm = () => {
     try {
       const formData = new FormData(e.currentTarget);
       const result = await login(formData);
-      console.log('result', result);
       if (result?.error) {
         if (result.code == "validation") {
           if (isValidationError(result.error)) {
@@ -132,6 +131,7 @@ export const LoginForm = () => {
                 name="password"
                 type={showPassword ? "text" : "password"}
                 required
+                autoComplete='current-password'
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent"
                 placeholder="Enter your password"
               />

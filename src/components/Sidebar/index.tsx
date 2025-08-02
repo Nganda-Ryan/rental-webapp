@@ -16,11 +16,11 @@ import {
   UserCog,
   Users,
 } from "lucide-react";
-import SidebarItemSkeleton from "../skeleton/SidebarItemSkeleton";
 import { usePathname } from "next/navigation";
 import logoImage from "../../../public/images/logo.svg";
 import { roleStore } from "@/store/roleStore";
 import { PROFILE_RENTER_LIST } from "@/constant";
+import { useRouter } from "@bprogress/next/app";
 
 type MenuItem = {
   icon: React.ReactNode;
@@ -104,17 +104,14 @@ interface SidebarProps {
 const Sidebar = memo(function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const [pageName, setPageName] = useLocalStorage("selectedMenu", "dashboard");
   const [menuGroups, setMenuGroups] = useState<MenuGroup[]>([]);
-    const { isAuthorized } = roleStore();
-  const [filtering, setFiltering] = useState(false);
-  
+  const { isAuthorized } = roleStore();
+  const router = useRouter();
   const { activeRole } = roleStore();
   const pathname = usePathname();
 
   const menuListRef = useRef(null);
   
   useEffect(() => {
-    setFiltering(true);
-    console.log('Sidebar activeRole Changed', activeRole)
     const filtered = ALL_MENU_GROUPS.map((group) => {
       const menuItems = group.menuItems.filter((item) =>
         item.profiles.includes(activeRole)
@@ -126,7 +123,6 @@ const Sidebar = memo(function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarPr
     }).filter((group) => group.menuItems.length > 0);
 
     setMenuGroups(filtered);
-    setFiltering(false);
   }, [activeRole]);
 
   const isActive = (item: MenuItem) => {
@@ -148,8 +144,14 @@ const Sidebar = memo(function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarPr
     return false;
   };
 
+  useEffect(() => {
+    if (!isAuthorized(PROFILE_RENTER_LIST)) {
+      router.push("/unauthorized");
+    }
+  }, [isAuthorized, router]);
+
   if (!isAuthorized(PROFILE_RENTER_LIST)) {
-    return <div>Unauthorized</div>;
+    return null;
   }
 
   return (

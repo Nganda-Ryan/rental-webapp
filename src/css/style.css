@@ -277,3 +277,17 @@ input[type="search"]::-webkit-search-cancel-button {
     background-position: center;
     height: 100vh;
 }
+
+
+@keyframes blinkDots {
+  0% { content: "."; }
+  33% { content: ".."; }
+  66% { content: "..."; }
+  100% { content: "."; }
+}
+
+.dots::after {
+  display: inline-block;
+  content: ".";
+  animation: blinkDots 1s steps(3, end) infinite;
+}

@@ -10,18 +10,13 @@ import { AVAILABLE_FILE_EXTENSION } from "@/constant";
 interface VerificationFormProps {
   onClose: () => void;
   onSubmit: (data: IPropertyVerificationDoc[], note: string ) => void;
-  propertyId: string;
-  propertyTitle: string;
 }
 
 export const VerificationForm = ({
   onClose,
   onSubmit,
-  propertyId,
-  propertyTitle
 }: VerificationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [documents, setDocuments] = useState<File[]>([]);
   const {
     handleSubmit,
     register,
@@ -82,10 +77,8 @@ export const VerificationForm = ({
 
 
     } catch (error) {
-      
-    } finally {
-      setIsSubmitting(false);
-    }
+      console.log('VerificationForm.handleFormSubmit.error', error)
+    } 
   }
 
   const validateAtLeastOneFile = () => {
@@ -101,12 +94,18 @@ export const VerificationForm = ({
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Property Verification</h2>
           <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            onClick={!isSubmitting ? onClose : undefined}
+            disabled={isSubmitting}
+            className={`p-2 rounded-lg transition-colors ${
+              isSubmitting
+                ? 'cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-400'
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400'
+            }`}
             aria-label="Close"
           >
-            <X size={20} className="text-gray-500 dark:text-gray-400" />
+            <X size={20} />
           </button>
+
         </div>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="p-4 sm:p-6 space-y-6">
           
@@ -238,16 +237,16 @@ export const VerificationForm = ({
           
           {/* Form Actions */}
           <div className="flex flex-col sm:flex-row items-center justify-end gap-3 sm:gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <button
-              type="button"
+            <Button
+              variant="outline-neutral"
+              disable={isSubmitting}
               onClick={onClose}
-              className="w-full sm:w-auto px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              disabled={isSubmitting}
+              fullWidth={false}
             >
               Cancel
-            </button>
+            </Button>
             <Button variant='info' disable={isSubmitting} isSubmitBtn fullWidth={false}>
-              {isSubmitting ? "Submitting..." : "Submit Verification"}
+              {isSubmitting ? "Submitting ..." : "Submit Verification"}
             </Button>
           </div>
         </form>
