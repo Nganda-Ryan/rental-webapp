@@ -57,8 +57,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
           <Image
             src={CoverUrl}
             alt={Title}
-            width={800}
-            height={600}
+            width={600}
+            height={400}
             className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
               isImageLoading ? 'opacity-0' : 'opacity-100'
             }`}
