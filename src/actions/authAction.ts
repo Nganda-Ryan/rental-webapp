@@ -218,7 +218,6 @@ export async function getProfile(){
     );
     const _data: ProfileDetail = session;
     _data.roles = sortedRoles;
-    console.log('-->_data', _data)
     return {
       data: _data,
       error: null,

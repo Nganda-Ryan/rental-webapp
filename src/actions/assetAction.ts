@@ -1,7 +1,7 @@
 "use server";
 
 import axios, { AxiosInstance } from "axios";
-import { CreatePropertyType, IAssetApplication, IContractForm, IDashBoardParams, IInvoice, IPropertyVerification, IUpdateAssetRequest, IUpdateInvoiceParam, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
+import { CreatePropertyType, IAssetApplication, IContractForm, IDashBoardParams, IInvoice, IPropertyApplication, IPropertyVerification, IUpdateAssetRequest, IUpdateInvoiceParam, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
 import { verifySession } from "@/lib/session";
 import { getExtension } from "@/lib/utils";
 import { uploadFile } from "@/lib/fileUpload";
@@ -557,32 +557,16 @@ export async function dashboard (params: IDashBoardParams) {
   }
 }
 
-export async function applyHouse (param: IAssetApplication ) {
+export async function applyHouse (param: IPropertyApplication ) {
   try {
     const session = await verifySession();
     
     const token = session.accessToken;
 
-    const response = await axios.post(`${process.env.ASSET_WORKER_ENDPOINT}/api/v1/Asset`, {
+    const response = await axios.post(`${process.env.ASSET_WORKER_ENDPOINT}/api/v1/Asset/Apply`, {
       Request: {
-        "profilCode": param.profilCode,
-        "assetCode": param.assetCode,
-        "title": param.title,
-        "body": [
-            {
-                "Code": "DUAL",
-                "isSelected": 1
-            },
-            {
-                "Code": "RENTALSCORE",
-                "isSelected": 1
-            },
-            {
-                "Code": "HISTORY",
-                "isSelected": 1
-            }
-        ],
-        "notes": `Application ${param.title}  of ${param.username}`
+        ...param,
+        typeCode: ""
       }
     },{
       headers: {
@@ -595,7 +579,7 @@ export async function applyHouse (param: IAssetApplication ) {
     return {
       code: 200,
       error: null,
-      asset: response.data
+      data: response.data
     }
   } catch (error: any) {
     console.log('-->createAsset.error', error)
@@ -610,7 +594,7 @@ export async function applyHouse (param: IAssetApplication ) {
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
-      asset: null
+      data: null
     }
   }
 }

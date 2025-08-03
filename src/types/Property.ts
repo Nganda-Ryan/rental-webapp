@@ -363,3 +363,16 @@ export interface ILoan {
   "AssetTypeCode": string,
   "CoverUrl": string
 }
+
+export interface IPropertyApplication {
+  "profilCode": string,
+  "assetCode": string,
+  "title": string,
+  "body": ApplicationSelectableItem [],
+  "notes": string
+}
+
+export interface ApplicationSelectableItem {
+  Code: string;
+  isSelect: number;
+}

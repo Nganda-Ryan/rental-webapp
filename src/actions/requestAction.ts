@@ -4,7 +4,7 @@
 import { uploadFile } from '@/lib/fileUpload';
 import { verifySession } from '@/lib/session';
 import { getExtension } from '@/lib/utils';
-import { IPropertyVerification } from '@/types/Property';
+import { IPropertyApplication, IPropertyVerification } from '@/types/Property';
 import { GetRequestsParams, ProfileApplication_T, VerifyRequestType } from '@/types/requestTypes';
 import axios, { AxiosInstance } from 'axios';
 import path from "node:path";
@@ -283,5 +283,47 @@ export async function requestPropertyVerification(application: IPropertyVerifica
       error: error.response?.data?.message ?? "An unexpected error occurred",
       data: null,
     };
+  }
+}
+
+export async function applyRequest(application: IPropertyApplication) {
+  try {
+    const session = await verifySession();
+    const apiClient: AxiosInstance = axios.create({
+        baseURL: process.env.VERIFY_SEARCH_WORKER_ENDPOINT,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.accessToken}`,
+        },
+    });
+    const response = await apiClient.request({
+      method: 'POST',
+      url: `/api/v1/Asset/Apply`,
+      data: {
+        Request: application
+      }
+    });
+
+    return {
+      code: null,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->Action.ApplyRequest.error', error?.response?.data)
+    
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
   }
 }
