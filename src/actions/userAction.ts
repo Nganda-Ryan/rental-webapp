@@ -5,6 +5,7 @@ import { verifySession } from "@/lib/session";
 import { ICreateUserParam, SeachUserParams } from "@/types/user";
 import { signIn, signUp } from "@/lib/auth";
 import { getCloudflareUser } from "@/database/userService";
+import { IPlanSubscription } from "@/types/PaymentTypes";
 
 
 export async function searchUser(params: SeachUserParams) {
@@ -113,4 +114,62 @@ export async function createUser(payload: ICreateUserParam){
     }
   }
 }
+
+export async function generatePaymentLink(planInfo: IPlanSubscription) {
+  try {
+    const session = await verifySession();
+    const token = session.accessToken;
+    
+    const { price } = planInfo;
+
+    // Validation manuelle
+    if (!price || price <= 0) {
+      return {
+        code: 'invalid-amount',
+        error: "Invalid amount",
+        data: null
+      };
+    }
+
+  
+    
+    const response = await axios.post(`${process.env.TRANSACTION_ENDPOINT}/Plan/Subscription`, {
+      Subcription: {
+        ...planInfo,
+        userId: session.userId
+      }
+    },{
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return {
+      error: null,
+      data: response.data,
+      code: "success",
+    }
+    
+    
+  } catch (error: any) {
+    
+    console.log('-->userAction.createUser.error', error)
+    
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
 

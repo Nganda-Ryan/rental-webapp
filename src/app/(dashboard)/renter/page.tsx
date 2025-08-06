@@ -9,15 +9,14 @@ import { requestLessorProfile } from '@/actions/requestAction'
 import toast from 'react-hot-toast';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal'
 import { useRouter } from '@bprogress/next/app'
-import { IContract, IDashBoardParams, ILoan } from '@/types/Property'
+import { IDashBoardParams, ILoan } from '@/types/Property'
 import { dashboard } from '@/actions/assetAction'
-import { PROFILE_RENTER_LIST } from '@/constant'
-import Link from 'next/link'
 import { LessorRequestForm } from '@/components/feature/tenants/LessorRequestForm'
 import { roleStore } from '@/store/roleStore'
 import TenantAssetCard from '@/components/Cards/TenantAssetCard'
 import Nodata from '@/components/error/Nodata'
 import PropertySkeletonCard from '@/components/skeleton/PropertySkeletonCard'
+import PaymentLinkButton from '@/components/PaymentLinkButton'
 
 const TenantDashboard = () => {
     const [showLessorRequestForm, setShowLessorRequestForm] = useState(false);
@@ -155,6 +154,18 @@ const TenantDashboard = () => {
         }
         }
     }
+    // Gestionnaires d'événements
+    const handlePaymentSuccess = (orderId: string) => {
+        console.log('Paiement initié avec succès:', orderId);
+        // Ici vous pouvez ajouter de la logique supplémentaire
+        // comme envoyer des analytics, logs, etc.
+    };
+
+    const handlePaymentError = (error: string) => {
+        console.error('Erreur de paiement:', error);
+        // Ici vous pouvez afficher une notification d'erreur
+        // ou rediriger vers une page d'erreur
+    };
 
     if (!isClient) return null;
 
@@ -166,6 +177,47 @@ const TenantDashboard = () => {
     <DefaultLayout>
         <Breadcrumb pageName='Dashboard' previousPage={false}/>
         <div className="w-full">
+            <div className="container mx-auto px-4 py-8">
+                <h1 className="text-3xl font-bold mb-8">Exemple d&apos;utilisation PayPal</h1>
+                
+                {/* Exemple 1: Bouton simple */}
+                <div className="mb-8 p-6 border rounded-lg">
+                    <h2 className="text-xl font-semibold mb-4">Bouton simple</h2>
+                    <PaymentLinkButton 
+                    amount="29.99"
+                    description="Produit exemple - 29.99€"
+                    />
+                </div>
+
+                {/* Exemple 2: Avec gestionnaires d'événements */}
+                <div className="mb-8 p-6 border rounded-lg">
+                    <h2 className="text-xl font-semibold mb-4">Avec gestionnaires d&apos;événements</h2>
+                    <PaymentLinkButton 
+                    amount="49.99"
+                    description="Produit premium"
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    />
+                </div>
+
+                {/* Exemple 3: Différentes devises */}
+                <div className="mb-8 p-6 border rounded-lg">
+                    <h2 className="text-xl font-semibold mb-4">Différentes devises</h2>
+                    <div className="space-y-4">
+                    <PaymentLinkButton 
+                        amount="99.99"
+                        currency="EUR"
+                        description="Produit en Euros"
+                    />
+                    <PaymentLinkButton 
+                        amount="119.99"
+                        currency="USD"
+                        description="Produit en Dollars"
+                    />
+                    </div>
+                </div>
+            </div>
             {
                 user?.roles && !user.roles.includes("LANDLORD")
                 

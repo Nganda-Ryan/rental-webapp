@@ -1,0 +1,15 @@
+{
+  "Renter": {
+    "Dashboard": {
+        "title": "Dashboard",
+        "currentRental": "Current rentals",
+        "pendingApplication": "Pending applications"
+    }
+  },
+  "Landlord": {
+    "title": "Hello world!"
+  },
+  "Support": {
+    "title": "Hello world!"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "Renter": {
+    "Dashboard": {
+        "title": "Tableau de bord",
+        "currentRental": "Locations en cours",
+        "pendingApplication": "Demandes en attente"
+    }
+  },
+  "Landlord": {
+    "title": "Hello world!"
+  },
+  "Support": {
+    "title": "Hello world!"
+  }
+}
