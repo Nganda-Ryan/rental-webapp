@@ -21,6 +21,13 @@ export interface ICreateUserParam {
     "addressData": AddressDataType
 }
 
+export interface IUpdateUser {
+  "userId": string,
+  "lastname": string,
+  "firstname": string,
+  "phone": string,
+  "avatarUrl": string,
+}
 
 export type AddressDataType = {
     "street": string;
@@ -136,3 +143,75 @@ export interface IProfileDetails {
   UserCode: string
 }
 export type UserStatus = 'ACTIVE' | 'PENDING' | 'INACTIVE' | 'ALL'
+
+
+
+
+export interface IUserData {
+  Code: string;
+  AddressCode: string;
+  Email: string;
+  Firstname: string;
+  Gender: "MALE" | "FEMALE" | string;
+  Lastname: string;
+  NIU: string;
+  OtherEmail: string | null;
+  OtherPhone: string | null;
+  Phone: string;
+  Status: string;
+  AvatarUrl: string;
+  Profiles: IUserProfile[];
+  Address: IUserAddress;
+  Subscriptions: ISubscription[];
+}
+
+export interface IUserProfile {
+  Code: string;
+  Status: string;
+  RoleCode: "RENTER" | "LANDLORD" | string;
+  CreatedAt: string; // format: "YYYY-MM-DD"
+  IsActive: number;
+  UserCode: string;
+}
+
+export interface IUserAddress {
+  Code: string;
+  City: string;
+  Country: string;
+  Street: string;
+  Details: string | null;
+}
+
+export interface ISubscription {
+  Code: string;
+  Quantity: string;
+  StartDate: string; // ISO date string
+  EndDate: string; // ISO date string
+  StatusCode: string;
+  Notes: string;
+  IsActive: number;
+  UserCode: string;
+  PlanCode: string;
+  Consumptions: IConsumption[];
+  Plan: IPlan;
+}
+
+export interface IConsumption {
+  Code: string;
+  Quantity: number;
+  CreatedAt: string; // "YYYY-MM-DD HH:mm:ss"
+  CompoCode: string;
+  IsActive: number;
+  Remaining: number;
+  SubCode: string;
+}
+
+export interface IPlan {
+  Code: string;
+  Title: string;
+  Price: number;
+  Currency: string;
+  CreatedAt: string; // "YYYY-MM-DD HH:mm:ss"
+  Description: string;
+  IsActive: number;
+}

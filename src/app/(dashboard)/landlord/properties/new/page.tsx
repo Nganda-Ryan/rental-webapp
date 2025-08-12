@@ -16,7 +16,7 @@ import toast from 'react-hot-toast';
 import { useRouter } from '@bprogress/next/app';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal';
 import { useConfigStore } from "@/lib/store/configStore";
-import { ICity, IState, IStreet } from "@/types/locationType";
+import { ICity, IState, IStreet } from "@/types/configType";
 import { Select } from "@/components/ui/Select";
 
 interface PropertyFormProps {

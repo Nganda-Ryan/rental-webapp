@@ -59,8 +59,9 @@ export function RoleProvider({
   }, [router, setActiveRole, setUser]); // Dependencies for useCallback
 
   useEffect(() => {
-    const browsedRole = mapUrlSegmentToRole(pathname?.split('/')[1]);
-
+    let browsedRole = mapUrlSegmentToRole(pathname?.split('/')[1]);
+    if(browsedRole == "SETTINGS") browsedRole = activeRole;
+    // console.log('--->browsedRole', browsedRole)
     if (!browsedRole || browsedRole === activeRole) {
       setLoadingProfile(false);
     } else if (user?.roles.includes(browsedRole)) {

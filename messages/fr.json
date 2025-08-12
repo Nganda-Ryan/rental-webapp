@@ -11,5 +11,13 @@
   },
   "Support": {
     "title": "Hello world!"
+  },
+  "LocaleSwitcher": {
+    "fr": "Francais",
+    "en": "Anglais",
+    "label": "Language"
+  },
+  "Settings": {
+    "language": "language"
   }
 }

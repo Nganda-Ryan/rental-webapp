@@ -2,9 +2,9 @@
 
 import axios, { AxiosInstance } from "axios";
 import { verifySession } from "@/lib/session";
-import { ICreateUserParam, SeachUserParams } from "@/types/user";
+import { ICreateUserParam, IUpdateUser, SeachUserParams } from "@/types/user";
 import { signIn, signUp } from "@/lib/auth";
-import { getCloudflareUser } from "@/database/userService";
+import { getCloudflareUser, me } from "@/database/userService";
 import { IPlanSubscription } from "@/types/PaymentTypes";
 
 
@@ -45,7 +45,6 @@ export async function searchUser(params: SeachUserParams) {
     }
   }
 }
-
 
 export async function createUser(payload: ICreateUserParam){
   try {
@@ -115,6 +114,47 @@ export async function createUser(payload: ICreateUserParam){
   }
 }
 
+export async function updateUser(payload: IUpdateUser) {
+  try {
+    const session = await verifySession();
+    const token = session.accessToken;
+
+    const response = await axios.put(
+      `${process.env.USER_WORKER_ENDPOINT}/api/v1/User`,
+      {
+        User: payload,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return {
+      error: null,
+      data: response.data,
+      code: 'success',
+    };
+  } catch (error: any) {
+    console.log('-->userAction.updateUser.error', error);
+
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? 'unknown',
+      error: error.response?.data?.message ?? 'An unexpected error occurred',
+      data: null,
+    };
+  }
+}
 export async function generatePaymentLink(planInfo: IPlanSubscription) {
   try {
     const session = await verifySession();
@@ -172,4 +212,81 @@ export async function generatePaymentLink(planInfo: IPlanSubscription) {
   }
 }
 
+export async function subscribeToPlan(planCode: string, endDate: String) {
+  try {
+    const session = await verifySession();
+    console.log('-->payload', {
+        "notes": `User ${session.Firstname} ${session.Lastname} subscribed to ${planCode}`,
+        "userId":session.userId,
+        "planCode": planCode ,
+        "endDate" : endDate
+      })
+    
+    const token = session.accessToken;
 
+    const response = await axios.post(`${process.env.USER_WORKER_ENDPOINT}/api/v1/User/Subscribe`, {
+      Subcription : {
+        "notes": `User ${session.Firstname} ${session.Lastname} subscribed to ${planCode}`,
+        "userId":session.userId,
+        "planCode": planCode ,
+        "endDate" : endDate
+      }
+    },{
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log('-->result', response);
+    
+    return {
+      code: "success",
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->subscribeToPlan.error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
+export async function describeMyself(){
+  try {
+    const session = await verifySession();
+    const meResult = await me(session.accessToken);
+    if(meResult.code == "success"){
+      return {
+        code: null,
+        error: null,
+        data: meResult.data
+      }
+    }
+    return meResult
+  } catch (error: any) {
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}

@@ -5,9 +5,9 @@ import { createSession, deleteSession, verifySession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { signIn, signUp } from "@/lib/auth";
 import { loginSchema, signUpSchema } from "@/lib/validations";
-import { CreateUserType } from "@/types/user";
+import { CreateUserType, IUserData } from "@/types/user";
 import axios from "axios";
-import { getCloudflareUser } from "@/database/userService";
+import { getCloudflareUser, me } from "@/database/userService";
 import { ProfileDetail, SessionPayload } from "@/types/authTypes";
 import { PROFILE_LIST } from "@/constant";
 
@@ -45,13 +45,14 @@ export async function login(formData: FormData) {
       };
     }
     const cfUserInfo = cfUserResult.user.body.userData;
+    // const cfUserInfo2: IUserData = cfUserResult2.data.body.userData;
     const roles = cfUserInfo.Profiles
       .filter((p: any) => p.IsActive)
       .map((p: any) => p.RoleCode);
     
     const rolePriority = ['ADMIN', 'SUPPORT', 'LANDLORD', 'RENTER'];
     const activeRole = rolePriority.find(role => roles.includes(role)) ?? roles[0];
-  
+
     const sessionInfo = {
       ...cfUserInfo,
       accessToken: firebaseResult.user.accessToken,

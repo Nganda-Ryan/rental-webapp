@@ -1,6 +1,6 @@
 "use server"
 
-import { ICity, ICountry, IState, IStreet } from "@/types/locationType"
+import { ICity, ICountry, IState, IStreet, PricingResponse } from "@/types/configType"
 import axios from "axios"
 
 export const locationConfigs= async () => {
@@ -24,6 +24,35 @@ export const locationConfigs= async () => {
                 city: city.sort((a, b) => a.name.localeCompare(b.name)),
                 street: street.sort((a, b) => a.name.localeCompare(b.name))
             },
+            error: null,
+            code: "success",
+        }
+
+    } catch (error: any) {
+        const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+        if (isRedirect) {
+        return {
+            data: null,
+            error: 'Session expired',
+            code: 'SESSION_EXPIRED',
+        };
+        }
+        return {
+        code: error.code ?? "unknown",
+        error: error.response?.data?.message ?? "An unexpected error occurred",
+        data: null
+        }
+    }
+}
+
+
+export const pricingConfigs = async () => {
+    try {
+        const pricingConf = await axios.get(process.env.PRICING_ENDPOINT!)
+
+
+        return {
+            data: pricingConf.data as PricingResponse,
             error: null,
             code: "success",
         }

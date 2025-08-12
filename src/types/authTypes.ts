@@ -1,3 +1,5 @@
+import { IUserData } from "./user";
+
 export type SignInSuccess = {
     user: {
       uid: string;

@@ -13,11 +13,9 @@ export default function Layout({
   return (
    <div>
     <RoleProvider>
-      {/* <AuthProvider> */}
         <div className={`dark:bg-boxdark-2 dark:text-bodydark min-h-screen bg-blue-sky`}>
             {children}
         </div>
-      {/* </AuthProvider> */}
     </RoleProvider>
    </div>
   );

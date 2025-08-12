@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { IConfig, ICountry, IState, ICity, IStreet } from '@/types/locationType'
+import type { IConfig, ICountry, IState, ICity, IStreet } from '@/types/configType'
 
 // 👇 Interface du store avec méthode
 interface ConfigStore {
