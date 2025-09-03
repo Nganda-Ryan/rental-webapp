@@ -517,6 +517,7 @@ export async function dashboard (params: IDashBoardParams) {
   try {
     const session = await verifySession();
     const token = session.accessToken;
+    // console.log('token', token)
 
     const apiClient: AxiosInstance = axios.create({
       baseURL: process.env.DASHBOARD_WORKER_ENDPOINT,

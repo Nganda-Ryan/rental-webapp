@@ -13,9 +13,9 @@ interface Props {
 }
 
 const defaultItems: ApplicationSelectableItem[] = [
-  { Code: "DUAL", isSelect: 1 },
+  { Code: "DUAL", isSelect: 0 },
   { Code: "RENTALSCORE", isSelect: 1 },
-  { Code: "HISTORY", isSelect: 1 },
+  { Code: "HISTORY", isSelect: 0 },
 ];
 
 export default function HousingApplicationModal({

@@ -56,18 +56,6 @@ export interface UserState {
     profiles: UserProfile[];
     authorisations: UserAuthorisation[];
     isAuthenticated: boolean;
-    
-    // Actions
-    setUser: (userData: {
-      email: string;
-      firstName: string;
-      lastName: string;
-      profiles: UserProfile[];
-      authorisations: UserAuthorisation[];
-    }) => void;
-    clearUser: () => void;
-    updateUserProfile: (profile: UserProfile) => void;
-    updateAuthorisations: (authorisations: UserAuthorisation[]) => void;
 }
 
 export interface SeachUserParams {
@@ -212,6 +200,105 @@ export interface IPlan {
   Price: number;
   Currency: string;
   CreatedAt: string; // "YYYY-MM-DD HH:mm:ss"
+  Description: string;
+  IsActive: number;
+}
+
+
+export interface ISetSecurityQuestion {
+  "questionCode": string,
+  "questionLabel": string,
+  "responseData" : string
+}
+
+export interface IGetSecurityQuestion {
+  "Id": number,
+  "UserCode": string,
+  "QuestionCode": string,
+  "QuestionLabel": string,
+  "ResponseData": string,
+  "CreatedAt": string
+}
+
+
+
+
+// -- ME --//
+export interface IMe {
+  Code: string;
+  AddressCode: string;
+  Email: string;
+  Firstname: string;
+  Gender: "MALE" | "FEMALE" | string;
+  Lastname: string;
+  NIU: string;
+  OtherEmail: string | null;
+  OtherPhone: string | null;
+  Phone: string;
+  Status: "ACTIVE" | "INACTIVE" | string;
+  AvatarUrl: string;
+  Profiles: IProfile[];
+  Address: IAddress;
+  Subscriptions: ISubscription[];
+  Consumptions: IConsumption[];
+}
+
+export interface IProfile {
+  Code: string;
+  Status: "ACTIVE" | "INACTIVE" | string;
+  RoleCode: string;
+  CreatedAt: string;
+  IsActive: number;
+  UserCode: string;
+}
+
+export interface IAddress {
+  Code: string;
+  City: string;
+  Country: string;
+  Street: string;
+  Details: string | null;
+}
+
+export interface ISubscription {
+  Code: string;
+  Quantity: string;
+  StartDate: string;
+  EndDate: string;
+  StatusCode: string;
+  Notes: string;
+  IsActive: number;
+  UserCode: string;
+  PlanCode: string;
+  Consumptions: IConsumption[]; // vide dans ton JSON, donc any[] pour l'instant
+  Plan: IPlan;
+}
+
+export interface IPlan {
+  Code: string;
+  Title: string;
+  Price: number;
+  Currency: string;
+  CreatedAt: string;
+  Description: string;
+  IsActive: number;
+}
+
+export interface IConsumption {
+  Code: string;
+  Quantity: number;
+  CreatedAt: string;
+  ItemCode: string;
+  IsActive: number;
+  Remaining: number;
+  UserCode: string;
+  item: IConsumptionItem;
+}
+
+export interface IConsumptionItem {
+  Code: string;
+  Title: string;
+  IsMesurable: number;
   Description: string;
   IsActive: number;
 }

@@ -49,3 +49,32 @@ export interface ProfileApplication_T {
   selfie: File;
   description: string;
 }
+
+interface IApplicationRenter {
+  Code: string;
+  Status: string;
+  RoleCode: string;
+  CreatedAt: string; // Si tu veux gérer en Date => Date
+  IsActive: number; // 0 ou 1
+  UserCode: string;
+  Email: string;
+  Firstname: string;
+  Gender: "MALE" | "FEMALE" | string; // On peut restreindre si on connaît toutes les valeurs
+  Lastname: string;
+  NIU: string;
+  Phone: string;
+  AvatarUrl: string;
+}
+
+export interface IApplication {
+  Code: string;
+  TypeCode: string;
+  CreatedAt: string; // ou Date si tu souhaites convertir
+  SubmittedDate: string;
+  ClosedDate: string | null;
+  IsClosed: number;
+  StatusCode: string;
+  Description: string;
+  LevelCode: string;
+  renter: IApplicationRenter;
+}

@@ -67,6 +67,8 @@ export async function getRequests(params: GetRequestsParams = {}): Promise<any> 
 export async function geRequestDetail(requestId: string): Promise<any> {
   try {
     const session = await verifySession();
+    // console.log('-->token', session.accessToken);
+    
     const apiClient: AxiosInstance = axios.create({
         baseURL: process.env.REQUEST_DETAIL_WORKER_ENDPOINT,
         headers: {

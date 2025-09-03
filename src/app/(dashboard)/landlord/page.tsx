@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import {
+  Building2,
+  Coins,
+  FileText,
   Home,
 } from "lucide-react";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
@@ -17,6 +20,8 @@ import { capitalize, formatNumberWithSpaces } from "@/lib/utils";
 import { StatusDot } from "@/components/StatusDot";
 import Overlay from "@/components/Overlay";
 import { ProcessingModal } from "@/components/Modal/ProcessingModal";
+import RentalRequestCard from "@/components/Cards/RentalRequestCard";
+import { v4 as uuidv4 } from "uuid";
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
@@ -110,7 +115,10 @@ export default function Dashboard() {
           <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 mb-1">Total Revenue</p>
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-500 dark:text-white">
+                  <Coins size={20} />
+                  Total Revenue
+                </h2>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {
                     dashboardData && formatNumberWithSpaces(dashboardData.RentPaymentsStatus.reduce((acc, curr) => acc + curr.Amount, 0))
@@ -127,9 +135,10 @@ export default function Dashboard() {
           <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 mb-1">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-500 dark:text-white">
+                  <Building2 size={20} />
                   Properties
-                </p>
+                </h2>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {dashboardData && dashboardData.Counts.properties} {" "}
                   <span className="italic text-gray-600 dark:text-gray-400 font-medium text-xl">
@@ -143,6 +152,41 @@ export default function Dashboard() {
             </div>
           </div>
 
+
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-500 dark:text-white">
+              <FileText size={20} />
+              Appearance & Preferences
+            </h2>
+            <div className="flex flex-col gap-3">
+              {dashboardData?.allApplications.map(item => (
+                <RentalRequestCard data={item} key={item.Code} />
+              ))}
+              {dashboardData?.allApplications.map(item => (
+                <RentalRequestCard data={item} key={item.Code} />
+              ))}
+              {dashboardData?.allApplications.map(item => (
+                <RentalRequestCard data={item} key={item.Code} />
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 dark:text-gray-400 mb-1">Total Revenue</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {
+                    dashboardData && formatNumberWithSpaces(dashboardData.RentPaymentsStatus.reduce((acc, curr) => acc + curr.Amount, 0))
+                  } 
+                  {/* {dashboardData?.RentPaymentsStatus[0].Currency} */}
+                </p>
+              </div>
+              <div className="bg-[#48BB78] p-3 rounded-full">
+                {/* {dashboardData?.RentPaymentsStatus[0].Currency && getCurrencyIcon(dashboardData?.RentPaymentsStatus[0].Currency, 24, "text-white")} */}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -2,14 +2,16 @@
 
 
 import { createSession, deleteSession, verifySession } from "@/lib/session";
-import { redirect } from "next/navigation";
+import { getAuth as getAdminAuth } from "firebase-admin/auth";
 import { signIn, signUp } from "@/lib/auth";
 import { loginSchema, signUpSchema } from "@/lib/validations";
-import { CreateUserType, IUserData } from "@/types/user";
-import axios from "axios";
+import { CreateUserType, ISetSecurityQuestion, IUserData } from "@/types/user";
+import axios, { AxiosInstance } from "axios";
 import { getCloudflareUser, me } from "@/database/userService";
 import { ProfileDetail, SessionPayload } from "@/types/authTypes";
 import { PROFILE_LIST } from "@/constant";
+import { auth } from "@/lib/firebase";
+import { adminAuth } from "@/lib/firebaseAdmin";
 
 
 
@@ -248,7 +250,177 @@ export async function logout() {
   // redirect("/signin");
 }
 
+export async function changePassword(currentPassword: string, newPassword: string) {
+  try {
+    // Vérifier la session et récupérer le token
+    const session = await verifySession();
+    const token = session.accessToken;
 
+    // Vérifier le token pour obtenir le uid
+    const decodedToken = await getAdminAuth().verifyIdToken(token);
+    const uid = decodedToken.uid;
+
+    // Mettre à jour le mot de passe côté serveur
+    await getAdminAuth().updateUser(uid, { password: newPassword });
+
+    return {
+      data: "success",
+      error: null,
+      code: null,
+    };
+  } catch (error: any) {
+    console.error("-->error", error);
+
+    const isRedirect = error.digest?.startsWith("NEXT_REDIRECT");
+    if (isRedirect) {
+      return {
+        data: null,
+        error: "Session expired",
+        code: "SESSION_EXPIRED",
+      };
+    }
+
+    let message = "An unexpected error occurred";
+    switch (error.code) {
+      case "auth/requires-recent-login":
+        message = "Please log in again to change your password.";
+        break;
+      case "auth/weak-password":
+        message = "The new password is too weak. Minimum 6 characters required.";
+        break;
+      case "auth/wrong-password":
+        message = "The current password is incorrect.";
+        break;
+      default:
+        message = "Failed to change password. Please try again.";
+    }
+
+    return {
+      code: error.code ?? "unknown",
+      error: error.message ?? message,
+      data: null,
+    };
+  }
+}
+
+export async function changeEmail(newEmail: string) {
+  try {
+    const session = await verifySession();
+    const decodedToken = await adminAuth.verifyIdToken(session.accessToken);
+
+    await adminAuth.updateUser(decodedToken.uid, {
+      email: newEmail,
+    });
+
+    return {
+      data: "success",
+      error: null,
+      code: null,
+    };
+  } catch (error: any) {
+    console.error("-->error", error);
+
+    let message = "An unexpected error occurred";
+    switch (error.code) {
+      case "auth/email-already-in-use":
+        message = "This email is already in use.";
+        break;
+      case "auth/invalid-email":
+        message = "The provided email is invalid.";
+        break;
+      default:
+        message = "Failed to change email. Please try again.";
+    }
+
+    return {
+      code: error.code ?? "unknown",
+      error: error.message ?? message,
+      data: null,
+    };
+  }
+}
+
+export async function getSecurityQuestion () {
+  try {
+    const session = await verifySession();
+    const token = session.accessToken;
+    // console.log('token', token)
+
+    const apiClient: AxiosInstance = axios.create({
+      baseURL: process.env.USER_WORKER_ENDPOINT,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    const response = await apiClient.request({
+      method: 'GET',
+      url: '/api/v1/User/Security'
+    });
+
+    
+    return {
+      code: 'success',
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->error', error.response)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
+export async function setSecurityQuestion (param: ISetSecurityQuestion) {
+  try {
+    const session = await verifySession();
+    const token = session.accessToken;
+    
+    const response = await axios.post(`${process.env.USER_WORKER_ENDPOINT}/api/v1/User/Security`, {
+      Request : {
+        ...param
+      }
+    },{
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return {
+      code: 'success',
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->inviteManager.error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+
+}
 /*
   SESSION TEMPLATE
   {

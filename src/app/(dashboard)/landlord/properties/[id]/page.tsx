@@ -865,9 +865,6 @@ const PropertyDetail = () => {
         }, {} as Record<string, boolean>);
     }
 
-    // if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
-    //     return router.push("/unauthorized");
-    // }
 
     return (
         <DefaultLayout>

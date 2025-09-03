@@ -3,6 +3,9 @@ import { pricingConfigs } from "@/actions/configsAction";
 import { describeMyself, generatePaymentLink, subscribeToPlan, updateUser } from "@/actions/userAction";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import PricingCard from "@/components/Cards/PricingCard";
+import LegalInformationSection from "@/components/feature/settings/LegalInformationSection";
+import PlanConsumption from "@/components/feature/settings/PlanConsumption";
+import SecuritySection from "@/components/feature/settings/SecuritySection";
 import LanguageSelector from "@/components/LanguageSelector";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { ProcessingModal } from "@/components/Modal/ProcessingModal";
@@ -15,6 +18,7 @@ import { roleStore } from "@/store/roleStore";
 import { ProfileDetail } from "@/types/authTypes";
 import { PricingResponse } from "@/types/configType";
 import { IPlanSubscription } from "@/types/PaymentTypes";
+import { IMe } from "@/types/user";
 import { useRouter } from "@bprogress/next/app";
 import {
   Moon,
@@ -30,6 +34,8 @@ import {
   ChevronUp,
   ChevronDown,
   Check,
+  Cross,
+  X,
 } from 'lucide-react'
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -40,6 +46,7 @@ const Settings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingPrincingInfo, setIsLoadingPrincingInfo] = useState(false);
   const [princingInfo, setPricingInfo] = useState<PricingResponse | null>(null);
+  const [me, setMe] = useState<IMe | null>(null);
   const configStore = useConfigStore();
 
   const [loadingMessage, setLoadingMessage] = useState('Updating profile...');
@@ -50,27 +57,51 @@ const Settings = () => {
   const router = useRouter();
 
   useEffect(() => {
-    getPricingInfo();
+    init();
   }, [])
 
-  const getPricingInfo = async () => {
-    setIsLoadingPrincingInfo(true)
-    const result = await pricingConfigs();
-    const meResult = await describeMyself();
-    console.log('-->meResult', meResult);
-    console.log('-->result', result);
-    if(result.error) {
-      if(result.code == 'SESSION_EXPIRED'){
-        router.push('/signin');
-        return;
+  const init = async () => {
+    try {
+      setIsLoadingPrincingInfo(true);
+
+      // Exécuter les deux promesses en parallèle
+      const [result, meResult] = await Promise.all([
+        pricingConfigs(),
+        describeMyself()
+      ]);
+
+      console.log('-->meResult', meResult);
+      console.log('-->result', result);
+
+      // Gestion des erreurs pour result
+      if (result.error) {
+        if (result.code === 'SESSION_EXPIRED') {
+          router.push('/signin');
+          return;
+        }
+        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+      } else {
+        setPricingInfo(result.data);
       }
-      setIsLoadingPrincingInfo(false);
-      toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
-    } else {
-      setPricingInfo(result.data)
+
+      // Gestion des erreurs pour meResult
+      if (meResult.error) {
+        if (meResult.code === 'SESSION_EXPIRED') {
+          router.push('/signin');
+          return;
+        }
+        toast.error(meResult.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+      } else {
+        setMe(meResult.data.body);
+      }
+    } catch (err) {
+      console.error("Erreur dans init:", err);
+      toast.error("Une erreur inattendue est survenue", { position: 'bottom-right' });
+    } finally {
       setIsLoadingPrincingInfo(false);
     }
-  }
+  };
+
   const handleSaveUpdateUserInfo = async (updatedInfo: ProfileDetail) => {
     console.log('-->updatedInfo', {
       avatarUrl: updatedInfo.AvatarUrl,
@@ -170,79 +201,68 @@ const Settings = () => {
       <div className="mx-auto max-w-270">
         <Breadcrumb pageName="Settings" />
         {/* User Information */}
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
-                <User size={20} />
-                User Information
-              </h2>
-              <button
-                onClick={() => setEditingUserInfo(!editingUserInfo)}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1"
-              >
-                <Edit2 size={16} />
-                {editingUserInfo ? 'Cancel' : 'Edit'}
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {editingUserInfo && userInfo ? (
-                <UserInfoForm
-                  defaultValues={userInfo}
-                  onCancel={() => setEditingUserInfo(false)}
-                  onSubmit={handleSaveUpdateUserInfo}
-                />
-              ) : (
-                (userInfo && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-2">
-                      <User size={16} className="mt-0.5 text-gray-500 dark:text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Full Name</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{`${userInfo.Firstname} ${userInfo.Lastname}`}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Mail size={16} className="mt-0.5 text-gray-500 dark:text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{userInfo.Email}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-2">
-                      <Phone size={16} className="mt-0.5 text-gray-500 dark:text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{userInfo.Phone}</p>
-                      </div>
-                    </div>
-                    {/* <div className="flex items-start gap-2">
-                      <MapPin size={16} className="mt-0.5 text-gray-500 dark:text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Address</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{userInfo.address}</p>
-                      </div>
-                    </div> */}
-                  </div>
-                  {/* <div className="md:col-span-2 mt-2 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center gap-2">
-                    <Building2 size={16} className="text-blue-600 dark:text-blue-400" />
-                    <div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">Current Plan</p>
-                      <p className="font-medium text-blue-700 dark:text-blue-400">{userInfo.currentPlan}</p>
-                    </div>
-                  </div> */}
-                </div>)
-              )}
-            </div>
+        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
+              <User size={20} />
+              User Information
+            </h2>
+            <button
+              onClick={() => setEditingUserInfo(!editingUserInfo)}
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1"
+            >
+              
+              {editingUserInfo ? <X size={16} />: <Edit2 size={16} />}
+              {editingUserInfo ? 'Cancel' : 'Edit'}
+            </button>
           </div>
 
-        {/* Appearance Section */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 mb-6">
+          <div className="space-y-4">
+            {editingUserInfo && userInfo ? (
+              <UserInfoForm
+                defaultValues={userInfo}
+                onCancel={() => setEditingUserInfo(false)}
+                onSubmit={handleSaveUpdateUserInfo}
+              />
+            ) : (
+              (userInfo && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <User size={16} className="mt-0.5 text-gray-500 dark:text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Full Name</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{`${userInfo.Firstname} ${userInfo.Lastname}`}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Mail size={16} className="mt-0.5 text-gray-500 dark:text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{userInfo.Email}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <Phone size={16} className="mt-0.5 text-gray-500 dark:text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{userInfo.Phone}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>)
+            )}
+          </div>
+        </div>
+
+        {/* Consumption */}
+        <PlanConsumption />
+        {/* Appearance Section  & Preferences */}
+        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
             <Sun size={20} />
-            Appearance
+            Appearance & Preferences
           </h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -285,21 +305,17 @@ const Settings = () => {
 
               </div>
             </div>
+
+            <LanguageSelector />
           </div>
         </div>
-
-        {/* Preferences Section */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-            <Globe size={20} />
-            Preferences
-          </h2>
-          <LanguageSelector />
-        </div>
+        
+        {/* Security */}
+        <SecuritySection />
 
         
         {/* Subscription Plans - Redesigned */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 mb-6">
+        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-lg font-semibold mb-6 flex items-center gap-2">
             <CreditCard size={20} />
             Subscription Plans
@@ -307,13 +323,16 @@ const Settings = () => {
           <div className="space-y-4">
             {
               isLoadingPrincingInfo ?
-              (
-                Array.from({ length: 4 }).map((_, index) => (<PrincingCardSkeleton key={index} />))
-              ) : princingInfo && princingInfo?.plans.map(plan => (<PricingCard pricingInfo={plan} currency={princingInfo.default_currency_symbol} currentPlanId="FREE" onBuyClick={buyPlan} key={plan.id} />))
+                (Array.from({ length: 4 }).map((_, index) => (<PrincingCardSkeleton key={index} />))) 
+                : 
+                princingInfo && princingInfo?.plans.map(plan => (<PricingCard pricingInfo={plan} currency={princingInfo.default_currency_symbol} currentPlanId="FREE" onBuyClick={buyPlan} key={plan.id} />))
             }
 
           </div>
         </div>
+
+        {/* Legal & Information */}
+        <LegalInformationSection />
 
 
         <Overlay isOpen={isLoading} onClose={() => {}}>
