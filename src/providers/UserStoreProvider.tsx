@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef } from 'react';
-import { useUserStore } from '@/lib/store/userStore';
 import { UserProfile, UserAuthorisation } from '../types/user';
 
 
@@ -21,16 +20,10 @@ export function UserStoreInitializer({
   // Utiliser useRef pour éviter de multiples rendus
   const initialized = useRef(false);
   
-  if (!initialized.current && email) {
-    useUserStore.getState().setUser({
-      email,
-      firstName: firstName || '',
-      lastName: lastName || '',
-      profiles: profiles || [],
-      authorisations: authorisations || [],
-    });
-    initialized.current = true;
-  }
+  // if (!initialized.current && email) {
+  //   useUserStore.getState().setUser();
+  //   initialized.current = true;
+  // }
   
   return null;
 }

@@ -5,25 +5,23 @@ import { PropertyCardProps } from '@/types/Property';
 import { formatPrice } from '@/lib/utils';
 import { getStatusBadge } from '@/lib/utils-component';
 import { ASSET_TYPE_COMPLEXE } from '@/constant';
+import Link from 'next/link';
 
 
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({
   property,
-  onClick,
   className = ''
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
   const { Address, CoverUrl, Title, Price, Currency, Code, IsActive, IsVerified, TypeCode, StatusCode } = property;
 
-  const handleClick = () => {
-    if (onClick) onClick(Code);
-  };
+
 
   return (
-    <div
+    <Link
+      href={`properties/${Code}`}
       className={`group relative overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-lg dark:border-gray-700 dark:bg-boxdark transition-all max-w-lg w-full cursor-pointer ${className}`}
-      onClick={handleClick}
     >
       {/* Badge Actif/Inactif */}
       {StatusCode === 'AVAILABLE' && (
@@ -107,7 +105,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

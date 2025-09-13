@@ -176,7 +176,6 @@ const PropertiesPage = () => {
                       key={property.Code || index}
                       property={property}
                       className="h-full"
-                      onClick={handleCardClick}
                     />
                   ))
                 }

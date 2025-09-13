@@ -60,7 +60,8 @@ export function RoleProvider({
 
   useEffect(() => {
     let browsedRole = mapUrlSegmentToRole(pathname?.split('/')[1]);
-    if(browsedRole == "SETTINGS") browsedRole = activeRole;
+    console.log('--->browsedRole', browsedRole)
+    if(browsedRole == "SETTINGS" || browsedRole == 'PAYMENT') browsedRole = activeRole;
     // console.log('--->browsedRole', browsedRole)
     if (!browsedRole || browsedRole === activeRole) {
       setLoadingProfile(false);

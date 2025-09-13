@@ -4,6 +4,7 @@ import DefaultLayout from '@/components/Layouts/DefaultLayout'
 import React, { useEffect } from 'react'
 import { useParams } from 'next/navigation';
 import { geRequestDetail } from '@/actions/requestAction';
+import { getScore } from '@/actions/userAction';
 
 const Page = () => {
     const params = useParams();
@@ -13,7 +14,9 @@ const Page = () => {
 
     const init = async () => {
         const result = await geRequestDetail(params.requestid as string);
-        console.log('-->result', result)
+        const result2 = await getScore(result.data.body.reqData.creator.UserCode as string);
+        console.log('-->result', result.data.body.reqData.creator)
+        console.log('-->result2', result2)
     }
     return (
         <DefaultLayout>

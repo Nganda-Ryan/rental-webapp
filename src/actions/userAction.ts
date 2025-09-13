@@ -250,6 +250,31 @@ export async function generatePaymentLink(planInfo: IPlanSubscription) {
   }
 }
 
+export async function confirmPayment(executeURL: string) {
+  try {
+    const session = await verifySession();
+    const response = await axios.post(executeURL, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.accessToken}`,
+      },
+    });
+
+    return {
+      code: null,
+      error: null,
+      data: response.data,
+    };
+  } catch (error: any) {
+    console.log('-->userAction.createUser.error', error.response)
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null,
+    };
+  }
+}
+
 export async function subscribeToPlan(planCode: string, endDate: String) {
   try {
     const session = await verifySession();
@@ -312,6 +337,44 @@ export async function describeMyself(){
       }
     }
     return meResult
+  } catch (error: any) {
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
+export async function getScore(userId: string) {
+  
+  try {
+    const session = await verifySession();
+    const apiClient: AxiosInstance = axios.create({
+        baseURL: process.env.USER_WORKER_ENDPOINT,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.accessToken}`,
+        },
+    });
+    const response = await apiClient.request({
+      method: 'GET',
+      url: `/api/v1/User/Score?Code=${userId}`,
+    });
+
+    return {
+      code: null,
+      error: null,
+      data: response.data
+    }
   } catch (error: any) {
     const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
     if (isRedirect) {

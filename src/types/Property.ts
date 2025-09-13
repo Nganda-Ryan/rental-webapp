@@ -40,7 +40,6 @@ export interface SubProperty2 {
 
 export interface PropertyCardProps {
   property: AssetData;
-  onClick?: (id: string) => void;
   className?: string;
 }
 

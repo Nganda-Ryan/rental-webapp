@@ -1,7 +1,6 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { UserStoreInitializer } from './UserStoreProvider';
 
 export function Providers({ children }: { children: ReactNode }) {
   // You could fetch initial user data from an API or cookie here if needed

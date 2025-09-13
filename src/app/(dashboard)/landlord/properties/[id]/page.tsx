@@ -961,7 +961,7 @@ const PropertyDetail = () => {
                                         {
                                             asset?.TypeCode != ASSET_TYPE_COMPLEXE && <>
                                                 {/* INVOICE HISTORY */}
-                                                {/* <SectionWrapper title="Invoice history" Icon={FileText}>
+                                                <SectionWrapper title="Invoice history" Icon={FileText}>
                                                     {invoiceTableData.length > 0 ? (
                                                         <ResponsiveTable
                                                             columns={invoiceColumns}
@@ -976,7 +976,7 @@ const PropertyDetail = () => {
                                                         ) : (
                                                         <p className="text-gray-500 dark:text-gray-400 text-sm p-3">No invoices available</p>
                                                     )}
-                                                </SectionWrapper> */}
+                                                </SectionWrapper>
                                                 
                                                 {/* CONTRACT */}
                                                 <SectionWrapper title="Lease Contracts" Icon={FileText}>

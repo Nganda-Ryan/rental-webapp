@@ -144,54 +144,42 @@ const Settings = () => {
   }
 
   const buyPlan = async (planId: string, price: number, currency: string) => {
-  if (!user) return;
+    if (!user) return;
 
-  let endDate = new Date();
-  endDate.setDate(endDate.getDate() + 30);
+    let endDate = new Date();
+    endDate.setDate(endDate.getDate() + 30);
 
-  const payload: IPlanSubscription = {
-    referenceCode: "REF-002",
-    notes: `User ${user.Firstname} ${user.Lastname} subscribed to plan ${planId}`,
-    userId: user.userId,
-    planCode: planId,
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: endDate.toISOString().split('T')[0],
-    price,
-    currency,
-    method: "PAYPAL",
-    phoneNumber: user.Phone,
-    countryCode: user.Address.Country,
-    phoneCode: "+237"
+    const payload: IPlanSubscription = {
+      referenceCode: "REF-002",
+      notes: `User ${user.Firstname} ${user.Lastname} subscribed to plan ${planId}`,
+      userId: user.userId,
+      planCode: planId,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
+      price,
+      currency,
+      method: "PAYPAL",
+      phoneNumber: user.Phone,
+      countryCode: user.Address.Country,
+      phoneCode: "+237"
+    };
+
+    setIsLoading(true);
+    setLoadingMessage('Creating payment link...');
+    const result = await generatePaymentLink(payload);
+    console.log('-->buyPlan.result', result)
+    if (result.code === "success") {
+      localStorage.setItem('paypal_execute_url', result.data.body.record.executeUrl);
+      setIsLoading(false);
+
+      const approvalUrl = result.data.body.record.approvalUrl;
+      const popup = window.open(approvalUrl, 'paypalPopup', 'width=600,height=700');
+
+    } else {
+      setIsLoading(false);
+      toast.error("Erreur lors de la création du paiement");
+    }
   };
-
-  setIsLoading(true);
-  const result = await generatePaymentLink(payload);
-  console.log('-->buyPlan.result', result)
-  if (result.code === "success") {
-    localStorage.setItem('paypal_execute_url', result.data.body.record.executeUrl);
-    setIsLoading(false);
-
-    const approvalUrl = result.data.body.record.approvalUrl;
-    const popup = window.open(approvalUrl, 'paypalPopup', 'width=600,height=700');
-
-    // Vérifie toutes les 500ms si la popup est fermée
-    const timer = setInterval(async () => {
-      if (popup && popup.closed) {
-        clearInterval(timer);
-        const executeUrl = localStorage.getItem('paypal_execute_url');
-        if (executeUrl) {
-          await fetch(executeUrl, { method: 'POST' });
-          alert('Paiement effectué avec succès !');
-          localStorage.removeItem('paypal_execute_url');
-        }
-      }
-    }, 500);
-
-  } else {
-    setIsLoading(false);
-    toast.error("Erreur lors de la création du paiement");
-  }
-};
 
 
 

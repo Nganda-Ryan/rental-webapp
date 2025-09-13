@@ -22,7 +22,7 @@ export const useUserStore = create<UserState>()(
       ...initialState,
       
       // Actions pour manipuler l'état
-      setUser: (userData) => 
+      setUser: (userData: UserState) => 
         set({
           email: userData.email,
           firstName: userData.firstName,
@@ -35,14 +35,14 @@ export const useUserStore = create<UserState>()(
       clearUser: () => 
         set(initialState),
       
-      updateUserProfile: (profile) =>
+      updateUserProfile: (profile: any) =>
         set((state) => ({
           profiles: state.profiles.map(p => 
             p.id === profile.id ? profile : p
           ),
         })),
       
-      updateAuthorisations: (authorisations) =>
+      updateAuthorisations: (authorisations: any) =>
         set({ authorisations }),
     }),
     {
