@@ -21,6 +21,7 @@ import { useSearchParams } from 'next/navigation';
 import { set } from "zod";
 import { capitalize } from "@/lib/utils";
 import { roleStore } from "@/store/roleStore";
+import { useTranslations } from "next-intl";
 
 
 const countryOptions = getNames()
@@ -34,8 +35,7 @@ const countryOptions = getNames()
 const Page = () => {
   const [imagePreview, setImagePreview] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState<{ label: string; value: string } | null>(null);
-  const [loadingMessage, setLoadingMessage] = useState("Loading property datas...");
+  const [loadingMessage, setLoadingMessage] = useState("Loading property data...");
   const [asset, setAsset] = useState<AssetDataDetailed | null>(null);
   const [tabIndex, setTabIndex] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -43,6 +43,7 @@ const Page = () => {
   const { isAuthorized } = roleStore();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("Common");
   const unitId = searchParams.get('unitId');
 
   const {
@@ -55,6 +56,10 @@ const Page = () => {
   } = useForm<IUpdateAssetRequest>();
 
   const typeCode = watch('typeCode');
+
+  useEffect(() => {
+    setLoadingMessage(t('loadingPropertyData'));
+  }, [t]);
 
   useEffect(() => {
     console.log('-->unitId', unitId);
@@ -152,11 +157,11 @@ const Page = () => {
     }
   }
 
-  const successMessage = "Property updated successfully";
+  const successMessage = t('propertyUpdatedSuccessfully');
 
   const handleFormValidSubmit = async (data: IUpdateAssetRequest) => {
     setIsLoading(true);
-    setLoadingMessage("Updating property...");
+    setLoadingMessage(t('updatingProperty'));
     console.log("Form data:", data);
     try {
       const result =  await updateAsset(data);
@@ -177,7 +182,7 @@ const Page = () => {
       console.log('-->ContractDetailPage.handleUpsertInvoice.error', error);
     } finally {
       setIsLoading(false);
-      setLoadingMessage("Loading property datas...");
+      setLoadingMessage(t('loadingPropertyData'));
     }
   };
   
@@ -272,22 +277,6 @@ const Page = () => {
                       {/* Location Info */}
                       <div className="flex flex-col justify-between w-full">
                         <div className="flex flex-col">
-                          <label className="mb-1 text-sm text-gray-700 dark:text-gray-300">Country</label>
-                          <Controller
-                            name="addressData.country"
-                            control={control}
-                            render={({ field }) => (
-                              <Select
-                                options={countryOptions}
-                                value={countryOptions.find(option => option.value === field.value) ?? null}
-                                onChange={(selectedOption) => {
-                                  field.onChange(selectedOption?.value);
-                                  setSelectedCountry(selectedOption || null);
-                                }}
-                                placeholder="Select a country"
-                              />
-                            )}
-                          />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>

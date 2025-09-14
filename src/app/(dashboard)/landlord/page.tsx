@@ -22,12 +22,14 @@ import Overlay from "@/components/Overlay";
 import { ProcessingModal } from "@/components/Modal/ProcessingModal";
 import RentalRequestCard from "@/components/Cards/RentalRequestCard";
 import { v4 as uuidv4 } from "uuid";
+import { useTranslations } from "next-intl";
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [dashboardData, setDashboardData] = useState<IDashboardResponse | null>(null);
   const router = useRouter();
   const { user, getProfileCode} = roleStore();
+  const t = useTranslations("Common");
 
 
 
@@ -35,7 +37,7 @@ export default function Dashboard() {
     init();
   }, []);
 
-  const loadingMessage = 'Loading data...';
+  const loadingMessage = t('loadingData');
   
   const init = async () => {
     const profileCode = getProfileCode("LANDLORD");
@@ -108,16 +110,16 @@ export default function Dashboard() {
   
   return (
     <DefaultLayout>
-      <Breadcrumb previousPage={false} pageName="Dashboard Overview" />
+      <Breadcrumb previousPage={false} pageName={t('dashboardOverview')} />
 
       <div className="w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-500 dark:text-white">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-500 dark:text-white capitalize">
                   <Coins size={20} />
-                  Total Revenue
+                  {t('totalRevenue')}
                 </h2>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {
@@ -135,9 +137,9 @@ export default function Dashboard() {
           <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-500 dark:text-white">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-500 dark:text-white capitalize">
                   <Building2 size={20} />
-                  Properties
+                  {t('properties')}
                 </h2>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {dashboardData && dashboardData.Counts.properties} {" "}
@@ -154,9 +156,9 @@ export default function Dashboard() {
 
 
           <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-500 dark:text-white">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-500 dark:text-white capitalize">
               <FileText size={20} />
-              Appearance & Preferences
+              {t('pendingApplications')}
             </h2>
             <div className="flex flex-col gap-3">
               {dashboardData?.allApplications.map(item => (
@@ -174,7 +176,9 @@ export default function Dashboard() {
           <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 mb-1">Total Revenue</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-1 capitalize">
+                  {t('totalRevenue')}
+                </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {
                     dashboardData && formatNumberWithSpaces(dashboardData.RentPaymentsStatus.reduce((acc, curr) => acc + curr.Amount, 0))

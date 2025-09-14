@@ -25,7 +25,7 @@ export default function LanguageSelector() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium text-gray-900 dark:text-white">{t('language')}:</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Choose your preferred language</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('chooseYourPreferredLanguage')}</p>
             </div>
             <select 
               id="language-select"

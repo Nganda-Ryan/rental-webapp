@@ -93,3 +93,32 @@ export const AVAILABLE_DOOC_FILE_EXTENSION = ".pdf,.doc,.docx"
 export const AVAILABLE_FILE_EXTENSION = ".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.svg"
 
 export const IMAGE_LOADING_SHIMMER = "data:image/svg+xml;base64,Cjxzdmcgd2lkdGg9IjcwMCIgaGVpZ2h0PSI0NzUiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciPgogICAgICA8c3RvcCBzdG9wLWNvbG9yPSIjMzMzIiBvZmZzZXQ9IjIwJSIgLz4KICAgICAgPHN0b3Agc3RvcC1jb2xvcj0iIzIyMiIgb2Zmc2V0PSI1MCUiIC8+CiAgICAgIDxzdG9wIHN0b3AtY29sb3I9IiMzMzMiIG9mZnNldD0iNzAlIiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjcwMCIgaGVpZ2h0PSI0NzUiIGZpbGw9IiMzMzMiIC8+CiAgPHJlY3QgaWQ9InIiIHdpZHRoPSI3MDAiIGhlaWdodD0iNDc1IiBmaWxsPSJ1cmwoI2cpIiAvPgogIDxhbmltYXRlIHhsaW5rOmhyZWY9IiNyIiBhdHRyaWJ1dGVOYW1lPSJ4IiBmcm9tPSItNzAwIiB0bz0iNzAwIiBkdXI9IjFzIiByZXBlYXRDb3VudD0iaW5kZWZpbml0ZSIgIC8+Cjwvc3ZnPg==";
+
+
+export const BILLING_ITEM_TYPE_OBJ_LIST = [
+  {label: "Eau", value: "WATER"},
+  {label: "Electricité", value: "ELEC"},
+  {label: "Service Internet", value: "INET01"},
+  {label: "Gaze", value: "GAS"},
+  {label: "Loyé mensuel", value: "RENT"},
+  {label: "Ancien Service", value: "SVC-OLD"},
+];
+
+export const PROPERTY_TYPE_OBJ_LIST = [
+  {
+    label: "Immeuble",
+    value: "CPLXMOD"
+  },
+  {
+    label: "Studio Moderne",
+    value: "STUDMOD"
+  },
+  {
+    label: "Chambre moderne",
+    value: "CHAMMOD"
+  },
+  {
+    label: "Appartement",
+    value: "APPART"
+  },
+]

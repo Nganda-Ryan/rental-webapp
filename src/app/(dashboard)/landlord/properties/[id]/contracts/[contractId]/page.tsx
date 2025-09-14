@@ -31,6 +31,7 @@ import Nodata from '@/components/error/Nodata';
 import { PROFILE_LANDLORD_LIST } from "@/constant";
 import SectionWrapper from '@/components/Cards/SectionWrapper';
 import { roleStore } from '@/store/roleStore';
+import { useTranslations } from 'next-intl';
 
 const ContractDetail = () => {
     const [contract, setContract] = useState<IContractDetail>();
@@ -48,6 +49,7 @@ const ContractDetail = () => {
     const params = useParams();
     const router = useRouter();
     const { isAuthorized } = roleStore();
+    const t = useTranslations('Common');
 
     useEffect(() => {
         const fetchContractData = async () => {
@@ -248,10 +250,10 @@ const ContractDetail = () => {
                 }
                 const result = await createInvoice(invoicePayload);
                 console.log('-->result', result)
-                if(result.data){
-                    setSuccessMessage("Invoice created successfully");
+                if (result.data) {
+                    setSuccessMessage(t('invoiceCreatedSuccessfully'));
                     setShowSuccessModal(true)
-                } else if(result.error){
+                } else if (result.error) {
                     toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
                 }
             } else {
@@ -269,10 +271,10 @@ const ContractDetail = () => {
                     })),
                 }
                 const result = await updateInvoice(payload);
-                if(result.data){
-                    setSuccessMessage("Invoice updated successfully");
+                if (result.data) {
+                    setSuccessMessage(t('invoiceUpdatedSuccessfully'));
                     setShowSuccessModal(true)
-                } else if(result.error){
+                } else if (result.error) {
                     toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
                 }
             }
@@ -321,7 +323,7 @@ const ContractDetail = () => {
             if(contract){
                 const result  = await terminateLease(contract.id);
                 if(result.data) {
-                    toast.success("Lease terminated", { position: 'bottom-right' });
+                    toast.success(t('leaseTerminated'), { position: 'bottom-right' });
                     contract.status = "INACTIVE"
                 } else if(result.error){
                     if(result.code == 'SESSION_EXPIRED'){
@@ -442,7 +444,7 @@ const ContractDetail = () => {
                                             <span className={`px-3 py-1 rounded-full text-sm`}>
                                                 {getStatusBadge(contract?.status ?? "DRAFT")}
                                             </span>
-                                        </div>
+                                        </div> 
                                         {/* Financial Information */}
                                         <div className="border-t border-gray-100 dark:border-gray-700 pt-4 mt-4">
                                             <h3 className="font-medium mb-4 flex items-center gap-2 dark:text-white">
@@ -654,7 +656,7 @@ const ContractDetail = () => {
                                     onClose={() => setShowActionModal(false)}
                                     onConfirm={handleConfirmTerminateLease}
                                     title="Terminate the contract"
-                                    type='APPROVED'
+                                    type='DECLINED'
                                     showCommentInput={false}
                                     message={`Are you sure you want to terminate lease #${contract.id} ?`}
                                 />

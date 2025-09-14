@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import ChangePasswordModal from './Modals/ChangePasswordModal';
 import ChangeEmailModal from './Modals/ModaleChangeEmail';
 import { roleStore } from '@/store/roleStore';
+import { useTranslations } from 'next-intl';
 
 const SecuritySection = () => {
     const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
@@ -12,17 +13,18 @@ const SecuritySection = () => {
     const [isSecurityQuestionsModalOpen, setIsSecurityQuestionsModalOpen] = useState(false);
     const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
     const { user } = roleStore();
+    const t = useTranslations('Common');
 
     const toggleTwoFactor = () => {
         setIsTwoFactorEnabled(!isTwoFactorEnabled)
-        alert(`Two-factor authentication ${!isTwoFactorEnabled ? 'enabled' : 'disabled'}`,)
+        alert(t('twoFactorStatus', { status: !isTwoFactorEnabled ? t('twoFactorEnabled') : t('twoFactorDisabled') }));
     }
 
     return (
       <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
           <Shield size={20} />
-          Security
+          {t('security')}
         </h2>
 
         <div className="space-y-4">
@@ -30,7 +32,7 @@ const SecuritySection = () => {
           <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
             <h3 className="font-medium mb-3 flex items-center gap-2 text-gray-800 dark:text-gray-200">
               <Lock size={16} />
-              Account Management
+              {t('accountManagement')}
             </h3>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -38,31 +40,31 @@ const SecuritySection = () => {
                 onClick={() => setIsChangePasswordModalOpen(true)}
                 className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
               >
-                Change Password
+                {t('changePassword')}
               </button>
             </div>
           </div>
 
           {/* Security Questions */}
           <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
-            <h3 className="font-medium mb-3 text-gray-800 dark:text-gray-200">Security Questions</h3>
+            <h3 className="font-medium mb-3 text-gray-800 dark:text-gray-200">{t('securityQuestions')}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              Setting security questions helps verify your identity when you need to recover your account.
+              {t('securityQuestionsDescription')}
             </p>
             <button
               onClick={() => setIsSecurityQuestionsModalOpen(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-500 text-sm transition"
             >
-              Set Security Questions
+              {t('setSecurityQuestions')}
             </button>
           </div>
 
           {/* Two-Factor Authentication */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm space-y-3 sm:space-y-0">
             <div>
-              <h3 className="font-medium text-gray-800 dark:text-gray-200">Two-Factor Authentication</h3>
+              <h3 className="font-medium text-gray-800 dark:text-gray-200">{t('twoFactorAuthentication')}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Add an extra layer of security to your account
+                {t('twoFactorDescription')}
               </p>
             </div>
 
@@ -78,13 +80,11 @@ const SecuritySection = () => {
           </div>
         </div>
 
-
         <Overlay isOpen={isChangePasswordModalOpen} onClose={() => setIsChangePasswordModalOpen(false)}>
           <ChangePasswordModal
             onClose={() => setIsChangePasswordModalOpen(false)}
           />
         </Overlay>
-        
       </div>
     )
 }

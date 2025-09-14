@@ -1,11 +1,10 @@
 "use client"
-import React, { useEffect, useMemo, useState } from "react";
-import { X, Building2, Trash, Trash2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Building2 } from "lucide-react";
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
-import { getNames, getCode } from 'country-list';
 import { useForm, useFieldArray, Controller  } from "react-hook-form";
-import { AssetFormValue, CreatePropertyType, SubProperty, SubProperty2 } from "@/types/Property";
+import { AssetFormValue, CreatePropertyType, SubProperty2 } from "@/types/Property";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 import Button from '@/components/ui/Button';
@@ -18,47 +17,10 @@ import { ProcessingModal } from '@/components/Modal/ProcessingModal';
 import { useConfigStore } from "@/lib/store/configStore";
 import { ICity, IState, IStreet } from "@/types/configType";
 import { Select } from "@/components/ui/Select";
+import { BILLING_ITEM_TYPE_OBJ_LIST, PROPERTY_TYPE_OBJ_LIST } from "@/constant";
 
-interface PropertyFormProps {
-  onClose: () => void;
-  onSubmit: (data: CreatePropertyType) => void;
-  initialData?: any; // For edit mode
-}
 
-const countryOptions = getNames()
-.map((name) => ({
-  label: name,
-  value: getCode(name),
-}))
-.filter((option) => option.value !== undefined) as { label: string; value: string }[]
 
-const billingItemsList = [
-  {label: "Eau", value: "WATER"},
-  {label: "Electricité", value: "ELEC"},
-  {label: "Service Internet", value: "INET01"},
-  {label: "Gaze", value: "GAS"},
-  {label: "Loyé mensuel", value: "RENT"},
-  {label: "Ancien Service", value: "SVC-OLD"},
-];
-
-const propertyTypes = [
-  {
-    label: "Immeuble",
-    value: "CPLXMOD"
-  },
-  {
-    label: "Studio Moderne",
-    value: "STUDMOD"
-  },
-  {
-    label: "Chambre moderne",
-    value: "CHAMMOD"
-  },
-  {
-    label: "Appartement",
-    value: "APPART"
-  },
-]
 
 
 const Page = () => {
@@ -99,7 +61,7 @@ const Page = () => {
       billingItem: [],
       rent: 0, 
       test:"",
-      UnitsType: propertyTypes[1]?.value,
+      UnitsType: PROPERTY_TYPE_OBJ_LIST[1]?.value,
       UnitsKey: "Unit",
       numberOfUnit: 1,
       UnitsDefaultPrice: 0,
@@ -526,7 +488,7 @@ const Page = () => {
                           >
                             <option value="">Select a Property Type</option>
                             {
-                              propertyTypes.map((propType, index) =>(
+                              PROPERTY_TYPE_OBJ_LIST.map((propType, index) =>(
                                 <option key={index} value={propType.value}>{propType.label}</option>
                               ))
                             }
@@ -588,11 +550,11 @@ const Page = () => {
                               <select
                                 {...register("UnitsType", { required: "Select the unit type" })}
                                 id="UnitsType"
-                                defaultValue={propertyTypes[1]?.value}
+                                defaultValue={PROPERTY_TYPE_OBJ_LIST[1]?.value}
                                 className="w-full px-3 py-1.5 h-10 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                               >
                                 {
-                                  propertyTypes.slice(1).map((propType, index) =>(
+                                  PROPERTY_TYPE_OBJ_LIST.slice(1).map((propType, index) =>(
                                     <option key={index} value={propType.value}>{propType.label}</option>
                                   ))
                                 }
@@ -655,7 +617,7 @@ const Page = () => {
 
                   <TabPanel>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {billingItemsList.map((bi) => (
+                      {BILLING_ITEM_TYPE_OBJ_LIST.map((bi) => (
                         <label key={bi.value} className="flex items-center space-x-2" id="rent">
                           <input
                             value={bi.value}
@@ -706,7 +668,7 @@ const Page = () => {
                                     className="w-full px-3 py-1.5 h-10 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   >
                                     <option value=""></option>
-                                    {propertyTypes.slice(1).map((propType, index) => (
+                                    {PROPERTY_TYPE_OBJ_LIST.slice(1).map((propType, index) => (
                                       <option key={index} value={propType.value}>
                                         {propType.label}
                                       </option>

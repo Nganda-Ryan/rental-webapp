@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 import autoAnimate from "@formkit/auto-animate";
 import Nodata from "@/components/error/Nodata";
 import { roleStore } from "@/store/roleStore";
+import { useTranslations } from "next-intl";
 
 const PropertiesPage = () => {
   const [assetList, setAssetList] = useState<AssetData[]>([]);
@@ -25,6 +26,7 @@ const PropertiesPage = () => {
   const [filterType, setFilterType] = useState("");
   const { isAuthorized, activeRole } = roleStore();
   const router = useRouter();
+  const t = useTranslations("Common");
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -111,7 +113,7 @@ const PropertiesPage = () => {
 
   return (
     <DefaultLayout>
-      <Breadcrumb pageName="Locatif" />
+      <Breadcrumb pageName={t('rental')} />
 
       <div className="">
         <div className="w-full space-y-4">
@@ -124,7 +126,7 @@ const PropertiesPage = () => {
               />
               <input
                 type="text"
-                placeholder="Rechercher une propriété..."
+                placeholder={t('searchAProperty')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
@@ -135,7 +137,7 @@ const PropertiesPage = () => {
               onClick={handleNewAsset}
               className="flex items-center whitespace-nowrap gap-2 px-4 py-2 rounded bg-blue-700 hover:bg-blue-800 text-white font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              <span>Nouveau Locatif</span>
+              <span>{t('newRental')}</span>
             </Button>
           </div>
 
@@ -146,7 +148,7 @@ const PropertiesPage = () => {
               onChange={(e) => setFilterType(e.target.value)}
               className="flex-1 min-w-[150px] px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             >
-              <option value="">Tous les types</option>
+              <option value="">{t('allTypes')}</option>
               {[...new Set(assetList.map(a => a.TypeCode))].map((type, index) => (
                 <option key={index} value={type}>{type}</option>
               ))}
@@ -156,9 +158,9 @@ const PropertiesPage = () => {
               onChange={(e) => setFilterActive(e.target.value)}
               className="flex-1 min-w-[130px] px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             >
-              <option value="">Tous les statuts</option>
-              <option value="1">Actif</option>
-              <option value="0">Inactif</option>
+              <option value="">{t('allStatus')}</option>
+              <option value="1">{t('active')}</option>
+              <option value="0">{t('inactive')}</option>
             </select>
           </div>
         </div>
