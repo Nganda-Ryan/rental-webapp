@@ -28,6 +28,7 @@ import Button from '@/components/ui/Button';
 
 import SectionWrapper from '@/components/Cards/SectionWrapper';
 import { roleStore } from '@/store/roleStore';
+import { useTranslations } from 'next-intl';
 
 
 
@@ -42,6 +43,8 @@ const Page = () => {
   const [isFetchingUser, setIsFetchingUser] = useState(true);
   const router = useRouter();
   const { isAuthorized } = roleStore();
+    const landlordT = useTranslations('Landlord.assets');
+    const commonT = useTranslations('Common');
 
   useEffect(() => {
 
@@ -107,7 +110,7 @@ const Page = () => {
             router.push('/signin');
             return;
         }
-        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
       }
     } catch (error) {
       console.log('SupportUsers.getUserList.error', error);
@@ -230,7 +233,7 @@ const Page = () => {
         setShowSuccessModal(true)
       } else if (result?.error) {
         console.log('SupportUser.handleNewUser.result.error', result.error);
-        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
       }
     } catch (error) {
       console.log("SupportUser.handleNewUser.error", error);

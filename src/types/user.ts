@@ -302,3 +302,34 @@ export interface IConsumptionItem {
   Description: string;
   IsActive: number;
 }
+
+
+export interface IGetTenant {
+  Code: string;
+  UserCode: string;
+  RoleCode: string;
+  IsActive: number;
+  Status: string;
+  CreatedAt: string;
+  user: {
+    Code: string;
+    AddressCode: string;
+    Email: string;
+    Firstname: string;
+    Gender: 'MALE' | 'FEMALE' | string;
+    Lastname: string;
+    NIU: string;
+    OtherEmail: string | null;
+    OtherPhone: string | null;
+    Phone: string;
+    Status: string;
+    AvatarUrl: string;
+    Profiles: any[]; // à remplacer par un type spécifique si disponible
+    Address: {
+      Code: string;
+      City: string;
+      Country: string;
+      Street: string;
+    };
+  };
+}

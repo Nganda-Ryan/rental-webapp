@@ -10,6 +10,7 @@ import 'react-phone-input-2/lib/style.css';
 import Overlay from '../Overlay';
 import { ProcessingModal } from '../Modal/ProcessingModal';
 import { useRouter } from '@bprogress/next/app';
+import { useTranslations } from 'next-intl';
 
 const countryOptions = getNames()
 .map((name) => ({
@@ -27,6 +28,8 @@ export const RegisterForm = () => {
   const [selectedCountry, setSelectedCountry] = useState<{ label: string; value: string } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false);
+    const landlordT = useTranslations('Landlord.assets');
+    const commonT = useTranslations('Common');
   const [formError, setFormError] = useState({
     isError: false,
     message: "",
@@ -87,7 +90,7 @@ export const RegisterForm = () => {
             }
           } else {
             if (result.error !== null && typeof result.error !== 'object') {
-              toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+              toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
             }
           }
         } else {

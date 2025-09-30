@@ -27,6 +27,10 @@ export function capitalize(str: string): string {
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
 }
 
+export const getInitials = (firstname: string, lastname: string) => {
+  return `${firstname.charAt(0)}${lastname.charAt(0)}`.toUpperCase();
+};
+
 export function capitalizeEachWord(str: string): string {
   if(!str) return str
   return str

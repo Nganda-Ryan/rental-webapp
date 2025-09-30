@@ -8,6 +8,7 @@ import Overlay from '../Overlay';
 import { ProcessingModal } from '../Modal/ProcessingModal';
 import { useRouter } from '@bprogress/next/app';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface FormError {
   username: string | null;
@@ -30,6 +31,8 @@ export const LoginForm = () => {
   const [formError, setFormError] = useState(INITIAL_STATE);
     const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+    const landlordT = useTranslations('Landlord.assets');
+    const commonT = useTranslations('Common');
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -51,7 +54,7 @@ export const LoginForm = () => {
           }
         } else {
           if (result.error !== null && typeof result.error !== 'object') {
-            toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
             setFormError({
               message: result.error,
               username: "",

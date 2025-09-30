@@ -24,6 +24,7 @@ import { formatDateToText } from '@/lib/utils'
 import Button from '@/components/ui/Button'
 import { MANAGER_PROFILE_LIST } from '@/constant'
 import { roleStore } from '@/store/roleStore'
+import { useTranslations } from 'next-intl'
 
 interface VerificationRequest {
   id: string
@@ -53,6 +54,8 @@ const LessorVerification = () => {
   const [isReady, setIsReady] = useState(false);
   const router = useRouter();
   const { isAuthorized } = roleStore();
+    const landlordT = useTranslations('Landlord.assets');
+    const commonT = useTranslations('Common');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,7 +89,7 @@ const LessorVerification = () => {
               router.push('/signin');
               return;
           }
-          toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+          toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
         }
       } catch (err) {
         console.log('Error fetching data:', err);

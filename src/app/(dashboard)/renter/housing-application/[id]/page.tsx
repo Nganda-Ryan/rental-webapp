@@ -22,6 +22,7 @@ import Button from "@/components/ui/Button";
 import { SuccessModal } from "@/components/Modal/SucessModal";
 import { roleStore } from "@/store/roleStore";
 import HousingApplicationModal from "@/components/feature/Properties/HousingApplicationModal";
+import { useTranslations } from "next-intl";
 
 
 
@@ -40,6 +41,8 @@ const PropertyDetail = () => {
   const params = useParams();
   const router = useRouter();
   const { user, getProfileCode } = roleStore();
+    const landlordT = useTranslations('Landlord.assets');
+    const commonT = useTranslations('Common');
   
   
   useEffect(() => {
@@ -84,7 +87,7 @@ const PropertyDetail = () => {
                     router.push('/signin');
                     return;
                 }
-                toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+                toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
             }
         }
     }
@@ -125,7 +128,7 @@ const PropertyDetail = () => {
             router.push('/signin');
             return;
         }
-        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
       }
     } catch (error) {
       console.log(error);

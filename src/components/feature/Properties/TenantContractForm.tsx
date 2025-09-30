@@ -8,6 +8,7 @@ import { searchUser } from "@/actions/userAction";
 import Button from "@/components/ui/Button";
 import toast from "react-hot-toast";
 import { useRouter } from "@bprogress/next/app";
+import { useTranslations } from "next-intl";
 
 interface TenantContractFormProps {
   onClose: () => void;
@@ -66,6 +67,8 @@ export const TenantContractForm = ({
   const [isFetchingUser, setIsFetchingUser] = useState(false);
   const [isCreatingContract, setIsCreatingContract] = useState(false);
   const router = useRouter();
+    const landlordT = useTranslations('Landlord.assets');
+    const commonT = useTranslations('Common');
   
   
   useEffect(() => {
@@ -97,7 +100,7 @@ export const TenantContractForm = ({
               router.push('/signin');
               return;
           }
-          toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+          toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
         }
       } catch (error) {
         console.log('-->error', error)

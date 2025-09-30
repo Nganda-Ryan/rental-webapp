@@ -376,6 +376,7 @@ export async function getScore(userId: string) {
       data: response.data
     }
   } catch (error: any) {
+    console.log('-->error', error.response)
     const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
     if (isRedirect) {
       return {

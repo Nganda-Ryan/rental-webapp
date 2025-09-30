@@ -34,6 +34,8 @@ const TenantDashboard = () => {
     const { isAuthorized, user, getProfileCode} = roleStore();
     const router = useRouter();
     const t = useTranslations('Renter.Dashboard');
+      const landlordT = useTranslations('Landlord.assets');
+      const commonT = useTranslations('Common');
     const tr = useTranslations('Landlord');
     useEffect(() => {
         setIsClient(true);
@@ -60,7 +62,7 @@ const TenantDashboard = () => {
             } else if(result.error){
                 setIsLoading(false)
                 console.log('TenantDashBoard.handleSubmitRequest.result.error', result.error);
-                toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+                toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
             }
             console.log('-->result', result)
         } catch (error) {
@@ -113,7 +115,7 @@ const TenantDashboard = () => {
                     router.push('/signin');
                     return;
                     }
-                    toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+                    toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
                 }
             } catch (error) {
                 console.log('-->error', error);
@@ -147,7 +149,7 @@ const TenantDashboard = () => {
                 router.push('/signin');
                 return;
             }
-            toast.error(dashboardData.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+            toast.error(dashboardData.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
             }
         } catch (error) {
             console.log('-->error', error);

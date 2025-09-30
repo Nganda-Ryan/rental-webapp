@@ -7,6 +7,7 @@ import { useRouter } from "@bprogress/next/app";
 import toast from "react-hot-toast";
 import { useConfigStore } from "@/lib/store/configStore";
 import { roleStore } from "@/store/roleStore";
+import { useTranslations } from "next-intl";
 
 export default function DefaultLayout({
   children,
@@ -17,6 +18,8 @@ export default function DefaultLayout({
   const configStore = useConfigStore();
   const router = useRouter();
   const { activeRole } = roleStore();
+    const landlordT = useTranslations('Landlord.assets');
+    const commonT = useTranslations('Common');
   useEffect(() => {
     init();
   }, []);
@@ -31,7 +34,7 @@ export default function DefaultLayout({
           router.push('/signin');
           return;
         }
-        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
       }
     } catch (error) {
       console.error('Erreur lors du chargement des adresses :', error)

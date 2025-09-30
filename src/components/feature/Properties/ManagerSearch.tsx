@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import autoAnimate from "@formkit/auto-animate";
 import ManagerCardSkeleton from "@/components/skeleton/ManagerCardSkeleton";
 import Button from "@/components/ui/Button";
+import { useTranslations } from "next-intl";
 interface ManagerSearchProps {
   onClose: () => void;
   onSelect: (manager: {
@@ -31,6 +32,8 @@ export const ManagerSearch = ({
   const [isFetchingUsers, setIsFetchingUsers] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [searchFilter, setSearchFilter] = useState<keyof typeof searchOptions>("firstName");
+    const landlordT = useTranslations('Landlord.assets');
+    const commonT = useTranslations('Common');
 
 
   useEffect(() => {
@@ -126,7 +129,7 @@ export const ManagerSearch = ({
           router.push('/signin');
           return;
         }
-        toast.error(result.error ?? "An unexpected error occurred", { position: 'bottom-right' });
+        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
       }
     } catch (error) {
       console.log(error)
