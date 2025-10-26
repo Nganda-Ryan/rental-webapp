@@ -54,8 +54,8 @@ const LessorVerification = () => {
   const [isReady, setIsReady] = useState(false);
   const router = useRouter();
   const { isAuthorized } = roleStore();
-    const landlordT = useTranslations('Landlord.assets');
-    const commonT = useTranslations('Common');
+  const t = useTranslations('Support.landlordVerification');
+  const commonT = useTranslations('Common');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -117,7 +117,7 @@ const LessorVerification = () => {
     try {
       if(actionModal.lessorId){
         setIsLoading(true);
-        setLoadingMessage('Processing request...')
+        setLoadingMessage(t('processingRequest'))
         const payload = {
           code: actionModal.lessorId,
           status: actionModal.type,
@@ -136,7 +136,7 @@ const LessorVerification = () => {
             return;
           }
           console.log('Error approving request:', result.error);
-          toast.error("Someting wend wrong during the process, please try again", { position: 'bottom-right' });
+          toast.error(t('processError'), { position: 'bottom-right' });
           return;
         }
         setRequestList((prev) => {
@@ -147,8 +147,8 @@ const LessorVerification = () => {
             return request;
           });
         })
-        
-        const message = actionModal.type === 'APPROVED' ? 'Lessor approved successfully!' : 'Lessor rejected successfully!';
+
+        const message = actionModal.type === 'APPROVED' ? t('approveSuccess') : t('rejectSuccess');
         toast.success(message, { position: 'bottom-right' });
       }
       setActionModal({
@@ -159,7 +159,7 @@ const LessorVerification = () => {
       return;
     } catch (error) {
       console.error('Error during action confirmation:', error);
-      toast.error("Someting wend wrong during the process, please try again", { position: 'bottom-right' });
+      toast.error(t('processError'), { position: 'bottom-right' });
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +168,7 @@ const LessorVerification = () => {
   const columns = [
     {
       key: 'lessor',
-      label: 'Lessor Information',
+      label: t('lessorInfo'),
       priority: 'medium' as const,
       render: (_: any, row: VerificationRequest) => (
         <div className="text-sm text-gray-700 dark:text-gray-300">
@@ -189,7 +189,7 @@ const LessorVerification = () => {
     },
     {
       key: 'submissionDate',
-      label: 'Submitted',
+      label: t('submitted'),
       priority: 'low' as const,
       render: (_: any, row: VerificationRequest) => (
         <div className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
@@ -200,7 +200,7 @@ const LessorVerification = () => {
     },
     {
       key: 'status',
-      label: 'REQUEST STATUS',
+      label: t('requestStatus'),
       priority: 'low' as const,
       render: (_: any, row: VerificationRequest) => (
         <div className="space-y-1 flex items-center justify-end md:justify-start ">
@@ -210,15 +210,15 @@ const LessorVerification = () => {
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: t('actions'),
       priority: "high" as "high",
       render: (_: any, row: VerificationRequest) => (
         <div className="flex gap-2 items-center justify-end md:justify-start ">
           <Button variant={row.status === 'PENDING' ? 'danger' : 'outline-danger'} disable={row.status !== 'PENDING'} isSubmitBtn={false} fullWidth={true} onClick={(e) => {e.stopPropagation(); handleAction('DECLINED', row.id); }}>
-            Reject
+            {t('reject')}
           </Button>
           <Button variant={row.status === 'PENDING' ? 'neutral' : 'outline-neutral'} disable={row.status !== 'PENDING'} isSubmitBtn={false} fullWidth={true} onClick={(e) => {e.stopPropagation();handleAction('APPROVED', row.id)}}>
-            Approve
+            {t('approve')}
           </Button>
         </div>
       ),
@@ -237,7 +237,7 @@ const LessorVerification = () => {
   
   return (
     <DefaultLayout>
-      <Breadcrumb previousPage={false} pageName="Lessor Verification Requests" />
+      <Breadcrumb previousPage={false} pageName={t('title')} />
 
       {
         isReady ?
@@ -269,7 +269,7 @@ const LessorVerification = () => {
                     })
                   }
                   onConfirm={handleActionConfirm}
-                  title={ actionModal.type === 'APPROVED' ? 'Approve Lessor Verification' : 'Reject Lessor Verification'}
+                  title={ actionModal.type === 'APPROVED' ? t('approveLessorVerification') : t('rejectLessorVerification')}
                   type={actionModal.type}
                 />
               </Overlay>
@@ -279,7 +279,7 @@ const LessorVerification = () => {
             </div>
             :
             <div className="w-full">
-              <Nodata message='No request to display'/>
+              <Nodata message={t('noRequests')}/>
             </div>
           }
         </>

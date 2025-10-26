@@ -6,6 +6,7 @@ import { IPropertyVerification, IPropertyVerificationDoc, IPropertyVerificationF
 import { requestPropertyVerification } from "@/actions/requestAction";
 import toast from "react-hot-toast";
 import { AVAILABLE_FILE_EXTENSION } from "@/constant";
+import { useTranslations } from 'next-intl';
 
 interface VerificationFormProps {
   onClose: () => void;
@@ -17,6 +18,7 @@ export const VerificationForm = ({
   onSubmit,
 }: VerificationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const t = useTranslations('Property.verification');
   const {
     handleSubmit,
     register,
@@ -84,7 +86,7 @@ export const VerificationForm = ({
   const validateAtLeastOneFile = () => {
     const { propertyDeed, buildindPermit, deedOfSales } = getValues();
     const hasAtLeastOne = propertyDeed || buildindPermit || deedOfSales;
-    return !!hasAtLeastOne || "Please provide at least one document.";
+    return !!hasAtLeastOne || t('pleaseProvideAtLeastOneDocument');
   };
 
 
@@ -92,7 +94,7 @@ export const VerificationForm = ({
     <div className="rounded-lg w-full max-h-[75vh] overflow-y-auto max-w-2xl mx-auto bg-white dark:bg-gray-800">
       <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl">
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Property Verification</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">{t('title')}</h2>
           <button
             onClick={!isSubmitting ? onClose : undefined}
             disabled={isSubmitting}
@@ -113,14 +115,14 @@ export const VerificationForm = ({
           {/* Property Documents */}
           <div className="space-y-4">
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Property Documents</h3>
-              <h3 className="font-medium text-xs text-gray-400 dark:text-white">Please provide at least one document <span className="text-red-600">*</span> </h3>
+              <h3 className="font-medium text-gray-900 dark:text-white">{t('propertyDocuments')}</h3>
+              <h3 className="font-medium text-xs text-gray-400 dark:text-white">{t('pleaseProvideAtLeastOneDocument')} <span className="text-red-600">*</span> </h3>
             </div>
             <div className="space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-700 gap-2">
                 <div className="flex items-center gap-2">
                   <FileText size={20} className="text-gray-400 dark:text-gray-300 flex-shrink-0" />
-                  <span className="text-sm text-gray-900 dark:text-white">Property Deed</span>
+                  <span className="text-sm text-gray-900 dark:text-white">{t('propertyDeed')}</span>
                 </div>
                 <input
                   type="file"
@@ -138,7 +140,7 @@ export const VerificationForm = ({
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-700 gap-2">
                 <div className="flex items-center gap-2">
                   <FileText size={20} className="text-gray-400 dark:text-gray-300 flex-shrink-0" />
-                  <span className="text-sm text-gray-900 dark:text-white">Building Permit</span>
+                  <span className="text-sm text-gray-900 dark:text-white">{t('buildingPermit')}</span>
                 </div>
                 <input
                   type="file"
@@ -156,7 +158,7 @@ export const VerificationForm = ({
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-700 gap-2">
                 <div className="flex items-center gap-2">
                   <FileText size={20} className="text-gray-400 dark:text-gray-300 flex-shrink-0" />
-                  <span className="text-sm text-gray-900 dark:text-white">Deed of Sale</span>
+                  <span className="text-sm text-gray-900 dark:text-white">{t('deedOfSale')}</span>
                 </div>
                 <input
                   type="file"
@@ -180,15 +182,15 @@ export const VerificationForm = ({
               )}
             </div>
           </div>
-          
+
           {/* Additionnal Documents */}
           <div className="space-y-4">
-            <h3 className="font-medium text-gray-900 dark:text-white">Additionnal Documents</h3>
+            <h3 className="font-medium text-gray-900 dark:text-white">{t('additionalDocuments')}</h3>
             <div className="space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-700 gap-2">
                 <div className="flex items-center gap-2">
                   <FileText size={20} className="text-gray-400 dark:text-gray-300 flex-shrink-0" />
-                  <span className="text-sm text-gray-900 dark:text-white">Bith Certificate</span>
+                  <span className="text-sm text-gray-900 dark:text-white">{t('birthCertificate')}</span>
                 </div>
                 <input
                   type="file"
@@ -206,7 +208,7 @@ export const VerificationForm = ({
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-700 gap-2">
                 <div className="flex items-center gap-2">
                   <FileText size={20} className="text-gray-400 dark:text-gray-300 flex-shrink-0" />
-                  <span className="text-sm text-gray-900 dark:text-white">Certificate of inheritance</span>
+                  <span className="text-sm text-gray-900 dark:text-white">{t('certificateOfInheritance')}</span>
                 </div>
                 <input
                   type="file"
@@ -226,11 +228,11 @@ export const VerificationForm = ({
 
           {/* Additional Information */}
           <div className="space-y-4">
-            <h3 className="font-medium text-gray-900 dark:text-white">Additional Information</h3>
+            <h3 className="font-medium text-gray-900 dark:text-white">{t('additionalInformation')}</h3>
             <textarea
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               rows={4}
-              placeholder="Any additional information about the property..."
+              placeholder={t('additionalInfoPlaceholder')}
               {...register("notes")}
             />
           </div>
@@ -243,10 +245,10 @@ export const VerificationForm = ({
               onClick={onClose}
               fullWidth={false}
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button variant='info' disable={isSubmitting} isSubmitBtn fullWidth={false}>
-              {isSubmitting ? "Submitting ..." : "Submit Verification"}
+              {isSubmitting ? t('submitting') : t('submitVerification')}
             </Button>
           </div>
         </form>

@@ -79,7 +79,7 @@ const PropertiesPage = () => {
 
     fetchData();
     listRef.current && autoAnimate(listRef.current, { duration: 300 });
-  }, [activeRole, router]);
+  }, [activeRole, commonT, router]);
 
   useEffect(() => {
     let filtered = assetList;
@@ -153,7 +153,7 @@ const PropertiesPage = () => {
               <option value="">{t('allTypes')}</option>
               {[...new Set(assetList.map(a => a.TypeCode))].map((type, index) => (
                 <option key={index} value={type}>{type}</option>
-              ))}
+              ))}     
             </select>
             <select
               value={filterActive}

@@ -3,10 +3,14 @@ import FormBuilder from '@/components/FormBuilder';
 import React, { forwardRef, useRef, useImperativeHandle } from 'react';
 import { FieldDefinition, FormBuilderRef } from '@/types/FormBuilderTypes';
 import { PropertiesGeneralInfoFormRef } from '@/types/FormTypes';
+import { useTranslations } from 'next-intl';
 
 
 const PropertiesGeneralInfoForm = forwardRef<PropertiesGeneralInfoFormRef, {}>(
     (props, ref) => {
+        const t = useTranslations('Property');
+        const commonT = useTranslations('Common');
+
         const formRef = useRef<FormBuilderRef>(null);
         useImperativeHandle(ref, () => ({
             reset: () => formRef.current?.reset(),
@@ -14,71 +18,71 @@ const PropertiesGeneralInfoForm = forwardRef<PropertiesGeneralInfoFormRef, {}>(
             trigger: () => formRef.current?.trigger() ?? Promise.resolve(false),
             getValues: () => formRef.current?.getValues() ?? {},
         }));
-    
+
         const handleSubmit = (data: any) => {
             console.log('Form data:', data);
         };
-    
+
         const handleCancel = () => {
             console.log('Form cancelled');
         };
 
         const fields: FieldDefinition[] = [
             {
-              label: 'Identifiant',
+              label: t('identifier'),
               api: 'name',
               type: 'text',
               required: true,
-              errorMessage: 'Name is required',
-              placeholder: 'Enter your name',
+              errorMessage: t('nameRequired'),
+              placeholder: t('namePlaceholder'),
             },
             {
-              label: 'Country',
+              label: commonT('country'),
               api: 'country',
               type: 'text',
               required: true,
-              errorMessage: 'The country is required',
-              placeholder: 'Enter your country',
+              errorMessage: t('countryRequired'),
+              placeholder: t('countryPlaceholder'),
             },
             {
-              label: 'Region',
+              label: t('region'),
               api: 'region',
               type: 'text',
               required: true,
-              errorMessage: 'Region is required',
-              placeholder: 'Enter your Region',
+              errorMessage: t('regionRequired'),
+              placeholder: t('regionPlaceholder'),
             },
             {
-              label: 'City',
+              label: commonT('city'),
               api: 'city',
               type: 'text',
               required: true,
-              errorMessage: 'The city is required',
-              placeholder: 'Enter your city',
+              errorMessage: t('cityRequired'),
+              placeholder: t('cityPlaceholder'),
             },
             {
-              label: 'Quater',
+              label: t('quarter'),
               api: 'quater',
               type: 'text',
               required: true,
-              errorMessage: 'Quater is required',
-              placeholder: 'Quater your email',
+              errorMessage: t('quarterRequired'),
+              placeholder: t('quarterPlaceholder'),
             },
             {
-              label: 'Area',
+              label: t('area'),
               api: 'area',
               type: 'number',
               required: false,
-              errorMessage: 'Email is required',
-              placeholder: 'Enter your email',
+              errorMessage: t('emailRequired'),
+              placeholder: t('emailPlaceholder'),
             },
             {
-              label: 'Description',
+              label: commonT('Description'),
               api: 'description',
               type: 'textarea',
               required: false,
-              errorMessage: 'Description is required',
-              placeholder: 'Enter your Description',
+              errorMessage: t('descriptionRequired'),
+              placeholder: t('descriptionPlaceholder'),
             },
         ];
           

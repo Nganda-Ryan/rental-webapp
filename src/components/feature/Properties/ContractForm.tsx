@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { CreatePropertyType, SubProperty } from "@/types/Property";
 import Image from "next/image";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { useTranslations } from 'next-intl';
 
 interface PropertyFormProps {
   onClose: () => void;
@@ -21,21 +22,24 @@ const countryOptions = getNames()
 }))
 .filter((option) => option.value !== undefined) as { label: string; value: string }[]
 
-const billingItemsList = [
-  {label: "Eau", value: "WATER"},
-  {label: "Electricité", value: "ELEC"},
-  {label: "Service Internet", value: "INET01"},
-  {label: "Gaze", value: "GAS"},
-  {label: "Loyé mensuel", value: "RENT"},
-  {label: "Ancien Service", value: "SVC-OLD"},
-];
-
 
 export const ContractForm = ({
   onClose,
   onSubmit,
   initialData,
 }: PropertyFormProps) => {
+  const t = useTranslations('Contract');
+  const commonT = useTranslations('Common');
+
+  const billingItemsList = [
+    {label: t('water'), value: "WATER"},
+    {label: t('electricity'), value: "ELEC"},
+    {label: t('internet'), value: "INET01"},
+    {label: t('gas'), value: "GAS"},
+    {label: t('monthlyRent'), value: "RENT"},
+    {label: t('oldService'), value: "SVC-OLD"},
+  ];
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<{ label: string; value: string } | null>(null);
 
@@ -72,7 +76,7 @@ export const ContractForm = ({
       <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl">
         <div className="sticky top-0 bg-white dark:bg-gray-800 z-10 p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <h2 className="text-xl font-semibold">
-            {initialData ? "Edit Property" : "Add New Property"}
+            {initialData ? t('editProperty') : t('addNewProperty')}
           </h2>
           <button
             onClick={onClose}
@@ -82,21 +86,21 @@ export const ContractForm = ({
             <X size={20} />
           </button>
         </div>
-        
+
         <form  onSubmit={handleSubmit(handleFormSubmission)} className="p-4 md:p-6 space-y-6">
-          
+
 
 
           {/* Financial Details */}
           <div className="space-y-4">
-            <h3 className="font-medium">Contractt Duration</h3>
+            <h3 className="font-medium">{t('contractDuration')}</h3>
             <div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Initial duration (in months)
+                  {t('initialDuration')}
                 </label>
                 <input
-                  {...register("initialDuration", { required: "example : 10" })}
+                  {...register("initialDuration", { required: commonT('example10') })}
                   type="number"
                   id='price'
                   className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -108,25 +112,25 @@ export const ContractForm = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Start Date
+                  {t('startDate')}
                 </label>
                 <input
                   type="date"
-                  {...register("startDate", { required: "The start date is required" })}
+                  {...register("startDate", { required: t('startDateRequired') })}
                   className="w-full px-3 py-1.5 h-10 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {errors.startDate && (
                   <p className="text-sm text-red-500">{errors.startDate.message}</p>
                 )}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  End Date
+                  {t('endDate')}
                 </label>
                 <input
                   type="date"
-                  {...register("endDate", { required: "The end date is required" })}
+                  {...register("endDate", { required: t('endDateRequired') })}
                   className="w-full px-3 py-1.5 h-10 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   readOnly
                 />
@@ -139,14 +143,14 @@ export const ContractForm = ({
 
           {/* Billing Items */}
           <div className="space-y-4">
-            <h3 className="font-medium">Billing Items</h3>
+            <h3 className="font-medium">{t('billingItems')}</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {billingItemsList.map((bi) => (
                 <label key={bi.value} className="flex items-center space-x-2" id="rent">
                   <input
                     value={bi.value}
                     type="checkbox"
-                    {...register("billingItems", { required: "Select at least one billing Item" })}
+                    {...register("billingItems", { required: t('billingItemRequired') })}
                     className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
                     defaultChecked={initialData?.amenities?.includes(bi)}
                   />
@@ -161,12 +165,12 @@ export const ContractForm = ({
 
           {/* Description */}
           <div className="space-y-4">
-            <h3 className="font-medium">Description</h3>
+            <h3 className="font-medium">{t('description')}</h3>
             <textarea
               className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows={4}
               {...register("notes")}
-              placeholder="Some notes about the contract..."
+              placeholder={t('notesPlaceholder')}
               defaultValue={initialData?.description}
               required
             />

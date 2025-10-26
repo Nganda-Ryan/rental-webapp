@@ -67,14 +67,14 @@ export async function updateAsset(asset: IUpdateAssetRequest) {
     if(typeof asset.coverUrl == 'object') {
       const cover = asset.coverUrl as File[];
       console.log('FILE', cover);
-      const coverPath = `${process.env.ASSET_FILE_NAME_SRC}/AS-${Date.now()}/COVER${getExtension(cover[0].name)}`;
+      const coverPath = `${process.env.ASSET_MAIN_FILE_NAME_SRC}/AS-${Date.now()}/COVER${getExtension(cover[0].name)}`;
       const uploadedCoverPath = await uploadFile(cover[0], coverPath);
       if(uploadedCoverPath.error) return {error: "error while uploading ID CARD VERSO", code:uploadedCoverPath.code, data: null}
       console.log('-->uploadedCoverPath', uploadedCoverPath);
       console.log('-->coverPath', coverPath);
-      asset.coverUrl = 'Documents/' + coverPath;
+      asset.coverUrl = coverPath;
     } else {
-      asset.coverUrl = 'Documents/' + asset.coverUrl.split('/Documents/').at(-1)
+      asset.coverUrl = asset.coverUrl.split('/Documents/').at(-1)
     }
     console.log('-->payload', {
       ...asset,

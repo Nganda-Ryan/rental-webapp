@@ -1,7 +1,9 @@
-TABLEAU B
+'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import autoAnimate from '@formkit/auto-animate'
 import { ListCollapse, Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Column {
   key: string
@@ -36,7 +38,8 @@ export const ResponsiveTable = ({
 }: ResponsiveTableProps) => {
   const [page, setPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
-  
+  const t = useTranslations('Table');
+
   const highPriorityColumns = columns.filter((col) => col.priority === 'high')
   const mediumPriorityColumns = columns.filter((col) => col.priority === 'medium')
   const lowPriorityColumns = columns.filter((col) => col.priority === 'low')
@@ -74,7 +77,7 @@ export const ResponsiveTable = ({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
             <input
               type="text"
-              placeholder={`Rechercher...`}
+              placeholder={t('searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 outline-none transition-all duration-200"
@@ -82,7 +85,7 @@ export const ResponsiveTable = ({
           </div>
           {searchTerm && (
             <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {filteredData.length} résultat{filteredData.length !== 1 ? 's' : ''} trouvé{filteredData.length !== 1 ? 's' : ''}
+              {t('results', { count: filteredData.length })}
             </div>
           )}
         </div>
@@ -92,13 +95,13 @@ export const ResponsiveTable = ({
       <div className="md:hidden space-y-2">
         {paginatedData.map((row) => (
           <div
-            key={row[keyField]}
+            key={uuidv4()}
             onClick={() => onRowClick?.(row)}
             className="bg-white dark:bg-gray-800 rounded p-5 shadow-sm border dark:border-gray-600 my-2 space-y-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-500 ease-in-out"
           >
             <div className="space-y-2">
               {highPriorityColumns.map((col) => (
-                <div key={col.key} className="flex justify-between items-start">
+                <div key={uuidv4()} className="flex justify-between items-start">
                   <span className=" font-medium text-gray-600 dark:text-gray-200">
                     {col.label} :
                   </span>
@@ -111,7 +114,7 @@ export const ResponsiveTable = ({
             {mediumPriorityColumns.length > 0 && <hr className="border-t border-gray-200 dark:border-gray-700" />}
             <div className="space-y-2">
               {mediumPriorityColumns.map((col) => (
-                <div key={col.key} className="flex justify-between items-start">
+                <div key={uuidv4()} className="flex justify-between items-start">
                   <span className=" font-medium text-gray-600 dark:text-gray-300">
                     {col.label} :
                   </span>
@@ -125,7 +128,7 @@ export const ResponsiveTable = ({
             {lowPriorityColumns.length > 0 && (
               <div className="space-y-2">
                 {lowPriorityColumns.map((col) => (
-                  <div key={col.key} className="flex justify-between items-start">
+                  <div key={uuidv4()} className="flex justify-between items-start">
                     <span className=" text-gray-500 dark:text-gray-300">
                       {col.label} :
                     </span>
@@ -147,7 +150,7 @@ export const ResponsiveTable = ({
             <tr>
               {columns.map((column) => (
                 <th
-                  key={column.key}
+                  key={uuidv4()}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider"
                 >
                   {column.label}
@@ -158,12 +161,12 @@ export const ResponsiveTable = ({
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700" ref={tableBodyRef}>
             {paginatedData.map((row) => (
               <tr
-                key={row[keyField]}
+                key={uuidv4()}
                 onClick={() => onRowClick?.(row)}
                 className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
               >
                 {columns.map((column) => (
-                  <td key={column.key} className="px-6 py-2.5 text-gray-900 dark:text-gray-100">
+                  <td key={uuidv4()} className="px-6 py-2.5 text-gray-900 dark:text-gray-100">
                     {column.render ? column.render(row[column.key], row) : row[column.key]}
                   </td>
                 ))}
@@ -177,7 +180,7 @@ export const ResponsiveTable = ({
       {paginatedData.length === 0 && searchTerm && (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <Search className="mx-auto mb-2" size={48} />
-          <p>Aucun résultat trouvé pour &quot;{searchTerm}&quot;</p>
+          <p>{t('noResults', { searchTerm })}</p>
         </div>
       )}
 
@@ -188,17 +191,17 @@ export const ResponsiveTable = ({
             disabled={page === 1}
             className=" px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50"
           >
-            Previous
+            {t('previous')}
           </button>
           <span className=" text-gray-700 dark:text-gray-200">
-            Page {page} / {totalPages}
+            {t('page', { page, totalPages })}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
             disabled={page === totalPages}
             className=" px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50"
           >
-            Next
+            {t('next')}
           </button>
         </div>
       )}
@@ -217,8 +220,11 @@ export const ResponsiveTable = ({
   )
 }
 
-const ShowMoreLink = ({ showMore }: { showMore: ShowMoreOption }) => (
-  <a href={showMore.url} className=" font-medium text-blue-700 dark:text-blue-300 hover:underline transition flex gap-2 justify-center items-center">
-    <span>{showMore.label || 'Voir plus'}</span> <span><ListCollapse size={20} className="text-blue-700 dark:text-blue-300" /></span>
-  </a>
-)
+const ShowMoreLink = ({ showMore }: { showMore: ShowMoreOption }) => {
+  const commonT = useTranslations('Common');
+  return (
+    <a href={showMore.url} className=" font-medium text-blue-700 dark:text-blue-300 hover:underline transition flex gap-2 justify-center items-center">
+      <span>{showMore.label || commonT('seeMore')}</span> <span><ListCollapse size={20} className="text-blue-700 dark:text-blue-300" /></span>
+    </a>
+  );
+}

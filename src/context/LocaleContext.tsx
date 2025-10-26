@@ -2,8 +2,9 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
-import { Locale, locales } from '@/i18n/config';
+import { Locale, locales, defaultLocale } from '@/i18n/config';
 import LoadingPage from '@/components/Loading/LoadingPage';
+import { setUserLocale } from '@/services/locale';
 
 
 interface LocaleContextType {
@@ -15,62 +16,72 @@ interface LocaleContextType {
 // Context
 const LocaleContext = createContext<LocaleContextType | null>(null);
 
-// Constante pour localStorage
-const LOCALE_STORAGE_KEY = 'user-locale';
+// Constante pour le cookie (même nom que dans locale.ts)
+const LOCALE_COOKIE_NAME = 'NEXT_LOCALE';
 
 interface LocaleProviderProps {
   children: ReactNode;
   initialMessages: Record<string, any>;
+  initialLocale?: Locale;
 }
 
-export function LocaleProvider({ children, initialMessages }: LocaleProviderProps) {
-  const [locale, setLocale] = useState<Locale>('fr');
+export function LocaleProvider({ children, initialMessages, initialLocale }: LocaleProviderProps) {
+  const [locale, setLocale] = useState<Locale>(initialLocale || defaultLocale);
   const [messages, setMessages] = useState(initialMessages);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isChangingLocale, setIsChangingLocale] = useState(false);
 
-  // Initialiser la locale depuis localStorage
+  // Fonction pour lire le cookie côté client
+  const getCookie = (name: string): string | null => {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+    return null;
+  };
+
+  // Initialiser la locale depuis le cookie uniquement au montage
   useEffect(() => {
     const initLocale = () => {
       try {
-        const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY) as Locale;
-        if (savedLocale && locales.includes(savedLocale)) {
-          loadLocale(savedLocale);
-        } else {
-          setIsLoading(false);
+        const cookieLocale = getCookie(LOCALE_COOKIE_NAME) as Locale;
+        if (cookieLocale && locales.includes(cookieLocale) && cookieLocale !== locale) {
+          loadLocale(cookieLocale, false);
         }
       } catch (error) {
-        console.error('Erreur lors de la lecture du localStorage:', error);
-        setIsLoading(false);
+        console.error('Erreur lors de la lecture du cookie:', error);
       }
     };
 
     initLocale();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fonction pour charger une nouvelle locale
-  const loadLocale = async (newLocale: Locale) => {
+  const loadLocale = async (newLocale: Locale, updateCookie: boolean = true) => {
     if (newLocale === locale && !isLoading) return;
-    
+
     setIsChangingLocale(true);
-    
+
     try {
       const newMessages: Record<string, any> = (await import(`../../messages/${newLocale}.json`)).default;
-      console.log('-->newMessages', newMessages);
       setLocale(newLocale);
       setMessages(newMessages);
-      localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
-      
+
+      // Mettre à jour le cookie via l'action serveur
+      if (updateCookie) {
+        await setUserLocale(newLocale);
+      }
+
     } catch (error) {
       console.error('Erreur lors du chargement de la locale:', error);
     } finally {
-      setIsLoading(false);
       setIsChangingLocale(false);
     }
   };
 
   const changeLocale = (newLocale: Locale) => {
-    loadLocale(newLocale);
+    loadLocale(newLocale, true);
   };
 
   const contextValue: LocaleContextType = {

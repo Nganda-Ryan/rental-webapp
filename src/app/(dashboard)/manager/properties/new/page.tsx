@@ -17,8 +17,8 @@ import { ProcessingModal } from '@/components/Modal/ProcessingModal';
 import { useConfigStore } from "@/lib/store/configStore";
 import { ICity, IState, IStreet } from "@/types/configType";
 import { Select } from "@/components/ui/Select";
-import { BILLING_ITEM_TYPE_OBJ_LIST, PROPERTY_TYPE_OBJ_LIST } from "@/constant";
 import { useTranslations } from "next-intl";
+import { useTranslatedConstants } from '@/hooks/useTranslatedConstants';
 
 
 
@@ -44,6 +44,7 @@ const Page = () => {
   const configStore = useConfigStore();
   const landlordT = useTranslations('Landlord.assets');
   const commonT = useTranslations('Common');
+  const { BILLING_ITEM_TYPE_OBJ_LIST, PROPERTY_TYPE_OBJ_LIST } = useTranslatedConstants();
   
   const {
     control,

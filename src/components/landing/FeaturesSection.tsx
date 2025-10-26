@@ -2,26 +2,29 @@
 import { FeatureCardType } from '@/types/FeatureCardType';
 import Image from 'next/image';
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 
 const FeaturesSection = () => {
+  const t = useTranslations('Landing.features');
+
   const features: FeatureCardType[] = [
     {
       number: 1,
-      title: "Automatiser la gestion",
-      description: "Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur.",
+      title: t('automation'),
+      description: t('description'),
       image: "/images/feature/feature1.jpg"
     },
     {
       number: 2,
-      title: "Gestion des contrats & facturation",
-      description: "Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur.",
+      title: t('contractsBilling'),
+      description: t('description'),
       image: "/images/feature/feature2.jpg"
     },
     {
       number: 3,
-      title: "Evaluation & Historique en temps reel",
-      description: "Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur.",
+      title: t('evaluation'),
+      description: t('description'),
       image: "/images/feature/feature3.avif"
     }
   ]
@@ -29,11 +32,10 @@ const FeaturesSection = () => {
     <div className="px-4 mx-auto max-w-screen-xl">
       <div className="text-center mb-16">
         <h2 className="text-3xl font-bold text-blue-marin mb-4">
-          Vos biens immobilier sont en sécurité
+          {t('title')}
         </h2>
         <p className="text-gray-500 max-w-2xl mx-auto">
-          Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet
-          consectetur.
+          {t('description')}
         </p>
       </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">

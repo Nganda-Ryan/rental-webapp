@@ -27,6 +27,7 @@ import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
 import { MANAGER_PROFILE_LIST } from '@/constant'
 import { useRouter } from '@bprogress/next/app'
 import { roleStore } from '@/store/roleStore'
+import { useTranslations } from 'next-intl'
 interface StatCardProps {
   title: string
   value: string | number
@@ -34,30 +35,36 @@ interface StatCardProps {
   icon: React.ReactNode
   color: string
 }
-const StatCard = ({ title, value, change, icon, color }: StatCardProps) => (
-  <div className="bg-white p-6 rounded-lg shadow-sm">
-    <div className="flex justify-between items-start">
-      <div>
-        <p className="text-gray-600 mb-1">{title}</p>
-        <p className="text-2xl font-bold">{value}</p>
-        {change && (
-          <p className={`text-sm mt-1 ${color}`}>
-            <TrendingUp className="inline mr-1" size={14} />
-            {change} this month
-          </p>
-        )}
-      </div>
-      <div
-        className={`p-3 rounded-full ${color.replace('text', 'bg')} bg-opacity-10`}
-      >
-        {icon}
+const StatCard = ({ title, value, change, icon, color }: StatCardProps) => {
+  const t = useTranslations('Support.systemOverview')
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-sm">
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-gray-600 mb-1">{title}</p>
+          <p className="text-2xl font-bold">{value}</p>
+          {change && (
+            <p className={`text-sm mt-1 ${color}`}>
+              <TrendingUp className="inline mr-1" size={14} />
+              {t('thisMonthIncrease', { percent: change })}
+            </p>
+          )}
+        </div>
+        <div
+          className={`p-3 rounded-full ${color.replace('text', 'bg')} bg-opacity-10`}
+        >
+          {icon}
+        </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
 const SystemOverview = () => {
   const { isAuthorized } = roleStore();
   const router = useRouter();
+  const t = useTranslations('Support.systemOverview')
+
   const userGrowthData = [
     {
       month: 'Jan',
@@ -86,69 +93,69 @@ const SystemOverview = () => {
   ]
   const userDistributionData = [
     {
-      name: 'renter',
+      name: t('renters'),
       value: 450,
       color: '#4299E1',
     },
     {
-      name: 'Lessors',
+      name: t('lessors'),
       value: 230,
       color: '#48BB78',
     },
     {
-      name: 'Managers',
+      name: t('managers'),
       value: 85,
       color: '#ED8936',
     },
     {
-      name: 'Support',
+      name: t('support'),
       value: 15,
       color: '#9F7AEA',
     },
   ]
   const verificationStats = [
     {
-      title: 'Active Users',
+      title: t('activeUsers'),
       value: '780',
-      change: '+12.5%',
+      change: '12.5',
       icon: <Users size={24} className="text-blue-600" />,
       color: 'text-blue-600',
     },
     {
-      title: 'Properties Listed',
+      title: t('propertiesListed'),
       value: '324',
-      change: '+8.2%',
+      change: '8.2',
       icon: <Building2 size={24} className="text-green-600" />,
       color: 'text-green-600',
     },
     {
-      title: 'Pending Verifications',
+      title: t('pendingVerifications'),
       value: '45',
       icon: <Clock size={24} className="text-orange-600" />,
       color: 'text-orange-600',
     },
     {
-      title: 'Monthly Activity',
+      title: t('monthlyActivity'),
       value: '92%',
-      change: '+5.4%',
+      change: '5.4',
       icon: <Activity size={24} className="text-purple-600" />,
       color: 'text-purple-600',
     },
   ]
   const recentActivity = [
     {
-      action: 'New Lessor Registration',
-      time: '5 minutes ago',
+      action: t('newLessorRegistration'),
+      time: t('minutesAgo', { count: 5 }),
       icon: <UserPlus size={16} className="text-blue-500" />,
     },
     {
-      action: 'Property Verification Approved',
-      time: '12 minutes ago',
+      action: t('propertyVerificationApproved'),
+      time: t('minutesAgo', { count: 12 }),
       icon: <CheckCircle size={16} className="text-green-500" />,
     },
     {
-      action: 'New Property Listed',
-      time: '45 minutes ago',
+      action: t('newPropertyListed'),
+      time: t('minutesAgo', { count: 45 }),
       icon: <Home size={16} className="text-purple-500" />,
     },
   ]
@@ -160,7 +167,7 @@ const SystemOverview = () => {
   }, []);
   return (
     <DefaultLayout>
-      <Breadcrumb previousPage={false} pageName="System Overview" />
+      <Breadcrumb previousPage={false} pageName={t('title')} />
       <div className="w-full min-h-screen">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -170,7 +177,7 @@ const SystemOverview = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">User Growth</h2>
+              <h2 className="text-lg font-semibold mb-4">{t('userGrowth')}</h2>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={userGrowthData}>
@@ -195,7 +202,7 @@ const SystemOverview = () => {
               </div>
             </div>
             <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">User Distribution</h2>
+              <h2 className="text-lg font-semibold mb-4">{t('userDistribution')}</h2>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -223,7 +230,7 @@ const SystemOverview = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
+              <h2 className="text-lg font-semibold mb-4">{t('recentActivity')}</h2>
               <div className="space-y-4">
                 {recentActivity.map((activity, index) => (
                   <div
@@ -240,21 +247,21 @@ const SystemOverview = () => {
               </div>
             </div>
             <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">Verification Status</h2>
+              <h2 className="text-lg font-semibold mb-4">{t('verificationStatus')}</h2>
               <div className="space-y-6">
                 {[
                   {
-                    label: 'Lessor Verifications',
+                    label: t('lessorVerifications'),
                     value: 75,
                     color: 'blue',
                   },
                   {
-                    label: 'Property Verifications',
+                    label: t('propertyVerifications'),
                     value: 60,
                     color: 'green',
                   },
                   {
-                    label: 'Support Response Rate',
+                    label: t('supportResponseRate'),
                     value: 90,
                     color: 'purple',
                   },

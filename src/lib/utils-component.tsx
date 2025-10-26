@@ -24,17 +24,23 @@ interface Props {
   color?: string;
 }
 
-export const getStatusBadge = (status: string) => {
+type TranslateFunction = (key: string) => string;
+
+export const getStatusBadge = (status: string, t?: TranslateFunction) => {
   const baseClass =
     "w-fit flex items-center gap-1 px-2 py-0.5 rounded-full text-sm lowercase me-2 capitalize";
 
   const statusKey = status.toUpperCase();
+  const statusLowerKey = status.toLowerCase().replace(/_/g, '_');
+
+  // Use translation if provided, otherwise fallback to status.toLowerCase()
+  const displayText = t ? (t(statusLowerKey) || status.toLowerCase()) : status.toLowerCase();
 
   if (["DRAFT", "DRAFTING"].includes(statusKey)) {
     return (
       <div className={`${baseClass} bg-gray-100 text-gray-600 dark:bg-gray-700/20 dark:text-gray-400`}>
         <ExternalLink size={14} className="text-inherit" />
-        <span>{status.toLowerCase()}</span>
+        <span>{displayText}</span>
       </div>
     );
   }
@@ -43,7 +49,7 @@ export const getStatusBadge = (status: string) => {
     return (
       <div className={`${baseClass} bg-yellow-100 text-yellow-600 dark:bg-gray-700/20 dark:text-yellow-400`}>
         <Clock size={14} className="text-inherit" />
-        <span>{status.toLowerCase()}</span>
+        <span>{displayText}</span>
       </div>
     );
   }
@@ -52,7 +58,7 @@ export const getStatusBadge = (status: string) => {
     return (
       <div className={`${baseClass} bg-green-100 text-green-600 dark:bg-gray-700/20 dark:text-green-400`}>
         <CheckCircle size={14} className="text-inherit" />
-        <span>{status.toLowerCase()}</span>
+        <span>{displayText}</span>
       </div>
     );
   }
@@ -61,7 +67,7 @@ export const getStatusBadge = (status: string) => {
     return (
       <div className={`${baseClass} bg-blue-100 text-blue-600 dark:bg-gray-700/20 dark:text-blue-400`}>
         <CheckCircle size={14} className="text-inherit" />
-        <span>{status.toLowerCase()}</span>
+        <span>{displayText}</span>
       </div>
     );
   }
@@ -70,7 +76,7 @@ export const getStatusBadge = (status: string) => {
     return (
       <div className={`${baseClass} bg-red-100 text-red-600 dark:bg-gray-700/20 dark:text-red-400`}>
         <XCircle size={14} className="text-inherit" />
-        <span>{status.toLowerCase()}</span>
+        <span>{displayText}</span>
       </div>
     );
   }
@@ -79,7 +85,7 @@ export const getStatusBadge = (status: string) => {
   return (
     <div className={`${baseClass} bg-gray-100 text-gray-600 dark:bg-gray-700/20 dark:text-gray-400`}>
       <ExternalLink size={14} className="text-inherit" />
-      <span>{status.toLowerCase()}</span>
+      <span>{displayText}</span>
     </div>
   );
 };

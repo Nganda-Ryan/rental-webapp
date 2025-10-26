@@ -31,7 +31,7 @@ export const LoginForm = () => {
   const [formError, setFormError] = useState(INITIAL_STATE);
     const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-    const landlordT = useTranslations('Landlord.assets');
+    const authT = useTranslations('Auth');
     const commonT = useTranslations('Common');
 
 
@@ -66,15 +66,15 @@ export const LoginForm = () => {
         setIsLoading(false);
         if (result.redirectTo) {
           router.push(result.redirectTo);
-          toast.success("Connexion réussie", { position: 'bottom-right' });
+          toast.success(commonT('loginSuccess'), { position: 'bottom-right' });
         } else {
-          toast.error("Erreur interne du système", { position: 'bottom-right' });
+          toast.error(commonT('systemError'), { position: 'bottom-right' });
         }
       }
       return;
     } catch (error: any) {
       console.error('Erreur inattendue :', error);
-      toast.error("Erreur interne du système", { position: 'bottom-right' });
+      toast.error(commonT('systemError'), { position: 'bottom-right' });
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +85,7 @@ export const LoginForm = () => {
     <div className="w-full max-w-md space-y-8">
       <Overlay isOpen={isLoading} onClose={() => {}}>
         <ProcessingModal
-         message="Loading you account ..." />
+         message={authT('loadingAccount')} />
       </Overlay>
       <div className="text-center">
         <div className="flex justify-center mb-4">
@@ -98,7 +98,7 @@ export const LoginForm = () => {
             />
         </div>
         {/* <h1 className="text-3xl font-bold text-[#083959]">Welcome back</h1> */}
-        <p className="mt-2 text-gray-600">Please sign in to your account</p>
+        <p className="mt-2 text-gray-600">{authT('signInPrompt')}</p>
       </div>
       <form onSubmit={handleSubmit} className="sm:mt-8 space-y-6">
         <div className="space-y-4">
@@ -113,7 +113,7 @@ export const LoginForm = () => {
                 type="text"
                 required
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent"
-                placeholder="Enter your email, NUI or Phone"
+                placeholder={authT('usernameOrEmail')}
               />
             </div>
             {formError.username && <p className="text-red-500">{formError.username}</p>}
@@ -123,7 +123,7 @@ export const LoginForm = () => {
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
             >
-              Password
+              {authT('password')}
             </label>
             <div className="mt-1 relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -136,7 +136,7 @@ export const LoginForm = () => {
                 required
                 autoComplete='current-password'
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent"
-                placeholder="Enter your password"
+                placeholder={authT('enterPassword')}
               />
               <button
                 type="button"
@@ -161,15 +161,15 @@ export const LoginForm = () => {
               htmlFor="remember-me"
               className="ml-2 block text-sm text-gray-700"
             >
-              Remember me
+              {authT('rememberMe')}
             </label>
           </div>
           <div className="text-sm">
             <a
-              href="#"
+              href="/forgot-password"
               className="font-medium text-blue-900 hover:text-blue-800"
             >
-              Forgot password?
+              {authT('forgotPassword')}
             </a>
           </div>
         </div>
@@ -177,13 +177,13 @@ export const LoginForm = () => {
           <SubmitButton />
           <div className="text-center">
             <span className="text-sm text-gray-600">
-              Don&apos;t have an account?{' '}
+              {authT('noAccount')}{' '}
             </span>
             <a
               href="/signup"
               className="text-sm font-medium text-blue-900 hover:text-blue-800"
             >
-              Create account
+              {authT('createAccount')}
             </a>
           </div>
         </div>
@@ -195,10 +195,11 @@ export const LoginForm = () => {
 
 const SubmitButton = () => {
   const { pending } = useFormStatus();
+  const authT = useTranslations('Auth');
 
   return (
     <button type="submit" disabled={pending} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-900 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900">
-        Sign in
+        {authT('signIn')}
     </button>
   )
 }

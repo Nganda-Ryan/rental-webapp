@@ -1,6 +1,10 @@
+'use client'
 import React from 'react'
+import { useTranslations } from 'next-intl'
 
 const Nodata = ({message}: {message?: string}) => {
+  const t = useTranslations('Common')
+
   return (
     <div className="h-[50vh] flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
         <svg
@@ -35,7 +39,7 @@ const Nodata = ({message}: {message?: string}) => {
             strokeLinecap="round"
         />
         </svg>
-        <p className="text-sm sm:text-lg">{message ?? "Nothing to display"}</p>
+        <p className="text-sm sm:text-lg">{message ?? t('nothingToDisplay')}</p>
     </div>
   )
 }

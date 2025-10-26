@@ -386,7 +386,7 @@ export async function setSecurityQuestion (param: ISetSecurityQuestion) {
   try {
     const session = await verifySession();
     const token = session.accessToken;
-    
+
     const response = await axios.post(`${process.env.USER_WORKER_ENDPOINT}/api/v1/User/Security`, {
       Request : {
         ...param
@@ -397,7 +397,7 @@ export async function setSecurityQuestion (param: ISetSecurityQuestion) {
         'Content-Type': 'application/json',
       },
     });
-    
+
     return {
       code: 'success',
       error: null,
@@ -420,6 +420,44 @@ export async function setSecurityQuestion (param: ISetSecurityQuestion) {
     }
   }
 
+}
+
+export async function sendPasswordResetEmail(email: string) {
+  try {
+    const { sendPasswordResetEmail: firebaseSendPasswordResetEmail } = await import('firebase/auth');
+    const { auth } = await import('@/lib/firebase');
+
+    await firebaseSendPasswordResetEmail(auth, email);
+
+    return {
+      success: true,
+      error: null,
+      code: null
+    };
+  } catch (error: any) {
+    console.error('-->sendPasswordResetEmail.error', error);
+
+    let message = "Failed to send password reset email";
+    switch (error.code) {
+      case "auth/user-not-found":
+        message = "No account found with this email address";
+        break;
+      case "auth/invalid-email":
+        message = "Invalid email address";
+        break;
+      case "auth/too-many-requests":
+        message = "Too many requests. Please try again later";
+        break;
+      default:
+        message = error.message || "An unexpected error occurred";
+    }
+
+    return {
+      success: false,
+      error: message,
+      code: error.code ?? "unknown"
+    };
+  }
 }
 /*
   SESSION TEMPLATE

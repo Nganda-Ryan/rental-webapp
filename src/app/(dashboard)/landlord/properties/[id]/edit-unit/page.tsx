@@ -15,8 +15,8 @@ import toast from 'react-hot-toast';
 import { useRouter } from '@bprogress/next/app';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal';
 
-import { PROPERTY_TYPE_OBJ_CODE } from '@/constant';
 import { useSearchParams } from 'next/navigation';
+import { useTranslatedConstants } from '@/hooks/useTranslatedConstants';
 import { capitalize } from "@/lib/utils";
 import { roleStore } from "@/store/roleStore";
 import { useTranslations } from "next-intl";
@@ -37,6 +37,7 @@ const Page = () => {
   const t = useTranslations("Common");
   const landlordT = useTranslations('Landlord.assets');
   const commonT = useTranslations('Common');
+  const { PROPERTY_TYPE_OBJ_CODE } = useTranslatedConstants();
   const unitId = searchParams.get('unitId');
 
   const {
@@ -69,11 +70,6 @@ const Page = () => {
         currency: asset.Currency,
         coverUrl: asset.CoverUrl,
         tag: [],
-        addressData: {
-          city: asset.Address.City,
-          country: asset.Address.Country,
-          street: asset.Address.Street,
-        },
       });
       if (asset?.CoverUrl) {setImagePreview(asset.CoverUrl);}
     }
@@ -128,11 +124,6 @@ const Page = () => {
           currency: assetData.Currency,
           coverUrl: assetData.CoverUrl,
           tag: item.Tag,
-          addressData: {
-            city: assetData.Address.City,
-            country: assetData.Address.Country,
-            street: assetData.Address.Street,
-          },
         });
         if (assetData.CoverUrl) {setImagePreview(assetData.CoverUrl);}
       } else if(result.error){
@@ -155,8 +146,22 @@ const Page = () => {
     setIsLoading(true);
     setLoadingMessage(t('updatingProperty'));
     console.log("Form data:", data);
+
+    // Handle file upload properly
+    const payload: IUpdateAssetRequest = {
+      ...data,
+      coverUrl: selectedFile ? [selectedFile] : (asset?.CoverUrl || ""),
+      addressData: {
+        city: asset?.Address.City || "",
+        country: asset?.Address.Country || "",
+        street: asset?.Address.Street || "",
+      }
+    };
+
+    console.log("Payload:", payload);
+
     try {
-      const result =  await updateAsset(data);
+      const result =  await updateAsset(payload);
       console.log('-->Result', result);
       if(result.data){
         setShowSuccessModal(true);
@@ -253,44 +258,15 @@ const Page = () => {
                                 file:rounded file:border-0
                                 file:text-sm file:font-medium
                                 file:bg-blue-50 file:text-blue-700
-                                hover:file:bg-blue-100 ${errors.coverUrl && "border border- border-red-600"}
+                                hover:file:bg-blue-100
                                 dark:file:bg-blue-900 dark:file:text-white
-                                dark:hover:file:bg-blue-800  
+                                dark:hover:file:bg-blue-800
                               `}
                               accept="image/*"
-                              {...register("coverUrl")}
                               onChange={handleFileChange}
                             />
                             <span className="sr-only"></span>
                           </label>
-                        </div>
-                      </div>
-
-                      {/* Location Info */}
-                      <div className="flex flex-col justify-between w-full">
-                        <div className="flex flex-col">
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{commonT('city')}</label>
-                          <input
-                            {...register("addressData.city", { required: commonT('theCityIsRequired')})}
-                            type="text"
-                            className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          {errors.addressData?.city && (
-                            <p className="text-sm text-red-500">{errors.addressData?.city.message}</p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{commonT('street')}</label>
-                          <input
-                            {...register("addressData.street", { required: commonT('theStreetIsRequired') })}
-                            type="text"
-                            className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          {errors.addressData?.street && (
-                            <p className="text-sm text-red-500">{errors.addressData.street.message}</p>
-                          )}
                         </div>
                       </div>
                     </div>

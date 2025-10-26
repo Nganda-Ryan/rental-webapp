@@ -21,74 +21,87 @@ import logoImage from "../../../public/images/logo.svg";
 import { roleStore } from "@/store/roleStore";
 import { PROFILE_RENTER_LIST } from "@/constant";
 import { useRouter } from "@bprogress/next/app";
+import { useTranslations } from "next-intl";
 
 type MenuItem = {
   icon: React.ReactNode;
   label: string;
+  labelKey: string;
   route: string;
   profiles: string[];
 };
 
 type MenuGroup = {
   name: string;
+  nameKey: string;
   menuItems: MenuItem[];
 };
 
 const ALL_MENU_GROUPS = [
   {
     name: "MENU",
+    nameKey: "menu",
     menuItems: [
       {
         icon: <LayoutDashboard size={20} />,
         label: "Dashboard",
+        labelKey: "dashboard",
         route: "/renter",
         profiles: ["RENTER"],
       },
       {
         icon: <LayoutDashboard size={20} />,
         label: "Dashboard",
+        labelKey: "dashboard",
         route: "/landlord",
         profiles: ["LANDLORD"],
       },
       {
         icon: <Building size={20} />,
         label: "Properties",
+        labelKey: "properties",
         route: "/landlord/properties",
         profiles: ["LANDLORD"],
       },
       {
         icon: <LayoutDashboard size={20} />,
         label: "System Overview",
+        labelKey: "systemOverview",
         route: "/support",
         profiles: ["SUPPORT", "ADMIN"],
       },
       {
         icon: <UserCog size={20} />,
         label: "Account Management",
+        labelKey: "accountManagement",
         route: "/support/account-management",
         profiles: ["SUPPORT", "ADMIN"],
       },
       {
         icon: <BadgeCheck size={20} />,
         label: "Landlord Verification",
+        labelKey: "landlordVerification",
         route: "/support/landlord-verification",
         profiles: ["SUPPORT", "ADMIN"],
       },
       {
         icon: <Building2 size={20} />,
         label: "Properties Verification",
+        labelKey: "propertiesVerification",
         route: "/support/properties-verification",
         profiles: ["SUPPORT", "ADMIN"],
       },
       {
         icon: <ShieldCheck size={20} />,
         label: "Support Users",
+        labelKey: "supportUsers",
         route: "/support/support-users",
         profiles: ["SUPPORT", "ADMIN"],
       },
       {
         icon: <Settings size={20} />,
         label: "Settings",
+        labelKey: "settings",
         route: "/settings",
         profiles: ["RENTER", "MANAGER", "LANDLORD", "SUPPORT", "ADMIN"],
       },
@@ -108,6 +121,8 @@ const Sidebar = memo(function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarPr
   const router = useRouter();
   const { activeRole } = roleStore();
   const pathname = usePathname();
+  const navT = useTranslations('Navigation');
+  const commonT = useTranslations('Common');
 
   const menuListRef = useRef(null);
   
@@ -197,13 +212,18 @@ const Sidebar = memo(function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarPr
             {menuGroups.map((group, groupIndex) => (
                 <div key={groupIndex}>
                   <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
-                    {group.name}
+                    {navT(group.nameKey)}
                   </h3>
                   <ul className="mb-6 flex flex-col gap-1.5">
                     {group.menuItems.map((menuItem, menuIndex) => (
                       <SidebarItem
                         key={menuIndex}
-                        item={menuItem}
+                        item={{
+                          ...menuItem,
+                          label: menuItem.labelKey === 'settings'
+                            ? commonT(menuItem.labelKey)
+                            : navT(menuItem.labelKey)
+                        }}
                         pageName={pageName}
                         setPageName={setPageName}
                         isItemActive={isActive(menuItem)}

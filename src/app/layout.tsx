@@ -5,26 +5,23 @@ import "@/css/style.css";
 import { ToasterProvider } from "../components/ui/toaster";
 import BarProvider from "@/context/BarContext";
 import { LocaleProvider } from "@/context/LocaleContext";
-
-async function getInitialMessages() {
-  return (await import('../../messages/en.json')).default;
-}
+import { Locale } from "@/i18n/config";
 
 export default async  function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+    const locale = await getLocale() as Locale;
     const messages = await getMessages();
-    const locale = await getLocale();
-    const initialMessages = await getInitialMessages();
+
   return (
     <html lang={locale}>
       <body suppressHydrationWarning={true} className="">
         <BarProvider>
           <ToasterProvider />
           <div className={`dark:bg-boxdark-2 dark:text-bodydark min-h-screen bg-blue-sky`}>
-            <LocaleProvider initialMessages={initialMessages}>
+            <LocaleProvider initialMessages={messages} initialLocale={locale}>
               {children}
             </LocaleProvider>
           </div>

@@ -3,6 +3,7 @@
 import { FAQ } from '@/types/faq';
 import Image from 'next/image';
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 const FaqItem = ({
   question,
   answer
@@ -40,27 +41,29 @@ const FaqItem = ({
   </div>;
 };
 const FaqSection = () => {
+  const t = useTranslations('Landing.faq');
+
   const faqs = [
     {
-      question: 'Pourquoi choisir Rental pour la gestion de vos biens immobilier',
-      answer: 'Dans un marché locatif en perpétuelle évolution, Rental se positionne comme la solution idéale pour les propriétaires souhaitant optimiser la gestion de leurs biens en toute sécurité. Rental facilite considérablement des tâches longues, la gestion des contrats, la facturation et le suivi des paiements tout en offrant à vos locataires.'
+      question: t('q1'),
+      answer: t('a1')
     }, {
-      question: 'Comment créer un compte dans Rental ?',
-      answer: 'Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur.'
+      question: t('q2'),
+      answer: t('a2')
     }, {
-      question: 'Y a-t-il un abonnement que je dois payer ?',
-      answer: 'Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur.'
+      question: t('q3'),
+      answer: t('a3')
     }, {
-      question: "Comment fonctionne l'application ?",
-      answer: 'Lorem ipsum dolor sit amet consectetur. Lorem ipsum dolor sit amet consectetur.'
+      question: t('q4'),
+      answer: t('a4')
     }
   ];
   return <section className="bg-white">
       <div className="max-w-screen-lg mt-10 mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-blue-marin">Des question ?</h2>
+          <h2 className="text-3xl font-bold text-blue-marin">{t('title')}</h2>
           <p className="text-gray-500 mt-2">
-            Découvrez les réponses aux questions les plus fréquentes
+            {t('subtitle')}
           </p>
         </div>
         <div className="">

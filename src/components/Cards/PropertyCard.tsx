@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from 'react';
 import { MapPin, BadgeCheck, CheckCircle, AlertCircle, Lock } from 'lucide-react';
 import Image from 'next/image';
@@ -6,6 +7,7 @@ import { formatPrice } from '@/lib/utils';
 import { getStatusBadge } from '@/lib/utils-component';
 import { ASSET_TYPE_COMPLEXE } from '@/constant';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 
 
@@ -15,6 +17,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
   const { Address, CoverUrl, Title, Price, Currency, Code, IsActive, IsVerified, TypeCode, StatusCode } = property;
+  const cardT = useTranslations('PropertyCard');
+  const commonT = useTranslations('Common');
 
 
 
@@ -26,26 +30,26 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
       {/* Badge Actif/Inactif */}
       {StatusCode === 'AVAILABLE' && (
         <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-xs font-semibold shadow-sm dark:bg-blue-900/30 dark:text-blue-300">
-          <CheckCircle size={14} /> Disponible
+          <CheckCircle size={14} /> {cardT('available')}
         </div>
       )}
 
       {StatusCode === 'RENTED' && (
         <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-yellow-100 text-yellow-800 px-2 py-0.5 text-xs font-semibold shadow-sm dark:bg-yellow-900/30 dark:text-yellow-300">
-          <Lock size={14} /> Loué
+          <Lock size={14} /> {cardT('rented')}
         </div>
       )}
 
       {StatusCode === "DRAFT" && (
         <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-gray-200 text-gray-800 px-3 py-0.5 text-xs font-semibold shadow-sm dark:bg-gray-700 dark:text-gray-200">
-          <AlertCircle size={14} /> Brouillon
+          <AlertCircle size={14} /> {cardT('draft')}
         </div>
       )}
 
       {/* Badge Vérifié */}
       {IsVerified == 1 ? (
         <div className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded-full bg-green-100 text-green-800 px-2 py-0.5 text-xs font-semibold shadow-sm dark:bg-green-900/30 dark:text-green-300">
-          <BadgeCheck size={14} /> Vérifié
+          <BadgeCheck size={14} /> {cardT('verified')}
         </div>
       ) : null}
 
@@ -65,7 +69,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
           />
         ) : (
           <div className="h-full flex items-center justify-center animate-pulse">
-            <div className="text-gray-400 dark:text-gray-500">Image indisponible</div>
+            <div className="text-gray-400 dark:text-gray-500">{cardT('imageUnavailable')}</div>
           </div>
         )}
       </div>
@@ -95,13 +99,13 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             {
               TypeCode != ASSET_TYPE_COMPLEXE && <>
                 {formatPrice(Price)} {Currency}
-                <span className="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">/month</span>
+                <span className="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">{commonT('perMonth')}</span>
               </>
             }
-            
+
           </div>
           <div className="rounded-lg bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-300 transition-colors group-hover:bg-blue-600 group-hover:text-white dark:group-hover:bg-blue-700">
-            Voir détails
+            {commonT('viewDetails')}
           </div>
         </div>
       </div>

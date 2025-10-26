@@ -1,18 +1,9 @@
 import {getRequestConfig} from 'next-intl/server';
-import { Locale } from './config';
-
-
-
-async function getLocale(): Promise<Locale> {
-  // Par défaut, retourner 'fr' (ou votre locale par défaut)
-  // La vraie locale sera gérée côté client
-  return 'en';
-}
-
+import { getUserLocale } from '@/services/locale';
 
 export default getRequestConfig(async () => {
-  const locale = await getLocale();
- 
+  const locale = await getUserLocale();
+
   return {
     locale,
     messages: (await import(`../../messages/${locale}.json`)).default

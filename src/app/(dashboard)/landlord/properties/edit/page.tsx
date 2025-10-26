@@ -83,8 +83,17 @@ const Page = () => {
     setIsLoading(true);
     setLoadingMessage(landlordT('updatingProperty'));
     console.log("Form data:", data);
+
+    // Handle file upload properly
+    const payload: IUpdateAssetRequest = {
+      ...data,
+      coverUrl: selectedFile ? [selectedFile] : (asset?.CoverUrl || "")
+    };
+
+    console.log("Payload:", payload);
+
     try {
-      const result =  await updateAsset(data);
+      const result =  await updateAsset(payload);
       console.log('-->Result', result);
       if(result.data){
         setShowSuccessModal(true);
@@ -239,13 +248,10 @@ const Page = () => {
                             hover:file:bg-blue-100
                             dark:file:bg-blue-900 dark:file:text-white
                             dark:hover:file:bg-blue-800
-                            ${errors.coverUrl ? "border-red-600" : ""}
                           `}
                           accept="image/*"
-                          {...register("coverUrl")}
                           onChange={handleFileChange}
                         />
-                        {errors.coverUrl && <p className="text-sm text-red-500">Image is required</p>}
                       </div>
 
                       {/* Colonne droite : Infos texte */}

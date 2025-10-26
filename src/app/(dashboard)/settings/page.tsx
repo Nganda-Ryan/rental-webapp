@@ -24,17 +24,10 @@ import {
     Moon,
     Sun,
     User,
-    Globe,
     Mail,
     Phone,
-    MapPin,
-    Building2,
     Edit2,
     CreditCard,
-    ChevronUp,
-    ChevronDown,
-    Check,
-    Cross,
     X,
 } from 'lucide-react'
 import { useTranslations } from "next-intl";
@@ -189,7 +182,7 @@ const Settings = () => {
 
     return (
         <DefaultLayout>
-            <div className="mx-auto max-w-270">
+            <div className="mx-auto">
                 <Breadcrumb pageName={commonT('settings')} />
                 {/* User Information */}
                 <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-6 mb-6">

@@ -375,3 +375,80 @@ export interface ApplicationSelectableItem {
   Code: string;
   isSelect: number;
 }
+
+
+
+
+// Définition de l'interface pour un utilisateur
+interface IUser {
+    Code: string;
+    AddressCode: string;
+    Email: string;
+    Firstname: string;
+    Gender: "MALE" | "FEMALE" | string; // Supposons MALE/FEMALE ou autre
+    Lastname: string;
+    NIU: string;
+    OtherEmail: string | null;
+    OtherPhone: string | null;
+    Phone: string;
+    Status: "ACTIVE" | "INACTIVE" | string;
+    AvatarUrl: string;
+    Profiles: any[]; // Dépend de la structure de Profile, mis à 'any[]' pour l'instant
+}
+
+// Définition de l'interface pour un "Partenaire" (Renter ou Contractor)
+interface IPartner {
+    Code: string;
+    Status: "ACTIVE" | "INACTIVE" | string;
+    RoleCode: "RENTER" | "LANDLORD" | string;
+    CreatedAt: string; // Format date "YYYY-MM-DD"
+    IsActive: 0 | 1; // 0 ou 1 pour booléen
+    UserCode: string;
+    user: IUser;
+}
+
+// Définition de l'interface pour l'Actif (Asset)
+interface IAsset {
+    Code: string;
+    Title: string;
+    TypeCode: "APPART" | string; // Type de bien (Appartement, Maison, etc.)
+    OwnerCode: string;
+    Price: number;
+    Currency: string;
+    CoverUrl: string;
+    Tag: string;
+    Notes: string;
+    StatusCode: "RENTED" | string;
+    IsActive: 0 | 1;
+    IsVerified: 0 | 1;
+    AddressCode: string;
+    CreatedAt: string; // Format date "YYYY-MM-DD"
+    ManagerCode: string;
+    EndDate: string; // Format date "YYYY-MM-DD"
+    ParentCode: string | null;
+    ManagerPermissionCode: string;
+    RenterCode: string;
+}
+
+// Définition de l'interface principale pour le Contrat
+export interface IGetAssetDetailContract {
+    Code: string;
+    AssetCode: string;
+    RenterCode: string;
+    ContractorCode: string;
+    Amount: number; // Montant du contrat (0 dans l'exemple, mais pourrait être le prix)
+    Currency: string;
+    InitialDuration: number; // Durée initiale en mois/années (1 dans l'exemple)
+    ReminderDay: number; // Jour du rappel de paiement
+    CreatedAt: string; // Format date "YYYY-MM-DD"
+    StartDate: string; // Format date "YYYY-MM-DD"
+    EndDate: string; // Format date "YYYY-MM-DD"
+    StatusCode: "ACTIVE" | "CLOSED" | string;
+    ContractedDate: string; // Format date/heure "YYYY-MM-DD HH:mm:ss"
+    ClosedDate: string | null; // Peut être null si le contrat est actif
+    Notes: string;
+    IsActive: 0 | 1;
+    renter: IPartner;
+    contractor: IPartner;
+    asset: IAsset;
+}

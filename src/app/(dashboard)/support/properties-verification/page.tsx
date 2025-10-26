@@ -24,6 +24,7 @@ import Button from '@/components/ui/Button'
 import { formatDateToText } from '@/lib/utils'
 import { MANAGER_PROFILE_LIST } from '@/constant'
 import { roleStore } from '@/store/roleStore'
+import { useTranslations } from 'next-intl'
 
 interface VerificationRequest {
   id: string
@@ -55,6 +56,8 @@ const Page = () => {
   const [loadingMessage, setLoadingMessage] = useState('')
   const [isReady, setIsReady] = useState(false);
   const { isAuthorized } = roleStore();
+  const t = useTranslations('Support.propertiesVerification');
+  const commonT = useTranslations('Common');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,7 +117,7 @@ const Page = () => {
   const handleActionConfirm = async (comment: string) => {
     try {
       if(actionModal.lessorId){
-        setLoadingMessage('Processing request...');
+        setLoadingMessage(t('processingRequest'));
         setIsLoading(true);
         const payload = {
           code: actionModal.lessorId,
@@ -128,7 +131,7 @@ const Page = () => {
         const result  = await verifyRequest(payload, "Asset");
         if (result.code) {
           console.log('Error approving request:', result.error);
-          toast.error("Someting wend wrong during the process, please try again", { position: 'bottom-right' });
+          toast.error(t('processError'), { position: 'bottom-right' });
           return;
         }
         setRequestList((prev) => {
@@ -139,8 +142,8 @@ const Page = () => {
             return request;
           });
         })
-        
-        const message = actionModal.type === 'APPROVED' ? 'asset approved successfully!' : 'asset rejected successfully!';
+
+        const message = actionModal.type === 'APPROVED' ? t('approveSuccess') : t('rejectSuccess');
         toast.success(message, { position: 'bottom-right' });
       }
       setActionModal({
@@ -151,7 +154,7 @@ const Page = () => {
       return;
     } catch (error) {
       console.error('Error during action confirmation:', error);
-      toast.error("Someting wend wrong during the process, please try again", { position: 'bottom-right' });
+      toast.error(t('processError'), { position: 'bottom-right' });
     } finally {
       setIsLoading(false);
     }
@@ -161,13 +164,13 @@ const Page = () => {
   const columns = [
     {
       key: 'asset',
-      label: 'Property Information',
+      label: t('propertyInfo'),
       priority: 'medium' as const,
       render: (_: any, row: VerificationRequest) => (
         <div className="text-sm text-gray-700 dark:text-gray-300">
           <div className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
             <Building2 size={14} />
-            {row.asset.replace('Verification of ', "")}
+            {row.asset.replace('Verification of ', "").replace(t('verificationOf') + ' ', "")}
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
             <Calendar size={14} />
@@ -178,7 +181,7 @@ const Page = () => {
     },
     {
       key: 'creator',
-      label: 'Property Owner',
+      label: t('propertyOwner'),
       priority: 'low' as const,
       render: (_: any, row: VerificationRequest) => (
         <div className="space-y-1">
@@ -198,7 +201,7 @@ const Page = () => {
     },
     {
       key: 'status',
-      label: 'REQUEST STATUS',
+      label: t('requestStatus'),
       priority: 'medium' as const,
       render: (_: any, row: VerificationRequest) => (
         <div className="space-y-1">
@@ -208,15 +211,15 @@ const Page = () => {
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: t('actions'),
       priority: 'high' as const,
       render: (_: any, row: VerificationRequest) => (
         <div className="flex gap-2">
           <Button variant={row.status === 'PENDING' ? 'danger' : 'outline-danger'} disable={row.status !== 'PENDING'} isSubmitBtn={false} fullWidth={true} onClick={(e) => {e.stopPropagation(); handleAction('DECLINED', row.id); }}>
-            Reject
+            {t('reject')}
           </Button>
           <Button variant={row.status === 'PENDING' ? 'neutral' : 'outline-neutral'} disable={row.status !== 'PENDING'} isSubmitBtn={false} fullWidth={true} onClick={(e) => {e.stopPropagation();handleAction('APPROVED', row.id)}}>
-            Approve
+            {t('approve')}
           </Button>
         </div>
       ),
@@ -235,7 +238,7 @@ const Page = () => {
   
   return (
     <DefaultLayout>
-      <Breadcrumb previousPage={false} pageName="Property Verification Requests" />
+      <Breadcrumb previousPage={false} pageName={t('title')} />
 
       {
         isReady ?
@@ -270,8 +273,8 @@ const Page = () => {
                   onConfirm={handleActionConfirm}
                   title={
                     actionModal.type === 'APPROVED'
-                      ? 'Approve asset Verification'
-                      : 'Reject asset Verification'
+                      ? t('approveAssetVerification')
+                      : t('rejectAssetVerification')
                   }
                   type={actionModal.type}
                 />
@@ -282,7 +285,7 @@ const Page = () => {
             </div>
           :
             <div className="w-full">
-              <Nodata message='No request to display'/>
+              <Nodata message={t('noRequests')}/>
             </div>
           }
         </>

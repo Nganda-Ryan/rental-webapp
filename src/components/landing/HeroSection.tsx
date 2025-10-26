@@ -1,12 +1,16 @@
+'use client';
 import React from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 const HeroSection = () => {
+  const t = useTranslations('Landing.hero');
+
   return (
     <div className="">
       <section className="bg-blue-marin text-white relative min-h-screen">
         <div className="max-w-screen-2xl mx-auto">
-          
+
           {/* Background grid pattern */}
           <div className="absolute inset-0">
             <div className="h-full w-full vector-bg"></div>
@@ -16,26 +20,20 @@ const HeroSection = () => {
             <div className="mx-auto text-center space-y-6 mt-33">
               <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/10 text-sm">
                 <span className="text-red-500 font-semibold">30</span>
-                <span className="ml-1">propriétaires inscrits</span>
+                <span className="ml-1">{t('landlordsRegistered', { count: 30 })}</span>
               </div>
               <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                <span className="text-red-500">Simplifiez</span> et{' '}
-                <span className="text-red-500">optimisez</span> la gestion de
-                <br />
-                vos biens locatifs en toute sérénité.
+                {t('title')}
               </h1>
               <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-                Avec Rental, simplifiez la gestion de vos locations grâce à une
-                plateforme intuitive qui automatise vos tâches administratives,
-                optimise vos paiements et améliore votre relation avec les
-                locataires.
+                {t('description')}
               </p>
               <div className="flex flex-wrap gap-4 justify-center pt-4">
                 <button className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium">
-                  Essayez Rental dès maintenant !
+                  {t('tryNow')}
                 </button>
                 <button className="bg-[#1e3a5f] hover:bg-[#1e3a5f]/80 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2">
-                  Voir la démo
+                  {t('viewDemo')}
                   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>

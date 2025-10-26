@@ -14,8 +14,8 @@ import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
 import Overlay from '@/components/Overlay';
 import { AllRole, FormValues, ICreateUserParam, IUser, SeachUserParams } from '@/types/user';
-import { MANAGER_PROFILE_OBJ_LIST } from '@/constant';
 import { createUser, searchUser } from '@/actions/userAction';
+import { useTranslatedConstants } from '@/hooks/useTranslatedConstants';
 import { getRoleBadge, getStatusBadge } from '@/lib/utils-component';
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
 import Nodata from '@/components/error/Nodata';
@@ -42,6 +42,7 @@ const SupportUsers = () => {
   const { isAuthorized } = roleStore();
     const landlordT = useTranslations('Landlord.assets');
     const commonT = useTranslations('Common');
+  const { MANAGER_PROFILE_OBJ_LIST } = useTranslatedConstants();
 
   useEffect(() => {
 

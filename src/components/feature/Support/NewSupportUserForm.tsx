@@ -14,7 +14,7 @@ import PhoneInput from 'react-phone-input-2';
 import { getNames, getCode } from 'country-list';
 import { Controller, useForm } from 'react-hook-form';
 import Button from '@/components/ui/Button';
-import { MANAGER_PROFILE_OBJ_LIST } from '@/constant';
+import { useTranslatedConstants } from '@/hooks/useTranslatedConstants';
 import { FormValues, ManagerRole } from '@/types/user';
 interface NewSupportUserFormProps {
   isOpen: boolean
@@ -40,6 +40,7 @@ export const NewSupportUserForm = ({
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<ManagerRole>('SUPPORT');
   const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const { MANAGER_PROFILE_OBJ_LIST } = useTranslatedConstants();
   const {
     register,
     handleSubmit,

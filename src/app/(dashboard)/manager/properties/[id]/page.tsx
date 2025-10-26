@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Building2,
   MapPin,
@@ -90,9 +90,6 @@ const PropertyDetail = () => {
     const landlordT = useTranslations('Landlord.assets');
     const commonT = useTranslations('Common');
     
-    useEffect(() => {
-        init();
-    }, []);
 
     useEffect(() => {
         if(showInvoiceGenerator == false){
@@ -647,10 +644,9 @@ const PropertyDetail = () => {
         }
         return false;
     }
-    const init = async () => {
+    const init = useCallback(async () => {
         try {
             const result = await getAsset(params.id as string);
-            console.log('-->result', result);
             if(result?.data?.body?.assetData) {
                 const item = result.data.body.assetData;
                 const assetData: AssetDataDetailed  = {
@@ -706,6 +702,7 @@ const PropertyDetail = () => {
                 }
 
                 console.log('-->managerList', _managerList);
+                console.log('-->result', result);
                 console.log('-->assetData', assetData);
                 console.log('-->item.contracts', item.contracts);
 
@@ -821,6 +818,7 @@ const PropertyDetail = () => {
                     setContractTableData([..._contractTableData].reverse());
                 }
                 setPermissionList(result.data.body.ConfigPermissionList);
+                console.log('-->result.data.body', result.data.body)
                 setManagerList(_managerList);
                 setAsset(assetData)
             } else if(result.error){
@@ -836,8 +834,13 @@ const PropertyDetail = () => {
         } finally {
             setIsReady(true);
         }
-    }
+    }, [commonT, params.id, router, today])
     // const fetch
+
+    
+    useEffect(() => {
+        init();
+    }, [init]);
 
     const copyToClipboard = (text: string) => {
         if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {

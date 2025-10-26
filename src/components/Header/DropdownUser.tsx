@@ -9,9 +9,11 @@ import SidebarItemSkeleton from "../skeleton/SidebarItemSkeleton";
 import { logout } from "@/actions/authAction";
 import { roleStore } from "@/store/roleStore";
 import { useRouter } from "@bprogress/next/app";
+import { useTranslations } from "next-intl";
 
 interface ProfileMenu {
   label: string;
+  labelKey: string;
   profileName: string[];
   route: string;
   icone: React.ReactNode;
@@ -20,24 +22,28 @@ interface ProfileMenu {
 const ALL_PROFILE_MENU: ProfileMenu[] = [
   {
     label: 'Tenant Profile',
+    labelKey: 'tenantProfile',
     profileName: ["RENTER"],
     route: '/renter',
     icone: (<Home size={20}/>),
   },
   {
     label: 'Landlord Profile',
+    labelKey: 'landLordProfile',
     profileName: ["LANDLORD"],
     route: '/landlord',
     icone: (<Building size={20}/>),
   },
   {
     label: 'Manager Profile',
+    labelKey: 'managerProfile',
     profileName: ["MANAGER"],
     route: '/manager',
     icone: (<Briefcase size={20}/>),
   },
   {
     label: 'Support Profile',
+    labelKey: 'supportProfile',
     profileName: ["ADMIN", "SUPPORT"],
     route: '/support',
     icone: (<Headset size={20}/>),
@@ -51,6 +57,7 @@ const DropdownUser = () => {
 
   const router = useRouter();
   const { activeRole, user, resetAuth} = roleStore();
+  const commonT = useTranslations('Common');
   useEffect(() => {
     if (user?.roles && user?.roles.length > 0) {
       const filteredMenu = ALL_PROFILE_MENU.filter(menu =>
@@ -131,8 +138,8 @@ const DropdownUser = () => {
           ) : (
             <ul className="flex flex-col border-b border-stroke dark:border-strokedark">
               {profileMenu.map((item, index) => (
-                <li 
-                  key={index} 
+                <li
+                  key={index}
                   className={`px-6 py-2 ${
                     activeRole === item.profileName[0] ? 'bg-slate-200 dark:bg-slate-700' : ''
                   }`}
@@ -144,7 +151,7 @@ const DropdownUser = () => {
                     }`}
                   >
                     {item.icone}
-                    {item.label}
+                    {commonT(item.labelKey)}
                     {activeRole === item.profileName[0] && (
                       <span className="ml-auto text-xs text-primary">●</span>
                     )}
@@ -157,13 +164,13 @@ const DropdownUser = () => {
                   className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
                 >
                   <Settings size={20} />
-                  Account Settings
+                  {commonT('accountSettings')}
                 </Link>
               </li>
             </ul>
           )}
           
-          <button 
+          <button
             onClick={handleLogOut}
             className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
           >
@@ -184,7 +191,7 @@ const DropdownUser = () => {
                 fill=""
               />
             </svg>
-            Log Out
+            {commonT('logOut')}
           </button>
         </div>
       )}

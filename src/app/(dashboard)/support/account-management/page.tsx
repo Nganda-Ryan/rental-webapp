@@ -14,8 +14,9 @@ import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
 import Overlay from '@/components/Overlay';
 import { AllRole, FormValues, ICreateUserParam, IUser, ManagerRole, SeachUserParams, UserStatus } from '@/types/user';
-import { CLIENT_PROFILE_OBJ_LIST, MANAGER_PROFILE_LIST, MANAGER_PROFILE_OBJ_LIST, USERS_STATUS } from '@/constant';
+import { MANAGER_PROFILE_LIST } from '@/constant';
 import { createUser, searchUser } from '@/actions/userAction';
+import { useTranslatedConstants } from '@/hooks/useTranslatedConstants';
 import { getRoleBadge, getStatusBadge } from '@/lib/utils-component';
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
 import Nodata from '@/components/error/Nodata';
@@ -43,8 +44,9 @@ const Page = () => {
   const [isFetchingUser, setIsFetchingUser] = useState(true);
   const router = useRouter();
   const { isAuthorized } = roleStore();
-    const landlordT = useTranslations('Landlord.assets');
-    const commonT = useTranslations('Common');
+  const t = useTranslations('Support.accountManagement');
+  const commonT = useTranslations('Common');
+  const { CLIENT_PROFILE_OBJ_LIST, MANAGER_PROFILE_OBJ_LIST, USERS_STATUS } = useTranslatedConstants();
 
   useEffect(() => {
 
@@ -114,7 +116,7 @@ const Page = () => {
       }
     } catch (error) {
       console.log('SupportUsers.getUserList.error', error);
-      toast.error("Something went wrong during the process. Try again or contact the administrator", { position: 'bottom-right' });
+      toast.error(commonT('somethingWentWrong'), { position: 'bottom-right' });
     } finally {
       setIsFetchingUser(false);
     }
@@ -130,7 +132,7 @@ const Page = () => {
   const usersTableColumn = [
     {
       key: 'userId',
-      label: 'USER',
+      label: t('user'),
       priority: "medium" as "medium",
       render: (_: any, user: IUser) => (
         <div className="text-sm text-gray-700 dark:text-gray-300">
@@ -141,7 +143,7 @@ const Page = () => {
     },
     {
       key: 'contact',
-      label: 'CONTACT',
+      label: t('contact'),
       priority: "medium" as "medium",
       render: (_: any, user: IUser) => (
       <div className="text-sm sm:text-base text-gray-800 dark:text-gray-100">
@@ -156,7 +158,7 @@ const Page = () => {
     },
     {
       key: 'role',
-      label: 'Role',
+      label: t('role'),
       priority: "low" as "low",
       render: (_: any, user: IUser) => (
         <span className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
@@ -166,7 +168,7 @@ const Page = () => {
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('status'),
       priority: "medium" as "medium",
       render: (_: any, user: IUser) => (
         <span className="text-sm text-gray-500 dark:text-gray-300 flex items-center justify-end md:justify-start gap-1">
@@ -176,19 +178,19 @@ const Page = () => {
     },
     {
         key: 'actions',
-        label: 'Actions',
+        label: t('actions'),
         priority: "high" as "high",
         render: (_: any, user: IUser) => (
         <div className="flex items-center justify-end md:justify-start gap-2">
           {user.status === 'ACTIVE' ? (
             <Button onClick={(e) => { e.stopPropagation(); handleDesactivateUser(user);}} variant='outline-danger' disable={false} isSubmitBtn={false} fullWidth={false}>
               <UserX size={16} />
-              Deactivate
+              {t('deactivate')}
             </Button>
           ) : (
             <Button onClick={(e) => { e.stopPropagation(); handleActivateUser(user);}} variant='outline-success' disable={false} isSubmitBtn={false} fullWidth={false}>
               <UserCheck size={16} />
-              Activate
+              {t('activate')}
             </Button>
           )}
         </div>
@@ -229,7 +231,7 @@ const Page = () => {
       const result = await createUser(payload);
 
       if(result?.data){
-        setSuccessMessage("Admin created successfully");
+        setSuccessMessage(t('adminCreated'));
         setShowSuccessModal(true)
       } else if (result?.error) {
         console.log('SupportUser.handleNewUser.result.error', result.error);
@@ -237,7 +239,7 @@ const Page = () => {
       }
     } catch (error) {
       console.log("SupportUser.handleNewUser.error", error);
-      toast.error("Something went wrong during the process. Try again or contact the administrator", { position: 'bottom-right' });
+      toast.error(commonT('somethingWentWrong'), { position: 'bottom-right' });
     } finally {
       if(showSuccessModal){
         await getUserList();
@@ -254,7 +256,7 @@ const Page = () => {
   }
   return (
     <DefaultLayout>
-      <Breadcrumb previousPage={false} pageName="Account Management" />
+      <Breadcrumb previousPage={false} pageName={t('title')} />
         <div className="w-full">
           <div className="bg-transparent rounded-lg md:shadow-sm overflow-hidden mb-5">
             {
@@ -271,7 +273,7 @@ const Page = () => {
                     />
                   // </SectionWrapper>
                   ) : (
-                  <Nodata message="No user to display" />
+                  <Nodata message={t('noUsers')} />
                 )
                 : 
               <SkeletonTable rows={6} />

@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Building2, Eye, EyeOff, Key, Mail } from 'lucide-react';
 import PhoneInput from 'react-phone-input-2';
-import Select from 'react-select';
 import { getNames, getCode } from 'country-list';
 import { signUpAction } from '@/actions/authAction';
 import toast from 'react-hot-toast';
@@ -20,16 +19,15 @@ const countryOptions = getNames()
 .filter((option) => option.value !== undefined) as { label: string; value: string }[]
 
 function isValidationError(error: unknown): error is Record<string, string[]> {
-  return typeof error !== null && error === 'object';
+  return error !== null && typeof error === 'object';
 }
 
 export const RegisterForm = () => {
   const [phone, setPhone] = useState('')
-  const [selectedCountry, setSelectedCountry] = useState<{ label: string; value: string } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false);
-    const landlordT = useTranslations('Landlord.assets');
-    const commonT = useTranslations('Common');
+  const authT = useTranslations('Auth');
+  const commonT = useTranslations('Common');
   const [formError, setFormError] = useState({
     isError: false,
     message: "",
@@ -64,10 +62,10 @@ export const RegisterForm = () => {
         userId: "",
         street: data.street,
         city: data.city,
-        country: selectedCountry?.value || '',
+        country: data.country as string,
       }
       const result = await signUpAction(payload);
-      console.log('-->result', result);
+
       if(result){
         if(result?.error){
           if(result.code == "validation"){
@@ -95,52 +93,45 @@ export const RegisterForm = () => {
           }
         } else {
           setIsLoading(false);
-          toast.success("Connexion réussie", { position: 'bottom-right' });
+          toast.success(commonT('registrationSuccess'), { position: 'bottom-right' });
           if (result.redirectTo) {
             router.push(result.redirectTo);
           } else {
-            toast.error("Erreur interne du système", { position: 'bottom-right' });
+            toast.error(commonT('systemError'), { position: 'bottom-right' });
           }
         }
       }
-      return;
     } catch (error:any) {
-      console.error('@@@@', error);
       if (error.message === 'WEAK_PASSWORD') {
-        setIsLoading(false);
-        toast.error('Le mot de passe est trop faible.', {position: 'top-center'});
+        toast.error(commonT('weakPassword'), {position: 'top-center'});
       } else {
-        console.error('@@@@', JSON.parse(error.response));
-        setIsLoading(false);
-        toast.error('Erreur inconnue lors de la création.', {position: 'bottom-right'});
+        toast.error(commonT('registrationError'), {position: 'bottom-right'});
       }
-      
     } finally {
       setIsLoading(false);
     }
   }
 
-  const handlePhoneChange = (phone: any) => {
-    console.log(phone)
+  const handlePhoneChange = (phone: string) => {
     setPhone(phone)
   }
   
   return (
     <div className="w-full max-w-md space-y-8">
       <Overlay isOpen={isLoading} onClose={() => {}}>
-        <ProcessingModal message="Creating your account..." />
+        <ProcessingModal message={authT('creatingAccount')} />
       </Overlay>
       <div className="text-center">
         <div className="flex justify-center mb-4">
           <Building2 className="h-12 w-12 text-blue-900" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
-        <p className="mt-2 text-gray-600">Please fill in your information</p>
+        <h1 className="text-3xl font-bold text-gray-900">{authT('createAccountTitle')}</h1>
+        <p className="mt-2 text-gray-600">{authT('fillInformation')}</p>
       </div>
       <form onSubmit={handleSubmit} className="mt-8 space-y-2">
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700">First Name</label>
+            <label className="block text-sm font-medium text-gray-700">{authT('firstName')}</label>
             <input
               type="text"
               required
@@ -150,7 +141,7 @@ export const RegisterForm = () => {
           {formError.firstname && <p className="text-red-500">{formError.firstname}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Last Name</label>
+            <label className="block text-sm font-medium text-gray-700">{authT('lastName')}</label>
             <input
               type="text"
               required
@@ -163,23 +154,23 @@ export const RegisterForm = () => {
 
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Gender</label>
+          <label className="block text-sm font-medium text-gray-700">{authT('gender')}</label>
           <select
             name="gender"
             required
             className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
           >
-            <option value="">Select gender</option>
-            <option value="MALE">Male</option>
-            <option value="FEMALE">Female</option>
-            <option value="OTHER">Other</option>
+            <option value="">{authT('selectGender')}</option>
+            <option value="MALE">{authT('male')}</option>
+            <option value="FEMALE">{authT('female')}</option>
+            <option value="OTHER">{authT('other')}</option>
           </select>
           {formError.gender && <p className="text-red-500">{formError.gender}</p>}
         </div>
         
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-medium text-gray-700">{commonT('email')}</label>
             <div className="mt-1 relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />
@@ -194,7 +185,7 @@ export const RegisterForm = () => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Primary Phone</label>
+            <label className="block text-sm font-medium text-gray-700">{authT('primaryPhone')}</label>
             <div className="mt-1 relative">
               <PhoneInput
                 country={'cm'}
@@ -212,12 +203,14 @@ export const RegisterForm = () => {
         
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Country</label>
+            <label className="block text-sm font-medium text-gray-700">{commonT('country')}</label>
             <select
               name="country"
               required
+              defaultValue=""
               className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
             >
+              <option value="" disabled>{commonT('selectCountry')}</option>
               {countryOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -226,9 +219,9 @@ export const RegisterForm = () => {
             </select>
             {formError.country && <p className="text-red-500">{formError.country}</p>}
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">City</label>
+            <label className="block text-sm font-medium text-gray-700">{commonT('city')}</label>
             <input
               type="text"
               required
@@ -239,7 +232,7 @@ export const RegisterForm = () => {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Street</label>
+          <label className="block text-sm font-medium text-gray-700">{commonT('street')}</label>
           <input
             type="text"
             required
@@ -251,7 +244,7 @@ export const RegisterForm = () => {
 
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Password</label>
+          <label className="block text-sm font-medium text-gray-700">{authT('password')}</label>
           <div className="relative">
             <Key
               size={16}
@@ -280,7 +273,7 @@ export const RegisterForm = () => {
             type="submit"
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-900 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900"
           >
-            Create Account
+            {authT('createAccount')}
             {isLoading && (
               <div role="status" className='pl-3'>
                 <svg aria-hidden="true" className="inline w-5 h-5 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -290,15 +283,15 @@ export const RegisterForm = () => {
                 <span className="sr-only">Loading...</span>
               </div>
             )}
-            
+
           </button>
           <div className="text-center">
-            <span className="text-sm text-gray-600">Already have an account? </span>
+            <span className="text-sm text-gray-600">{authT('alreadyHaveAccount')} </span>
             <a
               href="/signin"
               className="text-sm font-medium text-blue-900 hover:text-blue-800"
             >
-              Sign in
+              {authT('signIn')}
             </a>
           </div>
         </div>

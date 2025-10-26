@@ -122,6 +122,16 @@ export interface IInviteManagerRequest {
   "notes": string
 }
 
+export interface IManagerInfo {
+    Code: string;
+    Name: string;
+    Email: string;
+    Phone: string;
+    Status: "ACTIVE" | "INACTIVE" | string; // Statut du compte
+    Permissions: string[]; // Tableau de chaînes de caractères pour les permissions
+    InvitationDate: string; // Date d'invitation au format ISO 8601 (YYYY-MM-DDTHH:mm:ss.sssZ)
+}
+
 export interface IProfileDetails {
   Code: string,
   Status: string,
