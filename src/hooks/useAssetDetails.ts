@@ -33,6 +33,7 @@ export function useAssetDetails({
   const [tenantInfo, setTenantInfo] = useState<TenantInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [permissionList, setPermissionList] = useState<any[]>([]);
 
   /**
    * Transform raw API units data to UnitData structure

@@ -90,7 +90,6 @@ const PropertyDetail = () => {
   const [invoiceFormDefaultValue, setInvoiceFormDefaultValue] = useState<IInvoiceForm>();
   const [tempInvoiceFormDefaultValue, setTempInvoiceFormDefaultValue] = useState<IInvoiceForm>();
   const [action, setAction] = useState<"CREATE" | "UPDATE">("CREATE");
-  const [permissionList, setPermissionList] = useState<any[]>([]);
 
   // Effects
   useEffect(() => {
@@ -505,7 +504,7 @@ const PropertyDetail = () => {
           showProcessingModal={isLoading}
           invoiceFormDefaultValue={invoiceFormDefaultValue}
           invoiceAction={action}
-          permissionList={permissionList}
+          permissionList={[]}
           successMessage={successMessage}
           processingMessage={loadingMessage}
           assetTitle={asset?.Name}
