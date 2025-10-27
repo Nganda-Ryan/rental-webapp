@@ -397,7 +397,27 @@
     "Dashboard": {
       "title": "Dashboard",
       "currentRental": "Current Rentals",
-      "pendingApplication": "Pending Applications"
+      "currentRentals": "Current Rentals",
+      "pendingApplication": "Pending Applications",
+      "pendingApplications": "Pending Applications",
+      "loadingData": "Loading data...",
+      "requestSubmittedSuccessfully": "Request submitted successfully",
+      "becomeALandlord": "Become a Landlord"
+    },
+    "LessorRequestForm": {
+      "title": "Become a Landlord",
+      "subtitle": "Please provide the required information",
+      "idCardRecto": "ID Card (Front)",
+      "idCardVerso": "ID Card (Back)",
+      "selfieWithId": "Selfie with ID",
+      "description": "Description",
+      "required": "Required",
+      "uploadIdCardFront": "Upload ID Card (Front)",
+      "uploadIdCardBack": "Upload ID Card (Back)",
+      "uploadSelfie": "Upload Selfie with ID",
+      "descriptionPlaceholder": "Tell us why you want to become a landlord...",
+      "cancel": "Cancel",
+      "submitRequest": "Submit Request"
     }
   },
   "Landlord": {

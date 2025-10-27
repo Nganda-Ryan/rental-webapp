@@ -3,7 +3,27 @@
     "Dashboard": {
       "title": "Tableau de bord",
       "currentRental": "Locations en cours",
-      "pendingApplication": "Demandes en attente"
+      "currentRentals": "Locations en cours",
+      "pendingApplication": "Demandes en attente",
+      "pendingApplications": "Demandes en attente",
+      "loadingData": "Chargement des données...",
+      "requestSubmittedSuccessfully": "Demande soumise avec succès",
+      "becomeALandlord": "Devenir propriétaire"
+    },
+    "LessorRequestForm": {
+      "title": "Devenir propriétaire",
+      "subtitle": "Veuillez fournir les informations requises",
+      "idCardRecto": "Carte d'identité (Recto)",
+      "idCardVerso": "Carte d'identité (Verso)",
+      "selfieWithId": "Selfie avec pièce d'identité",
+      "description": "Description",
+      "required": "Requis",
+      "uploadIdCardFront": "Télécharger carte d'identité (Recto)",
+      "uploadIdCardBack": "Télécharger carte d'identité (Verso)",
+      "uploadSelfie": "Télécharger selfie avec pièce d'identité",
+      "descriptionPlaceholder": "Dites-nous pourquoi vous voulez devenir propriétaire...",
+      "cancel": "Annuler",
+      "submitRequest": "Soumettre la demande"
     }
   },
   "Landlord": {

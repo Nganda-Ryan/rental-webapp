@@ -30,13 +30,13 @@ const TenantDashboard = () => {
         "pendingInvoices": 0,
         "pendingRequests": 0
     })
-    const loadingMessage = 'Loading data...';
     const { isAuthorized, user, getProfileCode} = roleStore();
     const router = useRouter();
     const t = useTranslations('Renter.Dashboard');
-      const landlordT = useTranslations('Landlord.assets');
-      const commonT = useTranslations('Common');
+    const landlordT = useTranslations('Landlord.assets');
+    const commonT = useTranslations('Common');
     const tr = useTranslations('Landlord');
+    const loadingMessage = t('loadingData');
     useEffect(() => {
         setIsClient(true);
         init();
@@ -58,7 +58,7 @@ const TenantDashboard = () => {
             if(result.data){
                 await init();
                 setIsLoading(false);
-                toast.success("Request submitted successfully", { position: 'bottom-right' });
+                toast.success(t('requestSubmittedSuccessfully'), { position: 'bottom-right' });
             } else if(result.error){
                 setIsLoading(false)
                 console.log('TenantDashBoard.handleSubmitRequest.result.error', result.error);
@@ -67,7 +67,7 @@ const TenantDashboard = () => {
             console.log('-->result', result)
         } catch (error) {
             console.log("TenantDashBoard.handleSubmitRequest.error", error);
-            toast.error("Something went wrong during the process. Try again or contact the administrator")
+            toast.error(commonT('somethingWentWrong'))
         } finally {
             setIsLoading(false)
         }
@@ -184,7 +184,7 @@ const TenantDashboard = () => {
                         className="flex items-center gap-2 px-4 py-2 bg-[#2A4365] text-white rounded-lg hover:bg-blue-800"
                     >
                         <ArrowUpRight size={20} />
-                        Become a Landlord
+                        {t('becomeALandlord')}
                     </button>
                 </div>
             }
@@ -199,7 +199,7 @@ const TenantDashboard = () => {
                         <Home className="text-blue-700 dark:text-blue-300" size={24} />
                     </div>
                     <div>
-                        <h3 className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">Current Rentals</h3>
+                        <h3 className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">{t('currentRentals')}</h3>
                         <p className="text-xl font-semibold text-neutral-900 dark:text-white">{counts.properties}</p>
                     </div>
                     </div>
@@ -216,7 +216,7 @@ const TenantDashboard = () => {
                         <Clock className="text-purple-700 dark:text-purple-300" size={24} />
                     </div>
                     <div>
-                        <h3 className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">Pending Applications</h3>
+                        <h3 className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">{t('pendingApplications')}</h3>
                         <p className="text-xl font-semibold text-neutral-900 dark:text-white">{counts.pendingRequests}</p>
                     </div>
                     </div>
