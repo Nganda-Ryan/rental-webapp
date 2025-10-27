@@ -74,7 +74,7 @@ export async function updateAsset(asset: IUpdateAssetRequest) {
       console.log('-->coverPath', coverPath);
       asset.coverUrl = coverPath;
     } else {
-      asset.coverUrl = asset.coverUrl.split('/Documents/').at(-1)
+      asset.coverUrl = asset.coverUrl.split('/Documents/').at(-1) || asset.coverUrl;
     }
     console.log('-->payload', {
       ...asset,
