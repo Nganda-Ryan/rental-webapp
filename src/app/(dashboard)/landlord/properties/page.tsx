@@ -152,8 +152,8 @@ const PropertiesPage = () => {
             >
               <option value="">{t('allTypes')}</option>
               {[...new Set(assetList.map(a => a.TypeCode))].map((type, index) => (
-                <option key={index} value={type}>{type}</option>
-              ))}     
+                <option key={index} value={type}>{t(type)}</option>
+              ))}
             </select>
             <select
               value={filterActive}

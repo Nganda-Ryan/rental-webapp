@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Search, X, Check, Mail, ChevronDown, User, Fingerprint, Phone, MailIcon } from "lucide-react";
 import { searchUser } from "@/actions/userAction";
 import { IUser, IUserPermission, SeachUserParams } from "@/types/user";
@@ -32,13 +32,11 @@ export const ManagerSearch = ({
   const [isFetchingUsers, setIsFetchingUsers] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [searchFilter, setSearchFilter] = useState<keyof typeof searchOptions>("firstName");
-    const landlordT = useTranslations('Landlord.assets');
-    const commonT = useTranslations('Common');
+  const landlordT = useTranslations('Landlord.assets');
+  const commonT = useTranslations('Common');
 
-
-  useEffect(() => {
-    init();
-  }, [])
+  
+  console.log('permissionList', permissionList);
 
   
   const listRef = useRef(null);
@@ -91,7 +89,7 @@ export const ManagerSearch = ({
   };
   
 
-  const init = async () => {
+  const init = useCallback(async () => {
     try {
       setIsFetchingUsers(true);
       const params: SeachUserParams = {
@@ -99,44 +97,52 @@ export const ManagerSearch = ({
         orderMode: 'asc',
         limit: 1000,
         offset: 0,
-      }; 
+      };
+
       const result = await searchUser(params);
       let _userList: IUser[] = [];
+
       console.log("result", result);
-      if(result.data) {
-        if(result.data.body.count > 0){
-          _userList = result.data.body.items.filter((user: any) => (user.RoleCode == "RENTER"))
-          .map((user: any) => ({
-            id: user.Code,
-            profileId: "",
-            firstName: user.user.Firstname,
-            lastName: user.user.Lastname,
-            email: user.user.Email,
-            phone: user.user.Phone,
-            profile: user.user.Profiles,
-            gender: user.user.Gender,
-            city: user.user.Address.City,
-            street: user.user.Address.Street,
-            country: user.user.Address.Country,
-            avatarUrl: user.user.AvatarUrl,
-            status: user.Status,
-            NIU: user.user.NIU,
-          }))
+
+      if (result.data) {
+        if (result.data.body.count > 0) {
+          _userList = result.data.body.items
+            .filter((user: any) => user.RoleCode === "RENTER")
+            .map((user: any) => ({
+              id: user.Code,
+              profileId: "",
+              firstName: user.user.Firstname,
+              lastName: user.user.Lastname,
+              email: user.user.Email,
+              phone: user.user.Phone,
+              profile: user.user.Profiles,
+              gender: user.user.Gender,
+              city: user.user.Address.City,
+              street: user.user.Address.Street,
+              country: user.user.Address.Country,
+              avatarUrl: user.user.AvatarUrl,
+              status: user.Status,
+              NIU: user.user.NIU,
+            }));
         }
         setUserList(_userList);
-      }  else if(result.error){
-        if(result.code == 'SESSION_EXPIRED'){
+      } else if (result.error) {
+        if (result.code === 'SESSION_EXPIRED') {
           router.push('/signin');
           return;
         }
         toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
       }
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setIsFetchingUsers(false);
-    }
-  }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsFetchingUsers(false);
+      }
+  }, [router, commonT, setIsFetchingUsers, setUserList]);
+
+  useEffect(() => {
+    init();
+  }, [init])
   return (
     <div className="rounded-lg w-full max-h-[75vh] min-h-[75vh] max-w-2xl mx-auto bg-white dark:bg-gray-800 flex flex-col">
       <div className="bg-white dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">

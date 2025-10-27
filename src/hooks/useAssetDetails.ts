@@ -14,6 +14,7 @@ import {
   ManagerData,
   TenantInfo,
 } from '@/types/AssetHooks';
+import { IUserPermission } from '@/types/user';
 export function useAssetDetails({
   assetId,
   assetType,
@@ -33,7 +34,7 @@ export function useAssetDetails({
   const [tenantInfo, setTenantInfo] = useState<TenantInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [permissionList, setPermissionList] = useState<any[]>([]);
+  const [permissionList, setPermissionList] = useState<IUserPermission[]>([]);
 
   /**
    * Transform raw API units data to UnitData structure
@@ -141,7 +142,7 @@ export function useAssetDetails({
       setError(null);
 
       const result = await getAsset(assetId);
-
+      console.log('getAsset result', result.data.body?.ConfigPermissionList);
       if (!result?.data?.body?.assetData) {
         if (result.error) {
           if (result.code === 'SESSION_EXPIRED') {
@@ -152,6 +153,7 @@ export function useAssetDetails({
         }
         throw new Error('Asset not found');
       }
+      setPermissionList(result.data.body?.ConfigPermissionList)
 
       const item = result.data.body.assetData;
       const body = result.data.body;
@@ -294,5 +296,6 @@ export function useAssetDetails({
     isLoading,
     error,
     refetch,
+    permissionList
   };
 }

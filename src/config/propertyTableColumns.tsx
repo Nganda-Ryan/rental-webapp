@@ -188,7 +188,7 @@ export const getUnitColumns = (
 ) => [
   {
     key: 'unit',
-    label: 'Unit Name',
+    label: t ? t('unitName') : 'Unit Name',
     priority: "medium" as "medium",
     render: (_: any, unit: UnitData) => (
       <div className="flex flex-col text-gray-800 dark:text-gray-100">
@@ -199,7 +199,7 @@ export const getUnitColumns = (
   },
   {
     key: 'status',
-    label: 'Status',
+    label: t ? t('status') : 'Status',
     priority: "low" as "low",
     render: (_: any, unit: UnitData) => (
       <div className=" text-gray-800 dark:text-gray-100">
@@ -209,7 +209,7 @@ export const getUnitColumns = (
   },
   {
     key: 'price',
-    label: 'Rent',
+    label: t ? t('rent') : 'Rent',
     priority: "medium" as "medium",
     render: (_: any, unit: UnitData) => (
       <span className="">
@@ -219,7 +219,7 @@ export const getUnitColumns = (
   },
   {
     key: 'actions',
-    label: 'Actions',
+    label: t ? t('actions') : 'Actions',
     priority: "high" as "high",
     render: (_: any, unit: UnitData) => (
       <div className="flex gap-2 ">

@@ -55,6 +55,7 @@ const PropertyDetail = () => {
     tenantInfo,
     isLoading: isLoadingAsset,
     refetch,
+    permissionList
   } = useAssetDetails({
     assetId: params.id as string,
     assetType: AssetType.PROPERTY,
@@ -504,7 +505,7 @@ const PropertyDetail = () => {
           showProcessingModal={isLoading}
           invoiceFormDefaultValue={invoiceFormDefaultValue}
           invoiceAction={action}
-          permissionList={[]}
+          permissionList={permissionList}
           successMessage={successMessage}
           processingMessage={loadingMessage}
           assetTitle={asset?.Name}

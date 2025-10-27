@@ -108,6 +108,12 @@ export interface AssetDetailsState {
   activeContract: ContractData | null;
   contracts: ContractData[];
   invoices: InvoiceData[];
+  permissionList: {
+    "Code": string,
+    "Title": string,
+    "Description": string,
+    "IsActive": number
+  }[];
   units: UnitData[];
   managerList: ManagerData[];
   tenantInfo: TenantInfo | null;

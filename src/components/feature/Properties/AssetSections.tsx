@@ -75,7 +75,7 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
     <>
       {/* UNITS SECTION - For complex properties */}
       {showUnits && units.length > 0 && (
-        <SectionWrapper title="Units" Icon={House}>
+        <SectionWrapper title={t('units')} Icon={House}>
           <ResponsiveTable
             columns={unitColumns}
             data={units.slice(0, 3)}
@@ -86,7 +86,7 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
               units.length > 3
                 ? {
                     url: `/landlord/properties/${asset.Code}/units`,
-                    label: 'Show more units',
+                    label: t('showMoreUnits'),
                   }
                 : undefined
             }
@@ -96,7 +96,7 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
 
       {/* INVOICES SECTION */}
       {showInvoices && invoices.length > 0 && (
-        <SectionWrapper title="Invoice history" Icon={FileText}>
+        <SectionWrapper title={t('invoiceHistory')} Icon={FileText}>
           {invoices.length > 0 ? (
             <ResponsiveTable
               columns={invoiceColumns}
@@ -107,14 +107,14 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
                 invoices.length > 3
                   ? {
                       url: `/landlord/properties/${asset.Code}/invoices`,
-                      label: 'Show more invoices',
+                      label: t('showMoreInvoices'),
                     }
                   : undefined
               }
             />
           ) : (
             <p className="text-gray-500 dark:text-gray-400 text-sm p-3">
-              No invoices available
+              {t('noInvoicesAvailable')}
             </p>
           )}
         </SectionWrapper>
@@ -122,7 +122,7 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
 
       {/* CONTRACTS SECTION */}
       {showContracts && (
-        <SectionWrapper title="Lease Contracts" Icon={FileText}>
+        <SectionWrapper title={t('leaseContracts')} Icon={FileText}>
           {contracts.length > 0 ? (
             <ResponsiveTable
               columns={contractColumns}

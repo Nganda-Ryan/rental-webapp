@@ -89,7 +89,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
 
         {/* Type */}
         <div className="mb-3 inline-block rounded-full bg-blue-100 px-3 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
-          {TypeCode}
+          {commonT(TypeCode)}
         </div>
 
         {/* Bas de la carte */}
