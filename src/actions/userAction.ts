@@ -260,6 +260,7 @@ export async function confirmPayment(executeURL: string) {
       },
     });
 
+    console.log('-->confirmPayment.response.data', response.data);
     return {
       code: null,
       error: null,

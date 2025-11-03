@@ -176,11 +176,22 @@ const Settings = () => {
             
             const popup = window.open(approvalUrl, 'paypalPopup', 'width=600,height=700');
 
+            // Variable pour stocker le timeout et l'interval
+            let checkPopupClosed: NodeJS.Timeout | null = null;
+            let initialTimeout: NodeJS.Timeout | null = null;
+
+            // Fonction pour nettoyer tous les listeners et timers
+            const cleanupPopup = () => {
+                window.removeEventListener('message', handleMessage);
+                if (checkPopupClosed) clearInterval(checkPopupClosed);
+                if (initialTimeout) clearTimeout(initialTimeout);
+            };
+
             // Écouter les messages de la popup
             const handleMessage = (event: MessageEvent) => {
                 // Vérifier l'origine pour la sécurité
                 if (event.origin !== window.location.origin) return;
-                
+
                 // La popup demande l'executeUrl
                 if (event.data.type === 'REQUEST_EXECUTE_URL') {
                     popup?.postMessage({
@@ -188,35 +199,39 @@ const Settings = () => {
                         executeUrl: executeUrl
                     }, window.location.origin);
                 }
-                
+
                 // La popup a terminé le paiement
                 if (event.data.type === 'PAYMENT_COMPLETE') {
                     console.log('Payment completed:', event.data.result);
-                    window.removeEventListener('message', handleMessage);
-                    
+                    cleanupPopup();
+
                     // Rafraîchir les données de l'utilisateur ou rediriger
                     toast.success(commonT('paymentSuccess'));
                     // Optionnel : rafraîchir la page ou mettre à jour l'état
                 }
-                
+
                 // La popup a rencontré une erreur
                 if (event.data.type === 'PAYMENT_ERROR') {
                     console.error('Payment error:', event.data.error);
-                    window.removeEventListener('message', handleMessage);
+                    cleanupPopup();
                     toast.error(commonT('paymentError'));
                 }
             };
             
             window.addEventListener('message', handleMessage);
-            
+
             // Nettoyer l'événement si la popup est fermée manuellement
-            const checkPopupClosed = setInterval(() => {
-                if (popup?.closed) {
-                    clearInterval(checkPopupClosed);
-                    window.removeEventListener('message', handleMessage);
-                    console.log('Popup closed by user');
-                }
-            }, 1000);
+            // Attendre 5 secondes avant de commencer à vérifier (pour laisser le temps à PayPal de charger)
+            initialTimeout = setTimeout(() => {
+                checkPopupClosed = setInterval(() => {
+                    // Vérifier que la popup existe et qu'elle est fermée
+                    if (popup && popup.closed) {
+                        cleanupPopup();
+                        console.log('Popup closed by user');
+                        toast.info(commonT('paymentCancelled'));
+                    }
+                }, 2500); // Vérifier toutes les 2.5 secondes au lieu d'1 seconde
+            }, 5000); // Attendre 5 secondes avant de commencer la vérification
 
         } else {
             setIsLoading(false);
