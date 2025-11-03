@@ -228,7 +228,7 @@ const Settings = () => {
                     if (popup && popup.closed) {
                         cleanupPopup();
                         console.log('Popup closed by user');
-                        toast.info(commonT('paymentCancelled'));
+                        // toast.info(commonT('paymentCancelled'));
                     }
                 }, 2500); // Vérifier toutes les 2.5 secondes au lieu d'1 seconde
             }, 5000); // Attendre 5 secondes avant de commencer la vérification
