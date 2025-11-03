@@ -54,6 +54,17 @@ const Settings = () => {
 
     useEffect(() => {
         init();
+
+        // Vérifier si on revient d'un paiement réussi
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('payment') === 'success') {
+            toast.success(commonT('paymentSuccess'), {
+                position: 'bottom-right',
+                duration: 5000
+            });
+            // Nettoyer l'URL sans recharger la page
+            window.history.replaceState({}, '', '/settings');
+        }
     }, [])
 
     const init = async () => {
@@ -164,74 +175,22 @@ const Settings = () => {
         setLoadingMessage(commonT('creatingPaymentLink'));
         const result = await generatePaymentLink(payload);
         console.log('-->buyPlan.result', result);
-        
+
         if (result.code === "success") {
             const executeUrl = result.data.body.record.executeUrl;
             const approvalUrl = result.data.body.record.approvalUrl;
-            
-            // Stocker dans sessionStorage (partagé entre onglets du même domaine)
+
+            // Stocker les informations nécessaires dans sessionStorage
             sessionStorage.setItem('paypal_execute_url', executeUrl);
-            
-            setIsLoading(false);
-            
-            const popup = window.open(approvalUrl, 'paypalPopup', 'width=600,height=700');
+            sessionStorage.setItem('payment_plan_info', JSON.stringify({
+                planId,
+                price,
+                currency,
+                planName: planId
+            }));
 
-            // Variable pour stocker le timeout et l'interval
-            let checkPopupClosed: NodeJS.Timeout | null = null;
-            let initialTimeout: NodeJS.Timeout | null = null;
-
-            // Fonction pour nettoyer tous les listeners et timers
-            const cleanupPopup = () => {
-                window.removeEventListener('message', handleMessage);
-                if (checkPopupClosed) clearInterval(checkPopupClosed);
-                if (initialTimeout) clearTimeout(initialTimeout);
-            };
-
-            // Écouter les messages de la popup
-            const handleMessage = (event: MessageEvent) => {
-                // Vérifier l'origine pour la sécurité
-                if (event.origin !== window.location.origin) return;
-
-                // La popup demande l'executeUrl
-                if (event.data.type === 'REQUEST_EXECUTE_URL') {
-                    popup?.postMessage({
-                        type: 'EXECUTE_URL',
-                        executeUrl: executeUrl
-                    }, window.location.origin);
-                }
-
-                // La popup a terminé le paiement
-                if (event.data.type === 'PAYMENT_COMPLETE') {
-                    console.log('Payment completed:', event.data.result);
-                    cleanupPopup();
-
-                    // Rafraîchir les données de l'utilisateur ou rediriger
-                    toast.success(commonT('paymentSuccess'));
-                    // Optionnel : rafraîchir la page ou mettre à jour l'état
-                }
-
-                // La popup a rencontré une erreur
-                if (event.data.type === 'PAYMENT_ERROR') {
-                    console.error('Payment error:', event.data.error);
-                    cleanupPopup();
-                    toast.error(commonT('paymentError'));
-                }
-            };
-            
-            window.addEventListener('message', handleMessage);
-
-            // Nettoyer l'événement si la popup est fermée manuellement
-            // Attendre 5 secondes avant de commencer à vérifier (pour laisser le temps à PayPal de charger)
-            initialTimeout = setTimeout(() => {
-                checkPopupClosed = setInterval(() => {
-                    // Vérifier que la popup existe et qu'elle est fermée
-                    if (popup && popup.closed) {
-                        cleanupPopup();
-                        console.log('Popup closed by user');
-                        // toast.info(commonT('paymentCancelled'));
-                    }
-                }, 2500); // Vérifier toutes les 2.5 secondes au lieu d'1 seconde
-            }, 5000); // Attendre 5 secondes avant de commencer la vérification
+            // Redirection complète vers PayPal (plus fiable que popup)
+            window.location.href = approvalUrl;
 
         } else {
             setIsLoading(false);

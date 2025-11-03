@@ -28,90 +28,37 @@ const SuccessPayment = () => {
 
     const init = async () => {
         try {
-            let executeUrl: string | null = null;
-            
-            // Méthode 1 : Essayer de récupérer depuis sessionStorage
-            executeUrl = sessionStorage.getItem('paypal_execute_url');
+            // Récupérer l'executeUrl depuis sessionStorage
+            const executeUrl = sessionStorage.getItem('paypal_execute_url');
             console.log('-->executeUrl from sessionStorage', executeUrl);
-            
-            // Méthode 2 : Si on est dans une popup, demander à la fenêtre parent
-            if (!executeUrl && window.opener) {
-                console.log('-->Requesting executeUrl from parent window');
-                
-                executeUrl = await new Promise<string>((resolve, reject) => {
-                    const timeout = setTimeout(() => {
-                        reject(new Error('Timeout waiting for executeUrl'));
-                    }, 5000);
-                    
-                    const handleMessage = (event: MessageEvent) => {
-                        if (event.origin !== window.location.origin) return;
-                        
-                        if (event.data.type === 'EXECUTE_URL') {
-                            clearTimeout(timeout);
-                            window.removeEventListener('message', handleMessage);
-                            resolve(event.data.executeUrl);
-                        }
-                    };
-                    
-                    window.addEventListener('message', handleMessage);
-                    
-                    // Demander l'executeUrl au parent
-                    window.opener.postMessage({ 
-                        type: 'REQUEST_EXECUTE_URL' 
-                    }, window.location.origin);
-                });
-            }
-            
+
             if (executeUrl) {
                 console.log('-->executeUrl found:', executeUrl);
-                
+
                 // Confirmer le paiement
                 const result = await confirmPayment(executeUrl);
                 console.log('-->confirmPayment result:', result);
-                
+
                 setPaymentResult(result);
                 setIsProcessing(false);
-                
+
                 // Nettoyer le sessionStorage
                 sessionStorage.removeItem('paypal_execute_url');
-                
-                // Notifier la fenêtre parent si on est dans une popup
-                if (window.opener) {
-                    window.opener.postMessage({
-                        type: 'PAYMENT_COMPLETE',
-                        result: result
-                    }, window.location.origin);
-                    
-                    // Fermer la popup après 3 secondes
-                    setTimeout(() => {
-                        window.close();
-                    }, 3000);
-                }
+                sessionStorage.removeItem('payment_plan_info');
+
+                // Rediriger vers les settings après 3 secondes avec un paramètre de succès
+                setTimeout(() => {
+                    router.push('/settings?payment=success');
+                }, 3000);
             } else {
                 console.error('-->executeUrl not found');
                 setError('Unable to retrieve payment information');
                 setIsProcessing(false);
-                
-                // Notifier la fenêtre parent de l'erreur
-                if (window.opener) {
-                    window.opener.postMessage({
-                        type: 'PAYMENT_ERROR',
-                        error: 'executeUrl not found'
-                    }, window.location.origin);
-                }
             }
         } catch (err) {
             console.error('-->Error in init:', err);
             setError(err instanceof Error ? err.message : 'An error occurred');
             setIsProcessing(false);
-            
-            // Notifier la fenêtre parent de l'erreur
-            if (window.opener) {
-                window.opener.postMessage({
-                    type: 'PAYMENT_ERROR',
-                    error: err instanceof Error ? err.message : 'Unknown error'
-                }, window.location.origin);
-            }
         }
     };
 
@@ -171,11 +118,11 @@ const SuccessPayment = () => {
                             <p className="text-gray-600 mt-2">
                                 {error}
                             </p>
-                            <button 
+                            <button
                                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                                onClick={() => window.close()}
+                                onClick={() => router.push('/settings')}
                             >
-                                Close Window
+                                Return to Settings
                             </button>
                         </div>
                     </div>
@@ -200,11 +147,9 @@ const SuccessPayment = () => {
                         <p className="text-gray-600 mt-2">
                             Thank you for your purchase. Your plan is now active.
                         </p>
-                        {window.opener && (
-                            <p className="text-sm text-gray-500 mt-2">
-                                This window will close automatically in a few seconds...
-                            </p>
-                        )}
+                        <p className="text-sm text-gray-500 mt-2">
+                            You will be redirected to settings in a few seconds...
+                        </p>
                     </div>
 
                     {/* Order Summary */}
@@ -276,18 +221,12 @@ const SuccessPayment = () => {
                             Need help? Contact our{' '}
                             <span className="text-blue-600 cursor-pointer">support team</span>
                         </p>
-                        <button 
+                        <button
                             className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                            onClick={() => {
-                                if (window.opener) {
-                                    window.close();
-                                } else {
-                                    router.push('/signin');
-                                }
-                            }}
+                            onClick={() => router.push('/settings?payment=success')}
                         >
                             <Home size={16} />
-                            {window.opener ? 'Close Window' : 'Return to Dashboard'}
+                            Return to Settings
                         </button>
                     </div>
                 </div>

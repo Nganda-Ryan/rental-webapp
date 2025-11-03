@@ -4,10 +4,10 @@ import { cookies } from 'next/headers'
 
 // 👉 Routes autorisées par rôle
 const routeRoles: Record<string, string[]> = {
-  'ADMIN': ['/support', '/settings', '/profile', '/images'],
-  'SUPPORT': ['/support', '/settings', '/profile', '/images'],
-  'LANDLORD': ['/landlord', '/renter', '/settings', '/profile', '/images'],
-  'RENTER': ['/renter', '/settings', '/profile', '/images']
+  'ADMIN': ['/support', '/settings', '/profile', '/images', '/payment'],
+  'SUPPORT': ['/support', '/settings', '/profile', '/images', '/payment'],
+  'LANDLORD': ['/landlord', '/renter', '/settings', '/profile', '/images', '/payment'],
+  'RENTER': ['/renter', '/settings', '/profile', '/images', '/payment']
 };
 
 const publicRoutes = ['/signin', '/signup', '/unauthorized', '/'];
