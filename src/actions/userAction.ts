@@ -232,7 +232,7 @@ export async function generatePaymentLink(planInfo: IPlanSubscription) {
     
   } catch (error: any) {
     
-    console.log('-->userAction.createUser.error', error)
+    console.log('-->userAction.generatePaymentLink.error', error)
     
     const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
     if (isRedirect) {
@@ -253,7 +253,7 @@ export async function generatePaymentLink(planInfo: IPlanSubscription) {
 export async function confirmPayment(executeURL: string) {
   try {
     const session = await verifySession();
-    const response = await axios.post(executeURL, {
+    const response = await axios.get(executeURL, {
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${session.accessToken}`,
