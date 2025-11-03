@@ -162,6 +162,7 @@
     "unexpectedError": "An unexpected error occurred",
     "profileUpdatedSuccessfully": "Profile updated successfully",
     "paymentCreationError": "Error creating payment",
+    "creatingPaymentLink": "Creating payment link...",
     "somethingWentWrong": "Something went wrong during the process. Try again or contact the administrator",
     "settings": "Settings",
     "userInfo": "User Information",

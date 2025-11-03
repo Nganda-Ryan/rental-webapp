@@ -163,13 +163,60 @@ const Settings = () => {
         setIsLoading(true);
         setLoadingMessage(commonT('creatingPaymentLink'));
         const result = await generatePaymentLink(payload);
-        console.log('-->buyPlan.result', result)
+        console.log('-->buyPlan.result', result);
+        
         if (result.code === "success") {
-            localStorage.setItem('paypal_execute_url', result.data.body.record.executeUrl);
-            setIsLoading(false);
-
+            const executeUrl = result.data.body.record.executeUrl;
             const approvalUrl = result.data.body.record.approvalUrl;
+            
+            // Stocker dans sessionStorage (partagé entre onglets du même domaine)
+            sessionStorage.setItem('paypal_execute_url', executeUrl);
+            
+            setIsLoading(false);
+            
             const popup = window.open(approvalUrl, 'paypalPopup', 'width=600,height=700');
+
+            // Écouter les messages de la popup
+            const handleMessage = (event: MessageEvent) => {
+                // Vérifier l'origine pour la sécurité
+                if (event.origin !== window.location.origin) return;
+                
+                // La popup demande l'executeUrl
+                if (event.data.type === 'REQUEST_EXECUTE_URL') {
+                    popup?.postMessage({
+                        type: 'EXECUTE_URL',
+                        executeUrl: executeUrl
+                    }, window.location.origin);
+                }
+                
+                // La popup a terminé le paiement
+                if (event.data.type === 'PAYMENT_COMPLETE') {
+                    console.log('Payment completed:', event.data.result);
+                    window.removeEventListener('message', handleMessage);
+                    
+                    // Rafraîchir les données de l'utilisateur ou rediriger
+                    toast.success(commonT('paymentSuccess'));
+                    // Optionnel : rafraîchir la page ou mettre à jour l'état
+                }
+                
+                // La popup a rencontré une erreur
+                if (event.data.type === 'PAYMENT_ERROR') {
+                    console.error('Payment error:', event.data.error);
+                    window.removeEventListener('message', handleMessage);
+                    toast.error(commonT('paymentError'));
+                }
+            };
+            
+            window.addEventListener('message', handleMessage);
+            
+            // Nettoyer l'événement si la popup est fermée manuellement
+            const checkPopupClosed = setInterval(() => {
+                if (popup?.closed) {
+                    clearInterval(checkPopupClosed);
+                    window.removeEventListener('message', handleMessage);
+                    console.log('Popup closed by user');
+                }
+            }, 1000);
 
         } else {
             setIsLoading(false);

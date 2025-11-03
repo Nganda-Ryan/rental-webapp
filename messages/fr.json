@@ -348,6 +348,7 @@
     "unexpectedError": "Une erreur inattendue est survenue",
     "profileUpdatedSuccessfully": "Profil mis à jour avec succès",
     "paymentCreationError": "Erreur lors de la création du paiement",
+    "creatingPaymentLink": "Création du lien de paiement...",
     "somethingWentWrong": "Une erreur est survenue pendant le processus. Réessayez ou contactez l'administrateur",
     "settings": "Paramètres",
     "userInfo": "Informations utilisateur",
