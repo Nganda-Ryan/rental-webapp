@@ -46,7 +46,7 @@ export async function getRequests(params: GetRequestsParams = {}): Promise<any> 
       data: response.data
     }
   } catch (error: any) {
-    console.log('-->userAction.createUser.error', error)
+    console.log('-->requestAction.getRequestsMethod.error', error)
     
     const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
     if (isRedirect) {

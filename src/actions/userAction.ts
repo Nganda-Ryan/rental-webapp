@@ -134,7 +134,7 @@ export async function createUser(payload: ICreateUserParam){
     }
     
   } catch (error: any) {
-    console.log('-->userAction.createUser.error', error)
+    console.log('-->userAction.createUserMethod.error', error)
     
     const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
     if (isRedirect) {
@@ -267,7 +267,7 @@ export async function confirmPayment(executeURL: string) {
       data: response.data,
     };
   } catch (error: any) {
-    console.log('-->userAction.createUser.error', error.response)
+    console.log('-->userAction.confirmPayment.error', error.response)
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
