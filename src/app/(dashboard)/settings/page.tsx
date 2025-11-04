@@ -168,9 +168,11 @@ const Settings = () => {
         if (result.code === "success") {
             const executeUrl = result.data.body.record.executeUrl;
             const approvalUrl = result.data.body.record.approvalUrl;
+            const token = result.data.body.record.token;
 
             // Stocker dans sessionStorage (partagé entre onglets du même domaine)
             sessionStorage.setItem('paypal_execute_url', executeUrl);
+            sessionStorage.setItem('paypal_token', token);
 
             setIsLoading(false);
 

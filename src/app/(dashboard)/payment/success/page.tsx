@@ -29,9 +29,11 @@ const SuccessPayment = () => {
     const init = async () => {
         try {
             let executeUrl: string | null = null;
+            let paypalToken: string | null = null;
 
             // Méthode 1 : Essayer de récupérer depuis sessionStorage
             executeUrl = sessionStorage.getItem('paypal_execute_url');
+            paypalToken = sessionStorage.getItem('paypal_token');
             console.log('-->executeUrl from sessionStorage', executeUrl);
 
             // Méthode 2 : Si on est dans une popup, demander à la fenêtre parent
@@ -62,11 +64,11 @@ const SuccessPayment = () => {
                 });
             }
 
-            if (executeUrl) {
+            if (executeUrl && paypalToken) {
                 console.log('-->executeUrl found:', executeUrl);
 
                 // Confirmer le paiement
-                const result = await confirmPayment(executeUrl);
+                const result = await confirmPayment(executeUrl, paypalToken);
                 console.log('-->confirmPayment result:', result);
 
                 setPaymentResult(result);
