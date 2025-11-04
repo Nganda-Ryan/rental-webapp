@@ -253,7 +253,7 @@ export async function generatePaymentLink(planInfo: IPlanSubscription) {
 export async function confirmPayment(executeURL: string) {
   try {
     const session = await verifySession();
-    const response = await axios.get(executeURL, {
+    const response = await axios.post(executeURL, {
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${session.accessToken}`,
