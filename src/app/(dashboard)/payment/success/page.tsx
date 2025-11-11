@@ -83,11 +83,6 @@ const SuccessPayment = () => {
                         type: 'PAYMENT_COMPLETE',
                         result: result
                     }, window.location.origin);
-
-                    // Fermer la popup après 3 secondes
-                    setTimeout(() => {
-                        window.close();
-                    }, 3000);
                 }
             } else {
                 console.error('-->executeUrl not found');
@@ -202,11 +197,6 @@ const SuccessPayment = () => {
                         <p className="text-gray-600 mt-2">
                             Thank you for your purchase. Your plan is now active.
                         </p>
-                        {window.opener && (
-                            <p className="text-sm text-gray-500 mt-2">
-                                This window will close automatically in a few seconds...
-                            </p>
-                        )}
                     </div>
 
                     {/* Order Summary */}
