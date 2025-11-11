@@ -260,7 +260,7 @@ export async function confirmPayment(executeURL: string, token: string) {
       },
     });
 
-    console.log('-->confirmPayment.response.data', response.data);
+    console.log('-->confirmPayment.response.data', session.accessToken);
     return {
       code: null,
       error: null,
