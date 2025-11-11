@@ -52,7 +52,7 @@ const SuccessPayment = () => {
                             clearTimeout(timeout);
                             window.removeEventListener('message', handleMessage);
                             resolve(event.data.executeUrl);
-                        }
+                        }   
                     };
 
                     window.addEventListener('message', handleMessage);
