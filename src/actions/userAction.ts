@@ -260,7 +260,9 @@ export async function confirmPayment(executeURL: string, token: string) {
       },
     });
 
-    console.log('-->confirmPayment.response.data', session.accessToken);
+    console.log('-->confirmPayment.session.accessToken', session.accessToken);
+    console.log('-->confirmPayment.PaypalToken', token);
+    console.log('-->confirmPayment.ExecuteURL', `${executeURL}/capture`);
     return {
       code: null,
       error: null,
