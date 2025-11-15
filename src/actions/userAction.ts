@@ -252,17 +252,24 @@ export async function generatePaymentLink(planInfo: IPlanSubscription) {
 
 export async function confirmPayment(executeURL: string, token: string) {
   try {
-    const session = await verifySession();
-    const response = await axios.post(`${executeURL}/capture`, {
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-    });
+    // Note: Ne pas appeler verifySession() ici car cette fonction peut être
+    // appelée depuis une popup de callback PayPal où les cookies de session
+    // peuvent ne pas être disponibles. L'authentification se fait via le token PayPal.
 
-    console.log('-->confirmPayment.session.accessToken', session.accessToken);
+    const response = await axios.post(
+      `${executeURL}/capture`,
+      {}, // Body vide pour la requête de capture
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      }
+    );
+
     console.log('-->confirmPayment.PaypalToken', token);
     console.log('-->confirmPayment.ExecuteURL', `${executeURL}/capture`);
+    console.log('-->confirmPayment.response', response.data);
     return {
       code: null,
       error: null,

@@ -63,9 +63,9 @@ const SuccessPayment = () => {
                     }, window.location.origin);
                 });
             }
-
+            console.log("-->executeUrl found:", executeUrl)
+            console.log("-->paypalToken found:", paypalToken)
             if (executeUrl && paypalToken) {
-                console.log('-->executeUrl found:', executeUrl);
 
                 // Confirmer le paiement
                 const result = await confirmPayment(executeUrl, paypalToken);
