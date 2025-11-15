@@ -278,9 +278,25 @@ export async function confirmPayment(executeURL: string, token: string) {
   } catch (error: any) {
     console.log('-->userAction.confirmPayment.error', error.response?.data)
     console.log('-->userAction.confirmPayment.error.details', JSON.stringify(error.response?.data, null, 2))
+
+    const errorData = error.response?.data;
+    let userMessage = errorData?.message ?? "An unexpected error occurred";
+
+    // Messages d'erreur plus explicites pour PayPal
+    if (errorData?.name === 'UNPROCESSABLE_ENTITY') {
+      const details = errorData?.details?.[0];
+      if (details?.issue === 'ORDER_ALREADY_CAPTURED') {
+        userMessage = "This payment has already been processed. Please create a new payment.";
+      } else if (details?.issue === 'DUPLICATE_INVOICE_ID') {
+        userMessage = "Duplicate invoice ID detected. Please try creating a new payment.";
+      } else {
+        userMessage = `PayPal Error: ${errorData.message}. Debug ID: ${errorData.debug_id}`;
+      }
+    }
+
     return {
       code: error.code ?? "unknown",
-      error: error.response?.data?.message ?? "An unexpected error occurred",
+      error: userMessage,
       data: null,
     };
   }

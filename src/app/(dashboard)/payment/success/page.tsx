@@ -76,6 +76,7 @@ const SuccessPayment = () => {
 
                 // Nettoyer le sessionStorage
                 sessionStorage.removeItem('paypal_execute_url');
+                sessionStorage.removeItem('paypal_token');
 
                 // Notifier la fenêtre parent si on est dans une popup
                 if (window.opener) {

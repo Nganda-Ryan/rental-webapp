@@ -145,8 +145,11 @@ const Settings = () => {
         let endDate = new Date();
         endDate.setDate(endDate.getDate() + 30);
 
+        // Générer un referenceCode unique pour chaque transaction
+        const uniqueRef = `REF-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
         const payload: IPlanSubscription = {
-            referenceCode: "REF-002",
+            referenceCode: uniqueRef,
             notes: `L'utilisateur ${user.Firstname} ${user.Lastname} a souscrit au plan ${planId}`,
             userId: user.userId,
             planCode: planId,
