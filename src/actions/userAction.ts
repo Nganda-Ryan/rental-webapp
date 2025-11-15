@@ -276,7 +276,8 @@ export async function confirmPayment(executeURL: string, token: string) {
       data: response.data,
     };
   } catch (error: any) {
-    console.log('-->userAction.confirmPayment.error', error.response)
+    console.log('-->userAction.confirmPayment.error', error.response?.data)
+    console.log('-->userAction.confirmPayment.error.details', JSON.stringify(error.response?.data, null, 2))
     return {
       code: error.code ?? "unknown",
       error: error.response?.data?.message ?? "An unexpected error occurred",
