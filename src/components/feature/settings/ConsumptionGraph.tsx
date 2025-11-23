@@ -1,9 +1,7 @@
 'use client'
 
-import React, { useState } from 'react';
+import React from 'react';
 import { IConsumption } from '@/types/user';
-import Overlay from '@/components/Overlay';
-import { ChevronDown } from 'lucide-react';
 
 interface ConsumptionGraphProps {
   consumptions: IConsumption[];

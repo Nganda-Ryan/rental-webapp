@@ -32,6 +32,7 @@ export interface AssetModalsProps {
   processingMessage: string;
   assetTitle?: string;
   activeContractId?: string;
+  profileCode?: string;
 
   /* Handlers */
   onCloseInvoiceGenerator: () => void;
@@ -43,7 +44,7 @@ export interface AssetModalsProps {
   onCloseDeleteModal: () => void;
   onConfirmDelete: () => void;
   onCloseAttachPropertiesModal: () => void;
-  onAttachProperties: (selectedProperties: string[]) => void;
+  onAttachProperties: (selectedProperty: any) => void;
   onCloseContractForm: () => void;
   onSubmitContract: (contractData: any) => void;
   onCloseSuccessModal: () => void;
@@ -72,6 +73,7 @@ export const AssetModals: React.FC<AssetModalsProps> = ({
   processingMessage,
   assetTitle,
   activeContractId,
+  profileCode,
   onCloseInvoiceGenerator,
   onCreateInvoice,
   onCloseManagerSearch,
@@ -131,7 +133,7 @@ export const AssetModals: React.FC<AssetModalsProps> = ({
         <AttachPropertiesModal
           onClose={onCloseAttachPropertiesModal}
           onAttach={onAttachProperties}
-          availableProperties={[]}
+          profileCode={profileCode ?? ""}
         />
       </Overlay>
 

@@ -385,6 +385,7 @@ const UnitDetail = () => {
           processingMessage="Loading..."
           assetTitle={asset?.Name}
           activeContractId={activeContract?.id}
+          profileCode={user?.Profiles.find(p => p.RoleCode === "LANDLORD")?.Code}
           onCloseInvoiceGenerator={() => setShowInvoiceGenerator(false)}
           onCreateInvoice={() => {}}
           onCloseManagerSearch={() => {}}

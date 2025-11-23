@@ -381,7 +381,7 @@ export async function describeMyself(){
   }
 }
 
-export async function getScore(userId: string) {
+export async function getScore(userId: string, requestId: string) {
   
   try {
     const session = await verifySession();
@@ -394,7 +394,7 @@ export async function getScore(userId: string) {
     });
     const response = await apiClient.request({
       method: 'GET',
-      url: `/api/v1/User/Score?Code=${userId}`,
+      url: `/api/v1/User/Score?Code=${userId}&requestId=${requestId}`,
     });
 
     return {

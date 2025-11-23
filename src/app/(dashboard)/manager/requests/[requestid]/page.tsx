@@ -14,7 +14,7 @@ const Page = () => {
 
     const init = async () => {
         const result = await geRequestDetail(params.requestid as string);
-        const result2 = await getScore(result.data.body.reqData.creator.UserCode as string);
+        const result2 = await getScore(result.data.body.reqData.creator.UserCode as string, params.requestid as string);
         console.log('-->result', result.data.body.reqData.creator)
         console.log('-->result2', result2)
     }

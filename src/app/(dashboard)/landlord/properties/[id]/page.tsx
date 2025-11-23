@@ -33,9 +33,9 @@ import { PropertySkeletonPageSection1, RightSideAction } from "@/components/skel
 import Nodata from "@/components/error/Nodata";
 
 // Actions
-import { createContract, createInvoice, inviteManager, terminateLease } from "@/actions/assetAction";
+import { createContract, createInvoice, inviteManager, terminateLease, attachAsset } from "@/actions/assetAction";
 import { requestPropertyVerification } from "@/actions/requestAction";
-import { IInvoiceForm, IInvoice, IPropertyVerification, IPropertyVerificationDoc } from "@/types/Property";
+import { IInvoiceForm, IInvoice, IPropertyVerification, IPropertyVerificationDoc, IAttachSimpleAssetToCplx, AssetData } from "@/types/Property";
 import { IInviteManagerRequest, IUser } from "@/types/user";
 
 const PropertyDetail = () => {
@@ -195,6 +195,58 @@ const PropertyDetail = () => {
         }
       } catch (error) {
         toast.error("An error occurred while inviting the manager", { position: 'bottom-right' });
+      }
+    }
+  };
+
+  const handleAttachProperty = async (selectedProperty: AssetData) => {
+    if (asset) {
+      console.log('propertyDetail.handleAttachProperty', selectedProperty)
+      try {
+        const payload: IAttachSimpleAssetToCplx = {
+          parentCode: asset.Code,
+          typeCode: selectedProperty.TypeCode,
+          title: selectedProperty.Title,
+          notes: '',
+          price: selectedProperty.Price,
+          currency: selectedProperty.Currency,
+          coverUrl: selectedProperty.CoverUrl,
+          tag: [],
+          addressData: {
+            city: selectedProperty.Address.City,
+            street: selectedProperty.Address.Street,
+            country: selectedProperty.Address.Country,
+          },
+          billingItems: [],
+        };
+        console.log('payload', payload)
+
+        setIsLoading(true);
+        setLoadingMessage("Attaching property...");
+        setIsAttachPropertiesModalOpen(false);
+
+        const result = await attachAsset(payload);
+        console.log('-->handleAttachProperty.result', result)
+
+        if (result.data) {
+          setIsLoading(false);
+          setLoadingMessage("Loading...");
+          setSuccessMessage("Property attached successfully");
+          setShowSuccessModal(true);
+          await refetch();
+        } else if (result.error) {
+          setIsLoading(false);
+          setLoadingMessage("Loading...");
+          if (result.code === 'SESSION_EXPIRED') {
+            router.push('/signin');
+            return;
+          }
+          toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
+        }
+      } catch (error) {
+        setIsLoading(false);
+        setLoadingMessage("Loading...");
+        toast.error("An error occurred while attaching the property", { position: 'bottom-right' });
       }
     }
   };
@@ -510,6 +562,7 @@ const PropertyDetail = () => {
           processingMessage={loadingMessage}
           assetTitle={asset?.Name}
           activeContractId={activeContract?.id}
+          profileCode={user?.Profiles.find(p => p.RoleCode === "LANDLORD")?.Code}
           onCloseInvoiceGenerator={() => setShowInvoiceGenerator(false)}
           onCreateInvoice={() => {}}
           onCloseManagerSearch={() => setIsManagerSearchOpen(false)}
@@ -519,7 +572,7 @@ const PropertyDetail = () => {
           onCloseDeleteModal={() => setIsDeleteModalOpen(false)}
           onConfirmDelete={() => {}}
           onCloseAttachPropertiesModal={() => setIsAttachPropertiesModalOpen(false)}
-          onAttachProperties={() => {}}
+          onAttachProperties={handleAttachProperty}
           onCloseContractForm={() => setContractFormOpen(false)}
           onSubmitContract={handleContractSubmit}
           onCloseSuccessModal={() => setShowSuccessModal(false)}

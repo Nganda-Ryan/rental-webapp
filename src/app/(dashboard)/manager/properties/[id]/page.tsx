@@ -28,8 +28,8 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Overlay from "@/components/Overlay";
 import InvoiceGenerator from "@/components/feature/Properties/InvoiceGenerator";
 import { useParams } from 'next/navigation';
-import { createContract, createInvoice, getAsset, inviteManager, searchInvoice, terminateLease } from "@/actions/assetAction";
-import { AssetData, AssetDataDetailed, IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, IPropertyVerification, IPropertyVerificationDoc, SeachInvoiceParams } from "@/types/Property";
+import { createContract, createInvoice, getAsset, inviteManager, searchInvoice, terminateLease, attachAsset } from "@/actions/assetAction";
+import { AssetData, AssetDataDetailed, IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, IPropertyVerification, IPropertyVerificationDoc, SeachInvoiceParams, IAttachSimpleAssetToCplx } from "@/types/Property";
 import { getStatusBadge } from "@/lib/utils-component";
 import { PropertySkeletonPageSection1, RightSideAction } from "@/components/skeleton/pages/PropertySkeletonPage";
 import Button from "@/components/ui/Button";
@@ -378,10 +378,54 @@ const PropertyDetail = () => {
         setTimeout(() => {
         }, 2000);
     };
-    const handleAttachProperties = (selectedProperties: string[]) => {
-        console.log("Attaching properties:", selectedProperties);
-        setSuccessMessage("Properties attached successfully");
-        setShowSuccessModal(true);
+    const handleAttachProperties = async (selectedProperty: any) => {
+        console.log('PropertyDetail.handleAttachProperties', selectedProperty)
+        // if (asset) {
+        //     try {
+        //         const payload: IAttachSimpleAssetToCplx = {
+        //             parentCode: asset.Code,
+        //             typeCode: selectedProperty.Type,
+        //             title: selectedProperty.Name,
+        //             notes: selectedProperty.Notes,
+        //             price: selectedProperty.Price,
+        //             currency: selectedProperty.Currency,
+        //             coverUrl: selectedProperty.CoverUrl,
+        //             tag: selectedProperty.Tag,
+        //             addressData: {
+        //                 city: selectedProperty.AddressData.City,
+        //                 street: selectedProperty.AddressData.Street,
+        //                 country: selectedProperty.AddressData.Country,
+        //             },
+        //             billingItems: selectedProperty.BillingItems,
+        //         };
+
+        //         setIsLoading(true);
+        //         setLoadingMessage("Attaching property...");
+        //         setIsAttachPropertiesModalOpen(false);
+
+        //         const result = await attachAsset(payload);
+
+        //         if (result.data) {
+        //             setIsLoading(false);
+        //             setLoadingMessage("Loading...");
+        //             setSuccessMessage("Property attached successfully");
+        //             setShowSuccessModal(true);
+        //             await init();
+        //         } else if (result.error) {
+        //             setIsLoading(false);
+        //             setLoadingMessage("Loading...");
+        //             if (result.code === 'SESSION_EXPIRED') {
+        //                 router.push('/signin');
+        //                 return;
+        //             }
+        //             toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
+        //         }
+        //     } catch (error) {
+        //         setIsLoading(false);
+        //         setLoadingMessage("Loading...");
+        //         toast.error("An error occurred while attaching the property", { position: 'bottom-right' });
+        //     }
+        // }
     };
     const handleContractSubmit = async (contractData: any) => {
         try {
@@ -1344,7 +1388,7 @@ const PropertyDetail = () => {
                     <AttachPropertiesModal
                         onClose={() => setIsAttachPropertiesModalOpen(false)}
                         onAttach={handleAttachProperties}
-                        availableProperties={[]}
+                        profileCode={user?.Profiles.find(p => p.RoleCode === "MANAGER")?.Code ?? ""}
                     />
                 </Overlay>
                 <Overlay isOpen={isContractFormOpen} onClose={() => setContractFormOpen(false)}>

@@ -66,7 +66,7 @@ const Settings = () => {
                 describeMyself()
             ]);
 
-            console.log('-->meResult', meResult);
+            console.log('-->meResult COMPLET', JSON.stringify(meResult, null, 2));
             console.log('-->result', result);
 
             // Gestion des erreurs pour result
@@ -88,7 +88,7 @@ const Settings = () => {
                 }
                 toast.error(meResult.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
             } else {
-                setMe(meResult.data.body);
+                setMe(meResult.data.body.userData);
             }
         } catch (err) {
             console.error("Erreur dans init:", err);
@@ -244,8 +244,25 @@ const Settings = () => {
         }
     };
 
+    // Récupérer le plan le plus récent basé sur StartDate
+    const currentPlanId = (() => {
+        console.log('-->me?.Subscriptions', me?.Subscriptions);
 
+        if (!me?.Subscriptions || me.Subscriptions.length === 0) {
+            console.log('-->Aucune subscription trouvée, retour à FREE');
+            return "FREE";
+        }
 
+        // Trier les subscriptions par StartDate (plus récent en premier)
+        const sortedSubscriptions = [...me.Subscriptions].sort((a, b) => {
+            return new Date(b.StartDate).getTime() - new Date(a.StartDate).getTime();
+        });
+
+        // Retourner le PlanCode de la subscription la plus récente
+        console.log('-->sortedSubscriptions', sortedSubscriptions);
+        console.log('-->currentPlanId détecté:', sortedSubscriptions[0].PlanCode);
+        return sortedSubscriptions[0].PlanCode;
+    })();
 
     return (
         <DefaultLayout>
@@ -376,7 +393,7 @@ const Settings = () => {
                             isLoadingPrincingInfo ?
                                 (Array.from({ length: 4 }).map((_, index) => (<PrincingCardSkeleton key={index} />))) 
                                 : 
-                                princingInfo && princingInfo?.plans.map(plan => (<PricingCard pricingInfo={plan} currency={princingInfo.default_currency_symbol} currentPlanId="FREE" onBuyClick={buyPlan} key={plan.id} />))
+                                princingInfo && princingInfo?.plans.map(plan => (<PricingCard pricingInfo={plan} currency={princingInfo.default_currency_symbol} currentPlanId={currentPlanId} onBuyClick={buyPlan} key={plan.id} />))
                         }
 
                     </div>
@@ -395,3 +412,308 @@ const Settings = () => {
 };
 
 export default Settings;
+
+/*
+-->meResult COMPLET {
+  "code": null,
+  "error": null,
+  "data": {
+    "code": "200",
+    "message": "retrieved successfully",
+    "exit": "OK",
+    "body": {
+      "userData": {
+        "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+        "AddressCode": "ADVYDMAMB386856",
+        "Email": "steveloicnganda@gmail.com",
+        "Firstname": "Steve Ryan",
+        "Gender": "MALE",
+        "Lastname": "NGANDA ",
+        "NIU": "NIUVYDMAMB38685",
+        "OtherEmail": null,
+        "OtherPhone": null,
+        "Phone": "+237672954087",
+        "Status": "ACTIVE",
+        "AvatarUrl": "",
+        "Profiles": [
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@RENTER",
+            "Status": "ACTIVE",
+            "RoleCode": "RENTER",
+            "CreatedAt": "2025-05-02",
+            "IsActive": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2"
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@LANDLORD",
+            "Status": "ACTIVE",
+            "RoleCode": "LANDLORD",
+            "CreatedAt": "2025-07-05",
+            "IsActive": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2"
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@MANAGER",
+            "Status": "ACTIVE",
+            "RoleCode": "MANAGER",
+            "CreatedAt": "2025-09-03",
+            "IsActive": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2"
+          }
+        ],
+        "Address": {
+          "Code": "ADVYDMAMB386856",
+          "City": "Yaounde",
+          "Country": "CM",
+          "Street": "Rue Lamido rey boude",
+          "Details": null
+        },
+        "Subscriptions": [
+          {
+            "Code": "COOL@RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "Quantity": "0",
+            "StartDate": "2025-08-11",
+            "EndDate": "2025-12-15",
+            "StatusCode": "ACTIVE",
+            "Notes": " ---- Auto created on transaction completed",
+            "IsActive": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "PlanCode": "COOL",
+            "Consumptions": [],
+            "Plan": {
+              "Code": "COOL",
+              "Title": "Cool",
+              "Price": 8000,
+              "Currency": "XAF",
+              "CreatedAt": "2025-06-16 15:03:28",
+              "Description": "Pour les investisseurs avec un portefeuille en croissance et des besoins de communication avancés.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "FREE@RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "Quantity": "0",
+            "StartDate": "2025-05-04T14:09:21.541Z",
+            "EndDate": "2025-08-04T07:15:50.400Z",
+            "StatusCode": "ACTIVE",
+            "Notes": "Basic default free subscription",
+            "IsActive": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "PlanCode": "FREE",
+            "Consumptions": [],
+            "Plan": {
+              "Code": "FREE",
+              "Title": "Gratuit",
+              "Price": 0,
+              "Currency": "XAF",
+              "CreatedAt": "2025-06-16 15:03:28",
+              "Description": "Parfait pour démarrer et gérer votre premier bien locatif.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "RELAX@RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "Quantity": "0",
+            "StartDate": "2025-08-09",
+            "EndDate": "2026-09-08",
+            "StatusCode": "ACTIVE",
+            "Notes": "User Steve Ryan NGANDA  ONANA subscribed to RELAX",
+            "IsActive": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "PlanCode": "RELAX",
+            "Consumptions": [],
+            "Plan": {
+              "Code": "RELAX",
+              "Title": "Relax",
+              "Price": 5000,
+              "Currency": "XAF",
+              "CreatedAt": "2025-06-16 15:03:28",
+              "Description": "Idéal pour les propriétaires gérant quelques biens avec un co-utilisateur.",
+              "IsActive": 1
+            }
+          }
+        ],
+        "Consumptions": [
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@PROPERTY_LIMIT",
+            "Quantity": 5,
+            "CreatedAt": "2025-08-16 16:24:49",
+            "ItemCode": "PROPERTY_LIMIT",
+            "IsActive": 1,
+            "Remaining": 5,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "item": {
+              "Code": "PROPERTY_LIMIT",
+              "Title": "Limite de biens locatifs",
+              "IsMesurable": 1,
+              "Description": "Le nombre maximum de biens locatifs actifs qu'un utilisateur peut gérer.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@TENANT_LIMIT",
+            "Quantity": 10,
+            "CreatedAt": "2025-08-16 16:24:49",
+            "ItemCode": "TENANT_LIMIT",
+            "IsActive": 1,
+            "Remaining": 10,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "item": {
+              "Code": "TENANT_LIMIT",
+              "Title": "Limite de locataires",
+              "IsMesurable": 1,
+              "Description": "Le nombre maximum de locataires qu'un utilisateur peut gérer par bien.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@USER_LIMIT",
+            "Quantity": 9999,
+            "CreatedAt": "2025-08-16 16:24:49",
+            "ItemCode": "USER_LIMIT",
+            "IsActive": 1,
+            "Remaining": 9999,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "item": {
+              "Code": "USER_LIMIT",
+              "Title": "Limite d'utilisateurs",
+              "IsMesurable": 1,
+              "Description": "Le nombre maximum de comptes utilisateurs pouvant accéder à l'espace de travail.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@EMAIL_REMINDERS",
+            "Quantity": 1,
+            "CreatedAt": "2025-08-16 16:24:49",
+            "ItemCode": "EMAIL_REMINDERS",
+            "IsActive": 1,
+            "Remaining": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "item": {
+              "Code": "EMAIL_REMINDERS",
+              "Title": "Rappels par Email",
+              "IsMesurable": 0,
+              "Description": "Active l'envoi automatique de rappels de paiement par email.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@PRO_LEASE_CONTRACT",
+            "Quantity": 1,
+            "CreatedAt": "2025-08-16 16:24:49",
+            "ItemCode": "PRO_LEASE_CONTRACT",
+            "IsActive": 1,
+            "Remaining": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "item": {
+              "Code": "PRO_LEASE_CONTRACT",
+              "Title": "Contrat de Bail Professionnel",
+              "IsMesurable": 0,
+              "Description": "Permet de générer des contrats de bail en utilisant des modèles professionnels.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@RENTALSCORE_CREDITS",
+            "Quantity": 5,
+            "CreatedAt": "2025-08-16 16:24:49",
+            "ItemCode": "RENTALSCORE_CREDITS",
+            "IsActive": 1,
+            "Remaining": 5,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "item": {
+              "Code": "RENTALSCORE_CREDITS",
+              "Title": "Crédits RentalScore",
+              "IsMesurable": 1,
+              "Description": "Le nombre de consultations de RentalScore gratuites par mois.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@RENTALHISTORY_CREDITS",
+            "Quantity": 5,
+            "CreatedAt": "2025-08-16 16:24:49",
+            "ItemCode": "RENTALHISTORY_CREDITS",
+            "IsActive": 1,
+            "Remaining": 5,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "item": {
+              "Code": "RENTALHISTORY_CREDITS",
+              "Title": "Crédits Historique Location",
+              "IsMesurable": 1,
+              "Description": "Le nombre de consultations d'historiques de location gratuites par mois.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@EMAIL_RECEIPTS",
+            "Quantity": 1,
+            "CreatedAt": "2025-08-16 16:24:49",
+            "ItemCode": "EMAIL_RECEIPTS",
+            "IsActive": 1,
+            "Remaining": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "item": {
+              "Code": "EMAIL_RECEIPTS",
+              "Title": "Reçus par Email",
+              "IsMesurable": 0,
+              "Description": "Active l'envoi automatique de reçus par email après un paiement.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@PRIORITY_SUPPORT",
+            "Quantity": 1,
+            "CreatedAt": "2025-08-16 16:24:49",
+            "ItemCode": "PRIORITY_SUPPORT",
+            "IsActive": 1,
+            "Remaining": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "item": {
+              "Code": "PRIORITY_SUPPORT",
+              "Title": "Support Prioritaire",
+              "IsMesurable": 0,
+              "Description": "Accès prioritaire au support client par email ou chat.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@SMS_REMINDERS",
+            "Quantity": 1,
+            "CreatedAt": "2025-11-15 12:33:06",
+            "ItemCode": "SMS_REMINDERS",
+            "IsActive": 1,
+            "Remaining": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "item": {
+              "Code": "SMS_REMINDERS",
+              "Title": "Rappels par SMS",
+              "IsMesurable": 0,
+              "Description": "Active l'envoi automatique de rappels de paiement par SMS.",
+              "IsActive": 1
+            }
+          },
+          {
+            "Code": "RKEWZb8CLWVPjHezeOTmZKlXH7t2@ASSISTANCE_TRAINING",
+            "Quantity": 1,
+            "CreatedAt": "2025-11-15 12:33:06",
+            "ItemCode": "ASSISTANCE_TRAINING",
+            "IsActive": 1,
+            "Remaining": 1,
+            "UserCode": "RKEWZb8CLWVPjHezeOTmZKlXH7t2",
+            "item": {
+              "Code": "ASSISTANCE_TRAINING",
+              "Title": "Assistance & Formation",
+              "IsMesurable": 0,
+              "Description": "Fournit une assistance personnalisée et des sessions de formation sur l'outil.",
+              "IsActive": 1
+            }
+          }
+        ]
+      },
+      "requests": []
+    }
+  }
+}
+*/

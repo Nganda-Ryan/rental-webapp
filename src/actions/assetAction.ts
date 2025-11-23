@@ -1,7 +1,7 @@
 "use server";
 
 import axios, { AxiosInstance } from "axios";
-import { CreatePropertyType, IAssetApplication, IContractForm, IDashBoardParams, IInvoice, IPropertyApplication, IPropertyVerification, IUpdateAssetRequest, IUpdateInvoiceParam, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
+import { CreatePropertyType, IAssetApplication, IAttachSimpleAssetToCplx, IContractForm, IDashBoardParams, IInvoice, IPropertyApplication, IPropertyVerification, IUpdateAssetRequest, IUpdateInvoiceParam, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
 import { verifySession } from "@/lib/session";
 import { getExtension } from "@/lib/utils";
 import { uploadFile } from "@/lib/fileUpload";
@@ -584,6 +584,47 @@ export async function applyHouse (param: IPropertyApplication ) {
     }
   } catch (error: any) {
     console.log('-->createAsset.error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
+export async function attachAsset (param: IAttachSimpleAssetToCplx ) {
+  try {
+    const session = await verifySession();
+    
+    const token = session.accessToken;
+
+    const response = await axios.post(`${process.env.ASSET_WORKER_ENDPOINT}/api/v1/Asset/Add`, {
+      Asset: {
+        ...param,
+      }
+    },{
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log('-->result', response);
+    
+    return {
+      code: 200,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->attachAsset.error', error)
     const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
     if (isRedirect) {
       return {

@@ -452,3 +452,65 @@ export interface IGetAssetDetailContract {
     contractor: IPartner;
     asset: IAsset;
 }
+
+export interface IAttachSimpleAssetToCplx {
+  /**
+   * Le code de référence du parent (Complexe) auquel l'actif est rattaché.
+   */
+  parentCode: string;
+  /**
+   * Le code de type de l'actif. Ex: "STUDMOD"
+   */
+  typeCode: string;
+  /**
+   * Le titre ou nom de l'actif. Ex: "Studio Est"
+   */
+  title: string;
+  /**
+   * Notes ou description supplémentaires. Ex: "beau Studio"
+   */
+  notes: string;
+  /**
+   * Le prix de l'actif.
+   */
+  price: number;
+  /**
+   * Le code de la devise. Ex: "XAF"
+   */
+  currency: string;
+  /**
+   * L'URL de la photo de couverture de l'actif.
+   */
+  coverUrl: string;
+  /**
+   * Une liste de balises (tags) décrivant l'actif. Ex: ["studio", "luxeux"]
+   */
+  tag: string[];
+  /**
+   * Les données d'adresse de l'actif.
+   */
+  addressData: IAddressData;
+  /**
+   * La liste des éléments de facturation associés à l'actif. Ex: ["WATER", "RENT", "ELEC"]
+   */
+  billingItems: string[];
+}
+
+/**
+ * @interface IAddressData
+ * Modélise les informations de localisation de l'actif.
+ */
+export interface IAddressData {
+  /**
+   * La ville où se situe l'actif. Ex: "Dla"
+   */
+  city: string;
+  /**
+   * Le code du pays (standard ISO 3166-1 alpha-3). Ex: "CMR"
+   */
+  country: string;
+  /**
+   * Le nom de la rue ou du quartier. Ex: "Bonapriso"
+   */
+  street: string;
+}
