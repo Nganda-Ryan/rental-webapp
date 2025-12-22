@@ -39,7 +39,7 @@ This is a rental property management web application built with Next.js 15, Reac
 
 **User Profiles:**
 - Users can have multiple profiles/roles
-- External user API via Cloudflare Workers at `USER_WORKER_ENDPOINT`
+- External user API via Cloudflare Workers at `USER_BASE_URL`
 - User service in `src/database/userService.ts` interfaces with external API
 
 ### Internationalization
@@ -102,7 +102,7 @@ Built with `next-intl`:
 
 ### External Dependencies
 
-- **Cloudflare Workers:** User management API (`USER_WORKER_ENDPOINT`)
+- **Cloudflare Workers:** User management API (`USER_BASE_URL`)
 - **Cloudflare R2:** Image storage (`pub-5482c8c79e08450d875d1ba6b0afe368.r2.dev`)
 - **Firebase:** Authentication only
 
@@ -111,7 +111,7 @@ Built with `next-intl`:
 Required environment variables (create `.env` based on `.env.example` if it exists):
 - `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_APP_ID`
 - `AUTH_SECRET` - JWT signing secret
-- `USER_WORKER_ENDPOINT` - Cloudflare Worker API endpoint
+- `USER_BASE_URL` - Cloudflare Worker API endpoint
 - `NODE_ENV` - Environment (production/development)
 
 ## Key Implementation Details

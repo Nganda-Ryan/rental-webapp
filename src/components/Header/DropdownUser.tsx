@@ -103,9 +103,9 @@ const DropdownUser = () => {
           <Image
             width={100}
             height={100}
-            src={"/images/user/among-us-blue-png-01.png"}
+            src={"/images/user/blank-profile-picture.webp"}
             alt="User"
-            className="rounded-full overflow-hidden h-11 w-11"
+            className="rounded-full overflow-hidden h-10 w-10"
           />
         </span>
 

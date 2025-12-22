@@ -22,7 +22,7 @@ export async function createAsset(asset: CreatePropertyType, coverFile: any) {
     const uploadedCoverPath = await uploadFile(cover, coverPath);
     if(uploadedCoverPath.error) return {error: "error while uploading ID CARD VERSO", code:uploadedCoverPath.code, data: null}
     
-    const response = await axios.post(`${process.env.ASSET_WORKER_ENDPOINT}/api/v1/Asset`, {
+    const response = await axios.post(`${process.env.ASSET_BASE_URL}/api/v1/Asset`, {
       Asset: {
         ...asset,
         coverUrl: coverPath
@@ -80,7 +80,7 @@ export async function updateAsset(asset: IUpdateAssetRequest) {
       ...asset,
       tag: (asset.tag.length > 0 && typeof asset.tag == "string") ? asset.tag.split(';') : [],
     })
-    const response = await axios.put(`${process.env.ASSET_WORKER_ENDPOINT}/api/v1/Asset`, {
+    const response = await axios.put(`${process.env.ASSET_BASE_URL}/api/v1/Asset`, {
       Asset: {
         ...asset,
         tag: (asset.tag.length > 0 && typeof asset.tag == "string") ? asset.tag.split(';') : [],
@@ -129,7 +129,7 @@ export async function createContract(contract: IContractForm) {
       profilCode: session.Code
     })
     
-    const response = await axios.post(`${process.env.CONTRACT_INVOICE_WORKER_ENDPOINT}/api/v1/Contract`, {
+    const response = await axios.post(`${process.env.CONTRACT_BASE_URL}/api/v1/Contract`, {
       Contract: {
         ...contract,
         profilCode: userProfile?.Code
@@ -170,7 +170,7 @@ export async function getAsset(assetCode: string): Promise<any> {
     const session = await verifySession();
     const token = session.accessToken;
     const apiClient: AxiosInstance = axios.create({
-      baseURL: process.env.ASSET_WORKER_ENDPOINT,
+      baseURL: process.env.ASSET_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -256,7 +256,7 @@ export async function getContract(contractCode: string) {
     const session = await verifySession();
     const token = session.accessToken;
     const apiClient: AxiosInstance = axios.create({
-      baseURL: process.env.CONTRACT_INVOICE_WORKER_ENDPOINT,
+      baseURL: process.env.CONTRACT_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -304,7 +304,7 @@ export async function createInvoice(invoice: IInvoice) {
       ...invoice,
       profilCode: userProfile?.Code
     })
-    const response = await axios.post(`${process.env.CONTRACT_INVOICE_WORKER_ENDPOINT}/api/v1/Contract/Invoice`, {
+    const response = await axios.post(`${process.env.CONTRACT_BASE_URL}/api/v1/Contract/Invoice`, {
       Invoice: {
         ...invoice,
         profilCode: userProfile?.Code
@@ -356,7 +356,7 @@ export async function updateInvoice(invoice: IUpdateInvoiceParam) {
     console.log(payload);
     
     const response = await axios.put(
-      `${process.env.CONTRACT_INVOICE_WORKER_ENDPOINT}/api/v1/Contract/Invoice`,
+      `${process.env.CONTRACT_BASE_URL}/api/v1/Contract/Invoice`,
       {
         Invoice: payload,
       },
@@ -438,7 +438,7 @@ export async function terminateLease(contractCode: string) {
     const session = await verifySession();
     const token = session.accessToken;
     
-    const response = await axios.delete(`${process.env.CONTRACT_INVOICE_WORKER_ENDPOINT}/api/v1/Contract`, {
+    const response = await axios.delete(`${process.env.CONTRACT_BASE_URL}/api/v1/Contract`, {
       data: {
         Contract: {
           Code: contractCode
@@ -478,7 +478,7 @@ export async function inviteManager (param: IInviteManagerRequest) {
     const session = await verifySession();
     const token = session.accessToken;
     
-    const response = await axios.post(`${process.env.ASSET_WORKER_ENDPOINT}/api/v1/Asset/Request/Manager`, {
+    const response = await axios.post(`${process.env.ASSET_BASE_URL}/api/v1/Asset/Request/Manager`, {
       Request : {
         ...param
       }
@@ -520,7 +520,7 @@ export async function dashboard (params: IDashBoardParams) {
     // console.log('token', token)
 
     const apiClient: AxiosInstance = axios.create({
-      baseURL: process.env.DASHBOARD_WORKER_ENDPOINT,
+      baseURL: process.env.DASHBOARD_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -564,7 +564,7 @@ export async function applyHouse (param: IPropertyApplication ) {
     
     const token = session.accessToken;
 
-    const response = await axios.post(`${process.env.ASSET_WORKER_ENDPOINT}/api/v1/Asset/Apply`, {
+    const response = await axios.post(`${process.env.ASSET_BASE_URL}/api/v1/Asset/Apply`, {
       Request: {
         ...param,
         typeCode: ""
@@ -606,7 +606,7 @@ export async function attachAsset (param: IAttachSimpleAssetToCplx ) {
     
     const token = session.accessToken;
 
-    const response = await axios.post(`${process.env.ASSET_WORKER_ENDPOINT}/api/v1/Asset/Add`, {
+    const response = await axios.post(`${process.env.ASSET_BASE_URL}/api/v1/Asset/Add`, {
       Asset: {
         ...param,
       }

@@ -70,7 +70,7 @@ export async function geRequestDetail(requestId: string): Promise<any> {
     // console.log('-->token', session.accessToken);
     
     const apiClient: AxiosInstance = axios.create({
-        baseURL: process.env.REQUEST_DETAIL_WORKER_ENDPOINT,
+        baseURL: process.env.REQUEST_BASE_URL,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.accessToken}`,
@@ -185,7 +185,7 @@ export async function requestLessorProfile(application: ProfileApplication_T){
         } 
       ]
     }
-    const response = await axios.post(`${process.env.USER_WORKER_ENDPOINT!}/api/v1/User/Request/Verification`,
+    const response = await axios.post(`${process.env.USER_BASE_URL!}/api/v1/User/Request/Verification`,
       {
         Request: {...payload }
       },
@@ -266,7 +266,7 @@ export async function requestPropertyVerification(application: IPropertyVerifica
 
     // 5. Appel à l’API backend
     const response = await axios.post(
-      `${process.env.ASSET_WORKER_ENDPOINT!}/api/v1/Asset/Request/Verification`,
+      `${process.env.ASSET_BASE_URL!}/api/v1/Asset/Request/Verification`,
       { Request: { ...payload } },
       { headers: { Authorization: `Bearer ${session.accessToken}` } }
     );

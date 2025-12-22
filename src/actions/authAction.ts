@@ -161,7 +161,7 @@ export async function signUpAction(_payload: any){
     if(tempUserInfo && tempUserInfo.user !== null && firebaseSignUpResult.user !== null){
       const userId = firebaseSignUpResult.user.uid;
       const token = tempUserInfo.user.accessToken;
-      const createdCfUser =  await axios.post(`${process.env.USER_WORKER_ENDPOINT}/api/v1/User`, {
+      const createdCfUser =  await axios.post(`${process.env.USER_BASE_URL}/api/v1/User`, {
         User: {...payload, userId: tempUserInfo.user.uid}
       },{
         headers: {
@@ -347,7 +347,7 @@ export async function getSecurityQuestion () {
     // console.log('token', token)
 
     const apiClient: AxiosInstance = axios.create({
-      baseURL: process.env.USER_WORKER_ENDPOINT,
+      baseURL: process.env.USER_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -387,7 +387,7 @@ export async function setSecurityQuestion (param: ISetSecurityQuestion) {
     const session = await verifySession();
     const token = session.accessToken;
 
-    const response = await axios.post(`${process.env.USER_WORKER_ENDPOINT}/api/v1/User/Security`, {
+    const response = await axios.post(`${process.env.USER_BASE_URL}/api/v1/User/Security`, {
       Request : {
         ...param
       }

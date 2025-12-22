@@ -115,7 +115,7 @@ export async function createUser(payload: ICreateUserParam){
 
     if(tempUserInfo && tempUserInfo.user !== null && firebaseSignUpResult.user !== null){
       console.log('Create CF user payload', {User: {...payload, userId: tempUserInfo.user.uid}});
-      const createdCfUser =  await axios.post(`${process.env.USER_WORKER_ENDPOINT}/api/v1/User`, {
+      const createdCfUser =  await axios.post(`${process.env.USER_BASE_URL}/api/v1/User`, {
         User: {...payload, userId: tempUserInfo.user.uid}
       },{
         headers: {
@@ -158,7 +158,7 @@ export async function updateUser(payload: IUpdateUser) {
     const token = session.accessToken;
 
     const response = await axios.put(
-      `${process.env.USER_WORKER_ENDPOINT}/api/v1/User`,
+      `${process.env.USER_BASE_URL}/api/v1/User`,
       {
         User: payload,
       },
@@ -314,7 +314,7 @@ export async function subscribeToPlan(planCode: string, endDate: String) {
     
     const token = session.accessToken;
 
-    const response = await axios.post(`${process.env.USER_WORKER_ENDPOINT}/api/v1/User/Subscribe`, {
+    const response = await axios.post(`${process.env.USER_BASE_URL}/api/v1/User/Subscribe`, {
       Subcription : {
         "notes": `User ${session.Firstname} ${session.Lastname} subscribed to ${planCode}`,
         "userId":session.userId,
@@ -386,7 +386,7 @@ export async function getScore(userId: string, requestId: string) {
   try {
     const session = await verifySession();
     const apiClient: AxiosInstance = axios.create({
-        baseURL: process.env.USER_WORKER_ENDPOINT,
+        baseURL: process.env.USER_BASE_URL,//https://manage-user-dev.rentalafrique.workers.dev
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.accessToken}`,
@@ -394,7 +394,7 @@ export async function getScore(userId: string, requestId: string) {
     });
     const response = await apiClient.request({
       method: 'GET',
-      url: `/api/v1/User/Score?Code=${userId}&requestId=${requestId}`,
+      url: `/api/v1/User/Score?requestId=${requestId}&Code=${userId}`,//api/v1/User/Score?requestId=requseraccessKk4L0NB1755211569872&Code=GDsGeQfrPKU5TZ5d97nhJPWPfpK2
     });
 
     return {

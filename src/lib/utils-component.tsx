@@ -18,7 +18,7 @@ interface Props {
     | 'RUB'
     | 'JPY'
     | 'CHF'
-    | 'FCFA'
+    | 'XAF'
     | string; // pour capturer les cas inconnus
   size?: number;
   color?: string;

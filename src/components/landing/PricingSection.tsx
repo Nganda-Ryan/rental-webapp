@@ -93,7 +93,7 @@ const PricingSection = () => {
   const plans = [
     {
       name: "Gratuit",
-      price: "0,00 FCFA",
+      price: "0,00 XAF",
       features: [
         "Limité à un bien locatif",
         "Limité à un locataire",
@@ -103,7 +103,7 @@ const PricingSection = () => {
     },
     {
       name: "Cool",
-      price: "10 000 FCFA",
+      price: "10 000 XAF",
       period: "/ mois",
       recommended: true,
       features: [
@@ -121,7 +121,7 @@ const PricingSection = () => {
     },
     {
       name: "Super cool",
-      price: "20 000 FCFA",
+      price: "20 000 XAF",
       period: "/ mois",
       features: [
         "biens locatif illimité",

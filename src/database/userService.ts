@@ -2,7 +2,7 @@ import axios from "axios";
 
 export async function getCloudflareUser(userId: string, token: string) {
     try {
-        const response = await axios.get(`${process.env.USER_WORKER_ENDPOINT!}/api/v1/User?Code=${userId}`,{
+        const response = await axios.get(`${process.env.USER_BASE_URL!}/api/v1/User?Code=${userId}`,{
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -25,7 +25,7 @@ export async function getCloudflareUser(userId: string, token: string) {
 
 export async function me(token: string){
     try {
-        const response = await axios.get(`${process.env.USER_WORKER_ENDPOINT!}/api/v1/User/me`,{
+        const response = await axios.get(`${process.env.USER_BASE_URL!}/api/v1/User/me`,{
             headers: {
               Authorization: `Bearer ${token}`,
             },

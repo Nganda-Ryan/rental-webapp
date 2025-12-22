@@ -373,7 +373,7 @@ export interface IPropertyApplication {
 
 export interface ApplicationSelectableItem {
   Code: string;
-  isSelect: number;
+  isSelected: number;
 }
 
 

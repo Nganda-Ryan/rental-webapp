@@ -14,7 +14,7 @@ const RentalRequestCard = ({ data }: MyProps) => {
       {/* Avatar */}
       <div className="flex-shrink-0 self-center sm:self-start">
         <Image
-          src={data.renter.AvatarUrl.trim().length > 0 ? data.renter.AvatarUrl : "/images/user/user-02.png"}
+          src={data.renter.AvatarUrl.trim().length > 0 ? data.renter.AvatarUrl : "/images/user/blank-profile-picture.webp"}
           alt="tenant avatar"
           className="h-16 w-16 sm:h-14 sm:w-14 rounded-full object-cover"
           width={64}
@@ -29,7 +29,7 @@ const RentalRequestCard = ({ data }: MyProps) => {
           href={`/landlord/requests/${data.Code}`} 
           className="block text-base sm:text-sm font-semibold uppercase text-gray-800 dark:text-gray-100 hover:underline truncate"
         >
-          {data.Code}
+          {data.renter.Firstname} {data.renter.Lastname}
         </Link>
 
         {/* Email & Phone */}

@@ -68,7 +68,7 @@ const Page = () => {
       UnitsKey: "Unit",
       numberOfUnit: 1,
       UnitsDefaultPrice: 0,
-      currency: "FCFA",
+      currency: "XAF",
       price: 0,
       cover: null as unknown as File,
       tag: "",
@@ -139,7 +139,7 @@ const Page = () => {
       typeCode: watch("UnitsType") || "",
       price: Number(watch("UnitsDefaultPrice")) || 0,
       title: `${watch("UnitsKey") || "Unit"} - ${index + 1}`,
-      currency: `${watch("currency") || "FCFA"}`
+      currency: `${watch("currency") || "XAF"}`
     }));
   
     newFields.forEach((updatedField, index) => {
@@ -576,7 +576,7 @@ const Page = () => {
                                   className="px-3 py-1.5 w-30 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   {...register(`currency`, { required: landlordT('selectCurrency') })}
                                 >
-                                  <option value="FCFA">FCFA</option>
+                                  <option value="XAF">XAF</option>
                                   <option value="USD">USD</option>
                                   <option value="EURO">EURO</option>
                                 </select>
@@ -718,7 +718,7 @@ const Page = () => {
                                           selectedPropertyType !== "CPLXMOD" || value !== "" || landlordT('selectCurrency'),
                                       })}
                                     >
-                                      <option value="FCFA">FCFA</option>
+                                      <option value="XAF">XAF</option>
                                       <option value="USD">USD</option>
                                       <option value="EURO">EURO</option>
                                     </select>
