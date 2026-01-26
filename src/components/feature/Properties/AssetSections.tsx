@@ -60,7 +60,6 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
   // Get column configurations
   const contractColumns = user ? getContractColumns(asset as any, user) : [];
   const invoiceColumns = onInvoiceUpdate ? getInvoiceColumns(onInvoiceUpdate) : [];
-  console.log('-->asset', asset);
   const unitColumns = getUnitColumns(asset as any, (unitCode) => {
     if (onUnitClick) {
       onUnitClick(unitCode);

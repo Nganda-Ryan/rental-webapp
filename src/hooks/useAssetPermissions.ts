@@ -131,7 +131,7 @@ export function useAssetPermissions({
        */
       canShareLink: isOwner && isVerified && !isComplex,
     };
-  }, [asset, assetType, activeContract, userRole]);
+  }, [asset, assetType, activeContract]);
 
   return permissions;
 }

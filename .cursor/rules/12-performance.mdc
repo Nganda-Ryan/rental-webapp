@@ -1,0 +1,610 @@
+# Performance & Optimization
+
+## Server Components (Performance First)
+
+### Default to Server Components
+
+**Server Components = Better Performance**:
+
+```typescript
+// ✅ Server Component (default) - Zero JavaScript to client
+export default async function PropertiesPage() {
+  const properties = await fetchProperties()
+  return <PropertyList properties={properties} />
+}
+```
+
+**Benefits**:
+- Zero client-side JavaScript
+- No hydration needed
+- Faster initial load
+- Better SEO
+- Direct data access
+
+### Client Components Only When Needed
+
+```typescript
+// ✅ Use Client Components sparingly
+"use client"
+
+import { useState } from 'react'
+
+// Only interactive parts need to be Client Components
+export function PropertyFilters({ onFilterChange }: Props) {
+  const [filter, setFilter] = useState('')
+
+  return (
+    <select onChange={(e) => onFilterChange(e.target.value)}>
+      {/* Options */}
+    </select>
+  )
+}
+```
+
+## Data Fetching Optimization
+
+### Parallel Data Fetching
+
+```typescript
+// ✅ Fetch in parallel
+export default async function Dashboard() {
+  const [properties, contracts, invoices] = await Promise.all([
+    fetchProperties(),
+    fetchContracts(),
+    fetchInvoices()
+  ])
+
+  return (
+    <>
+      <PropertyList properties={properties} />
+      <ContractList contracts={contracts} />
+      <InvoiceList invoices={invoices} />
+    </>
+  )
+}
+```
+
+### Sequential Fetching (When Dependencies Exist)
+
+```typescript
+// ✅ Sequential when one depends on another
+export default async function PropertyPage({ params }: { params: { id: string } }) {
+  const property = await fetchProperty(params.id)
+  const owner = await fetchUser(property.OwnerCode) // Depends on property
+
+  return <PropertyDetails property={property} owner={owner} />
+}
+```
+
+### Caching Strategy
+
+```typescript
+// Static data (rarely changes)
+const response = await fetch(url, {
+  cache: 'force-cache' // Cache indefinitely
+})
+
+// Dynamic data (changes frequently)
+const response = await fetch(url, {
+  cache: 'no-store' // Never cache
+})
+
+// Revalidate periodically
+const response = await fetch(url, {
+  next: { revalidate: 3600 } // Revalidate every hour
+})
+```
+
+## Image Optimization
+
+### Next.js Image Component
+
+```typescript
+import Image from 'next/image'
+
+// ✅ Always use Next.js Image
+<Image
+  src={property.CoverUrl}
+  alt={property.Title}
+  width={800}
+  height={600}
+  quality={80} // 1-100, default 75
+  priority={false} // Set true for above-fold images
+  placeholder="blur" // Blur placeholder while loading
+  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+/>
+```
+
+### Priority Loading
+
+```typescript
+// ✅ Above-fold images (visible without scrolling)
+<Image
+  src={hero.image}
+  alt="Hero"
+  priority={true} // Preload this image
+  width={1920}
+  height={1080}
+/>
+
+// ✅ Below-fold images (lazy load)
+<Image
+  src={property.image}
+  alt="Property"
+  priority={false} // Lazy load
+  loading="lazy"
+  width={400}
+  height={300}
+/>
+```
+
+### Responsive Images
+
+```typescript
+<Image
+  src={property.CoverUrl}
+  alt={property.Title}
+  width={800}
+  height={600}
+  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
+  // Generates optimized images for each breakpoint
+/>
+```
+
+## Code Splitting
+
+### Dynamic Imports
+
+```typescript
+import dynamic from 'next/dynamic'
+
+// ✅ Lazy load heavy components
+const PropertyMap = dynamic(() => import('@/components/PropertyMap'), {
+  ssr: false, // Don't render on server
+  loading: () => <p>Loading map...</p>
+})
+
+// ✅ Lazy load chart libraries
+const ApexChart = dynamic(() => import('react-apexcharts'), {
+  ssr: false
+})
+
+export function PropertyDetails({ property }: Props) {
+  return (
+    <div>
+      <h1>{property.Title}</h1>
+      <PropertyMap coordinates={property.coordinates} />
+    </div>
+  )
+}
+```
+
+### Route-based Code Splitting
+
+Next.js automatically code-splits by route - no action needed.
+
+## Bundle Size Optimization
+
+### Import Only What You Need
+
+```typescript
+// ❌ Bad - imports entire library
+import _ from 'lodash'
+
+// ✅ Good - imports only needed function
+import debounce from 'lodash/debounce'
+
+// ❌ Bad - imports all icons
+import * as Icons from 'lucide-react'
+
+// ✅ Good - imports specific icons
+import { Home, User, Settings } from 'lucide-react'
+```
+
+### Tree Shaking
+
+```typescript
+// ✅ Use named exports for better tree shaking
+export function calculateTotal(items: Item[]) { }
+export function formatPrice(price: number) { }
+
+// Import only what you need
+import { calculateTotal } from '@/lib/utils'
+```
+
+## Streaming & Suspense
+
+### Streaming with Suspense
+
+```typescript
+import { Suspense } from 'react'
+
+export default function Page() {
+  return (
+    <div>
+      <h1>Properties</h1>
+
+      {/* Show skeleton while loading */}
+      <Suspense fallback={<PropertyListSkeleton />}>
+        <PropertyList />
+      </Suspense>
+
+      {/* Other parts of page load immediately */}
+      <Footer />
+    </div>
+  )
+}
+
+// Separate async component
+async function PropertyList() {
+  const properties = await fetchProperties() // Slow fetch
+  return <div>{/* Render properties */}</div>
+}
+```
+
+### Multiple Suspense Boundaries
+
+```typescript
+export default function Dashboard() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+
+      {/* Each section loads independently */}
+      <Suspense fallback={<Skeleton />}>
+        <RecentProperties />
+      </Suspense>
+
+      <Suspense fallback={<Skeleton />}>
+        <ActiveContracts />
+      </Suspense>
+
+      <Suspense fallback={<Skeleton />}>
+        <RevenueChart />
+      </Suspense>
+    </div>
+  )
+}
+```
+
+## Memoization
+
+### React.memo for Component Memoization
+
+```typescript
+import { memo } from 'react'
+
+// ✅ Memoize expensive components
+export const PropertyCard = memo(function PropertyCard({ property }: Props) {
+  return (
+    <div>
+      <h2>{property.Title}</h2>
+      <p>{property.Price}</p>
+    </div>
+  )
+})
+
+// Only re-renders if property changes
+```
+
+### useMemo for Expensive Calculations
+
+```typescript
+"use client"
+
+import { useMemo } from 'react'
+
+export function PropertyList({ properties }: { properties: AssetData[] }) {
+  // ✅ Memoize expensive calculations
+  const sortedProperties = useMemo(() => {
+    return [...properties].sort((a, b) => b.Price - a.Price)
+  }, [properties])
+
+  const totalValue = useMemo(() => {
+    return properties.reduce((sum, p) => sum + p.Price, 0)
+  }, [properties])
+
+  return (
+    <div>
+      <p>Total Value: {totalValue}</p>
+      {sortedProperties.map(p => <PropertyCard key={p.Code} property={p} />)}
+    </div>
+  )
+}
+```
+
+### useCallback for Function Memoization
+
+```typescript
+"use client"
+
+import { useCallback } from 'react'
+
+export function PropertyManager({ properties }: Props) {
+  // ✅ Memoize callbacks passed to child components
+  const handleDelete = useCallback(async (code: string) => {
+    await deleteProperty(code)
+  }, [])
+
+  return (
+    <>
+      {properties.map(p => (
+        <PropertyCard
+          key={p.Code}
+          property={p}
+          onDelete={handleDelete}
+        />
+      ))}
+    </>
+  )
+}
+```
+
+## Database/API Optimization
+
+### Request Deduplication
+
+Next.js automatically deduplicates identical fetch requests:
+
+```typescript
+// Both components fetch same data
+// Next.js makes only ONE request
+async function Header() {
+  const user = await fetch('/api/user').then(r => r.json())
+  return <div>{user.name}</div>
+}
+
+async function Sidebar() {
+  const user = await fetch('/api/user').then(r => r.json())
+  return <div>{user.email}</div>
+}
+```
+
+### Pagination
+
+```typescript
+"use client"
+
+export function PropertyList() {
+  const [page, setPage] = useState(1)
+  const pageSize = 20
+
+  const { properties, total } = await fetchProperties({
+    page,
+    pageSize
+  })
+
+  return (
+    <div>
+      {properties.map(p => <PropertyCard key={p.Code} property={p} />)}
+
+      <Pagination
+        current={page}
+        total={Math.ceil(total / pageSize)}
+        onChange={setPage}
+      />
+    </div>
+  )
+}
+```
+
+### Infinite Scroll
+
+```typescript
+"use client"
+
+import { useEffect, useState } from 'react'
+
+export function InfinitePropertyList() {
+  const [properties, setProperties] = useState<AssetData[]>([])
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+
+  const loadMore = async () => {
+    const newProperties = await fetchProperties({ page, pageSize: 20 })
+
+    if (newProperties.length === 0) {
+      setHasMore(false)
+      return
+    }
+
+    setProperties(prev => [...prev, ...newProperties])
+    setPage(prev => prev + 1)
+  }
+
+  // Intersection Observer for auto-load
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMore()
+        }
+      },
+      { threshold: 1.0 }
+    )
+
+    const sentinel = document.querySelector('#load-more-sentinel')
+    if (sentinel) observer.observe(sentinel)
+
+    return () => observer.disconnect()
+  }, [hasMore])
+
+  return (
+    <div>
+      {properties.map(p => <PropertyCard key={p.Code} property={p} />)}
+      {hasMore && <div id="load-more-sentinel">Loading...</div>}
+    </div>
+  )
+}
+```
+
+## Virtual Scrolling (Large Lists)
+
+For extremely long lists (1000+ items):
+
+```typescript
+import { FixedSizeList } from 'react-window'
+
+export function VirtualizedPropertyList({ properties }: Props) {
+  const Row = ({ index, style }: { index: number, style: React.CSSProperties }) => (
+    <div style={style}>
+      <PropertyCard property={properties[index]} />
+    </div>
+  )
+
+  return (
+    <FixedSizeList
+      height={600}
+      itemCount={properties.length}
+      itemSize={200}
+      width="100%"
+    >
+      {Row}
+    </FixedSizeList>
+  )
+}
+```
+
+## Debouncing & Throttling
+
+### Debounce Search Input
+
+```typescript
+"use client"
+
+import { useState, useEffect } from 'react'
+import debounce from 'lodash/debounce'
+
+export function PropertySearch() {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<AssetData[]>([])
+
+  // ✅ Debounce search to avoid excessive API calls
+  useEffect(() => {
+    const debouncedSearch = debounce(async (searchQuery: string) => {
+      if (!searchQuery) {
+        setResults([])
+        return
+      }
+
+      const data = await searchProperties(searchQuery)
+      setResults(data)
+    }, 300) // Wait 300ms after user stops typing
+
+    debouncedSearch(query)
+
+    return () => debouncedSearch.cancel()
+  }, [query])
+
+  return (
+    <div>
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search properties..."
+      />
+      <SearchResults results={results} />
+    </div>
+  )
+}
+```
+
+## Font Optimization
+
+### Using next/font
+
+```typescript
+// app/layout.tsx
+import { Inter } from 'next/font/google'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter'
+})
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={inter.variable}>
+      <body>{children}</body>
+    </html>
+  )
+}
+```
+
+## Monitoring Performance
+
+### Web Vitals
+
+```typescript
+// app/layout.tsx
+"use client"
+
+import { useReportWebVitals } from 'next/web-vitals'
+
+export function WebVitals() {
+  useReportWebVitals((metric) => {
+    console.log(metric)
+    // Send to analytics
+  })
+
+  return null
+}
+```
+
+## Cloudflare Pages Optimization
+
+### Edge Runtime Considerations
+
+```typescript
+// ✅ Use edge-compatible APIs only
+export const runtime = 'edge'
+
+// ❌ Avoid Node.js APIs (fs, path, crypto.randomBytes)
+// ✅ Use Web APIs instead (crypto.getRandomValues)
+```
+
+### Keep Bundle Size Small
+
+- Cloudflare Workers have size limits
+- Keep client bundles under 1MB (compressed)
+- Use dynamic imports for heavy components
+- Remove unused dependencies
+
+## Key Performance Metrics
+
+**Target Web Vitals**:
+- **LCP (Largest Contentful Paint)**: < 2.5s
+- **FID (First Input Delay)**: < 100ms
+- **CLS (Cumulative Layout Shift)**: < 0.1
+- **TTFB (Time to First Byte)**: < 600ms
+
+## Performance Checklist
+
+- [ ] Use Server Components by default
+- [ ] Client Components only when necessary
+- [ ] Parallel data fetching where possible
+- [ ] Next.js Image for all images
+- [ ] Priority loading for above-fold images
+- [ ] Dynamic imports for heavy components
+- [ ] Proper caching strategy
+- [ ] Pagination for large lists
+- [ ] Debounce search inputs
+- [ ] Memoize expensive calculations
+- [ ] Virtual scrolling for 1000+ items
+- [ ] Bundle size < 1MB compressed
+- [ ] Font optimization with next/font
+- [ ] Monitor Web Vitals
+
+## Key Principles
+
+1. **Server Components first** - Zero JavaScript by default
+2. **Parallel fetching** - Load data simultaneously
+3. **Image optimization** - Use Next.js Image
+4. **Code splitting** - Dynamic imports for heavy components
+5. **Caching** - Strategic cache usage
+6. **Lazy loading** - Load what's needed when needed
+7. **Memoization** - Prevent unnecessary re-renders
+8. **Pagination** - Don't load everything at once
+9. **Debouncing** - Reduce unnecessary API calls
+10. **Monitor** - Track and improve Web Vitals

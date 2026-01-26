@@ -1,0 +1,58 @@
+# Architecture Patterns
+
+## Application Architecture
+- **Monolithic Next.js application** with clear separation of concerns
+- **Server-first approach** - Use Server Components by default
+- **Edge-optimized** - Runs on Cloudflare's edge network
+- **API-driven** - External Cloudflare Workers handle business logic
+
+## Directory Structure
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── (auth)/            # Authentication routes
+│   └── (dashboard)/       # Protected role-based routes
+├── actions/               # Server Actions (API layer)
+├── components/            # React components
+├── types/                 # TypeScript definitions
+├── lib/                   # Core utilities
+├── database/              # External API wrappers
+├── services/              # Business logic
+├── store/                 # State management
+└── hooks/                 # Custom React hooks
+```
+
+## Route Organization
+Use **route groups** (parentheses) for layout organization:
+- `(auth)` - Public authentication pages
+- `(dashboard)` - Protected dashboard routes
+
+**Protected route structure:**
+```
+(dashboard)/
+├── landlord/       # Landlord views
+├── renter/         # Renter views
+├── manager/        # Manager views
+├── support/        # Support/Admin views
+└── settings/       # Shared settings
+```
+
+## Data Flow
+```
+Client Component
+    ↓
+Server Action (validates session)
+    ↓
+Cloudflare Workers API
+    ↓
+Database
+    ↓
+Response → Client
+```
+
+## Key Principles
+1. **Server Components by default** - Only use Client Components when necessary
+2. **Middleware controls all auth** - Never check auth in components
+3. **Server Actions for mutations** - All CRUD operations go through actions
+4. **Props over state** - Pass data from Server to Client Components
+5. **Type safety everywhere** - Strict TypeScript usage

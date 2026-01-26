@@ -1,4 +1,6 @@
+"use client";
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import Overlay from '@/components/Overlay';
 import InvoiceGenerator from '@/components/feature/Properties/InvoiceGenerator';
 import { ManagerSearch } from '@/components/feature/Properties/ManagerSearch';
@@ -33,6 +35,13 @@ export interface AssetModalsProps {
   assetTitle?: string;
   activeContractId?: string;
   profileCode?: string;
+  actionType?: 'terminate' | 'deactivate' | 'activate';
+  actionTitle?: string;
+  actionMessage?: string;
+  isUnit?: boolean;
+  isDeactivating?: boolean;
+  isActivating?: boolean;
+  isDeleting?: boolean;
 
   /* Handlers */
   onCloseInvoiceGenerator: () => void;
@@ -74,6 +83,13 @@ export const AssetModals: React.FC<AssetModalsProps> = ({
   assetTitle,
   activeContractId,
   profileCode,
+  actionType = 'terminate',
+  actionTitle,
+  actionMessage,
+  isUnit = false,
+  isDeactivating = false,
+  isActivating = false,
+  isDeleting = false,
   onCloseInvoiceGenerator,
   onCreateInvoice,
   onCloseManagerSearch,
@@ -90,6 +106,8 @@ export const AssetModals: React.FC<AssetModalsProps> = ({
   onCloseActionModal,
   onConfirmAction,
 }) => {
+  const commonT = useTranslations('Common');
+  
   return (
     <>
       {/* Invoice Generator Modal */}
@@ -119,12 +137,14 @@ export const AssetModals: React.FC<AssetModalsProps> = ({
         />
       </Overlay>
 
-      {/* Delete Property Modal */}
+      {/* Delete Property/Unit Modal */}
       <Overlay isOpen={showDeleteModal} onClose={onCloseDeleteModal}>
         <DeletePropertyModal
           onClose={onCloseDeleteModal}
           onConfirm={onConfirmDelete}
           propertyAddress={assetTitle ?? ''}
+          isUnit={isUnit}
+          isLoading={isDeleting}
         />
       </Overlay>
 
@@ -147,15 +167,18 @@ export const AssetModals: React.FC<AssetModalsProps> = ({
         <SuccessModal onClose={onCloseSuccessModal} message={successMessage} />
       </Overlay>
 
-      {/* Action Confirmation Modal (e.g., terminate lease) */}
+      {/* Action Confirmation Modal (e.g., terminate lease, deactivate, activate) */}
       <Overlay isOpen={showActionModal} onClose={onCloseActionModal}>
         <ActionConfirmationModal
           onClose={onCloseActionModal}
           onConfirm={onConfirmAction}
-          title="Terminate the contract"
-          type="APPROVED"
+          title={actionTitle || ''}
+          type={actionType === 'activate' ? "APPROVED" : "DECLINED"}
           showCommentInput={false}
-          message={`Are you sure you want to terminate lease #${activeContractId} ?`}
+          message={actionMessage || ''}
+          confirmLabel={actionType === 'deactivate' ? commonT('deactivate') : actionType === 'activate' ? commonT('activate') : undefined}
+          cancelLabel={commonT('cancel')}
+          isLoading={actionType === 'deactivate' ? isDeactivating : actionType === 'activate' ? isActivating : false}
         />
       </Overlay>
 
@@ -163,6 +186,7 @@ export const AssetModals: React.FC<AssetModalsProps> = ({
       <Overlay isOpen={showProcessingModal} onClose={() => {}}>
         <ProcessingModal message={processingMessage} />
       </Overlay>
+      
     </>
   );
 };

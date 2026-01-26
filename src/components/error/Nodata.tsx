@@ -6,7 +6,7 @@ const Nodata = ({message}: {message?: string}) => {
   const t = useTranslations('Common')
 
   return (
-    <div className="h-[50vh] flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
+    <div className="h-[50vh] flex flex-col shrink-1 items-center justify-center py-12 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg shadow-sm pt-3">
         <svg
         xmlns="http://www.w3.org/2000/svg"
         width="96"

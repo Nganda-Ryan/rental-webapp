@@ -192,6 +192,7 @@ export function useAssetDetails({
         VerificationDate: undefined, // Not provided in API response
         CreatedAt: item.CreatedAt || '',
         UpdatedAt: item.UpdatedAt || '',
+        IsActive: item.IsActive, // 1 or 0
       };
 
       // Transform units (for properties only)

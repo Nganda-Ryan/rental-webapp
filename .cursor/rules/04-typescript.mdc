@@ -1,0 +1,379 @@
+# TypeScript Guidelines
+
+## Critical Rules
+
+### 1. ALWAYS Use Explicit Types - Avoid `any`
+
+```typescript
+// ❌ Bad
+const data: any = await fetchUser()
+const handleClick = (event: any) => {}
+
+// ✅ Good
+const data: IUserData = await fetchUser()
+const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {}
+```
+
+### 2. Type External API Responses
+
+```typescript
+// Define API response structure
+interface ApiResponse<T> {
+  success: boolean
+  data?: T
+  message?: string
+  error?: string
+}
+
+// Usage
+async function fetchUser(id: string): Promise<ApiResponse<IUserData>> {
+  const response = await fetch(`/api/users/${id}`)
+  return response.json()
+}
+```
+
+### 3. Use Type Guards for Runtime Checks
+
+```typescript
+function isAsset(obj: unknown): obj is AssetDataDetailed {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'Code' in obj &&
+    'Title' in obj
+  )
+}
+
+// Usage
+if (isAsset(data)) {
+  // TypeScript knows data is AssetDataDetailed here
+  console.log(data.Title)
+}
+```
+
+### 4. Strict Null Checks - Handle Undefined/Null Explicitly
+
+```typescript
+// ❌ Bad
+const title = property.Title
+
+// ✅ Good
+const title = property?.Title ?? 'Untitled'
+
+// ❌ Bad
+function getUser(id: string) {
+  return users.find(u => u.id === id)
+}
+
+// ✅ Good
+function getUser(id: string): IUserData | undefined {
+  return users.find(u => u.id === id)
+}
+```
+
+## Interface vs Type
+
+### Use Interfaces for Data Models
+
+```typescript
+// ✅ Preferred for data structures
+export interface IUserData {
+  Code: string
+  Email: string
+  Firstname: string
+}
+
+// Can be extended
+export interface IUserDataDetailed extends IUserData {
+  Profiles: IProfile[]
+  Subscriptions: ISubscription[]
+}
+```
+
+### Use Types for Utilities and Unions
+
+```typescript
+// ✅ Preferred for unions
+export type UserStatus = 'ACTIVE' | 'PENDING' | 'INACTIVE'
+
+// ✅ Preferred for utility types
+export type Partial<T> = {
+  [P in keyof T]?: T[P]
+}
+
+// ✅ Preferred for function types
+export type AsyncAction<T> = (data: T) => Promise<ActionResult>
+```
+
+## Naming Conventions
+
+### Interfaces - `I` Prefix for Data Models
+
+```typescript
+// Data models
+export interface IUserData { }
+export interface IProperty { }
+export interface IContract { }
+
+// Form data
+export interface IUserForm { }
+export interface IPropertyForm { }
+```
+
+### Types - No Prefix
+
+```typescript
+export type PropertyType = 'CPLXMOD' | 'STUDMOD' | 'CHAMMOD' | 'APPART'
+export type UserRole = 'ADMIN' | 'SUPPORT' | 'LANDLORD' | 'MANAGER' | 'RENTER'
+```
+
+## Generic Types
+
+Use generics for reusable patterns:
+
+```typescript
+// Server Action return type
+interface ActionResult<T = unknown> {
+  success: boolean
+  data?: T
+  error?: string
+}
+
+// Usage
+async function createProperty(
+  formData: IPropertyForm
+): Promise<ActionResult<AssetData>> {
+  // Implementation
+}
+
+// API response wrapper
+interface ApiResponse<T> {
+  success: boolean
+  data?: T
+  message?: string
+}
+```
+
+## Utility Types
+
+Leverage TypeScript utility types:
+
+```typescript
+// Make all properties optional
+type PartialUser = Partial<IUserData>
+
+// Make all properties required
+type RequiredUser = Required<IUserData>
+
+// Pick specific properties
+type UserBasicInfo = Pick<IUserData, 'Code' | 'Email' | 'Firstname'>
+
+// Omit specific properties
+type UserWithoutProfiles = Omit<IUserData, 'Profiles'>
+
+// Extract from union
+type AdminOrSupport = Extract<UserRole, 'ADMIN' | 'SUPPORT'>
+```
+
+## Type Assertions - Use Sparingly
+
+```typescript
+// ❌ Avoid type assertions when possible
+const user = data as IUserData
+
+// ✅ Better - use type guards
+if (isUserData(data)) {
+  const user = data // TypeScript infers correct type
+}
+
+// ✅ OK - when you're certain (e.g., DOM)
+const input = document.querySelector('input') as HTMLInputElement
+```
+
+## Function Types
+
+### Explicit Return Types
+
+```typescript
+// ✅ Always specify return type for public functions
+export async function fetchUser(code: string): Promise<IUserData | null> {
+  // Implementation
+}
+
+// ✅ Void for no return
+export function logError(message: string): void {
+  console.error(message)
+}
+```
+
+### Function Parameters
+
+```typescript
+// ✅ Type all parameters
+function createProperty(
+  data: IPropertyForm,
+  ownerId: string,
+  options?: { draft?: boolean }
+): Promise<ActionResult<AssetData>> {
+  // Implementation
+}
+```
+
+## Array Types
+
+```typescript
+// ✅ Preferred
+const users: IUserData[] = []
+const roles: UserRole[] = ['ADMIN', 'SUPPORT']
+
+// ❌ Avoid Array<T> syntax (less readable)
+const users: Array<IUserData> = []
+```
+
+## Const Assertions
+
+Use `as const` for literal types:
+
+```typescript
+// ✅ Creates readonly array with literal types
+const BILLING_ITEMS = ['WATER', 'ELEC', 'INTERNET', 'GAS', 'RENT'] as const
+type BillingItem = typeof BILLING_ITEMS[number] // 'WATER' | 'ELEC' | ...
+
+// ✅ Creates readonly object
+const ROUTES = {
+  HOME: '/',
+  LANDLORD: '/landlord',
+  RENTER: '/renter'
+} as const
+```
+
+## React Component Props
+
+```typescript
+// ✅ Define props interface
+interface PropertyCardProps {
+  property: AssetData
+  onEdit?: (property: AssetData) => void
+  className?: string
+  children?: React.ReactNode
+}
+
+export function PropertyCard({
+  property,
+  onEdit,
+  className,
+  children
+}: PropertyCardProps) {
+  // Implementation
+}
+```
+
+## Event Handlers
+
+```typescript
+// ✅ Use React event types
+const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  event.preventDefault()
+}
+
+const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  setValue(event.target.value)
+}
+
+const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault()
+}
+```
+
+## Enums vs Union Types
+
+### ❌ Avoid Enums
+
+```typescript
+// ❌ Don't use enums (they generate runtime code)
+enum UserRole {
+  ADMIN = 'ADMIN',
+  SUPPORT = 'SUPPORT'
+}
+```
+
+### ✅ Use Union Types Instead
+
+```typescript
+// ✅ Use union types (no runtime overhead)
+type UserRole = 'ADMIN' | 'SUPPORT' | 'LANDLORD' | 'MANAGER' | 'RENTER'
+
+// ✅ With const object for values
+const USER_ROLES = {
+  ADMIN: 'ADMIN',
+  SUPPORT: 'SUPPORT',
+  LANDLORD: 'LANDLORD',
+  MANAGER: 'MANAGER',
+  RENTER: 'RENTER'
+} as const
+
+type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES]
+```
+
+## Non-null Assertion - Use Carefully
+
+```typescript
+// ❌ Dangerous - only use when you're 100% certain
+const user = users.find(u => u.id === id)!
+
+// ✅ Better - handle the possibility
+const user = users.find(u => u.id === id)
+if (!user) {
+  throw new Error('User not found')
+}
+```
+
+## Type Import/Export
+
+```typescript
+// ✅ Use type-only imports when possible
+import type { IUserData, IProfile } from '@/types/user'
+
+// ✅ Export types explicitly
+export type { IUserData, IProfile }
+```
+
+## Discriminated Unions
+
+Use for state machines and polymorphic data:
+
+```typescript
+// ✅ Discriminated union for API states
+type ApiState<T> =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: T }
+  | { status: 'error'; error: string }
+
+// Usage with type narrowing
+function handleState<T>(state: ApiState<T>) {
+  switch (state.status) {
+    case 'idle':
+      return 'Not started'
+    case 'loading':
+      return 'Loading...'
+    case 'success':
+      return state.data // TypeScript knows data exists
+    case 'error':
+      return state.error // TypeScript knows error exists
+  }
+}
+```
+
+## Key Takeaways
+
+1. **No `any`** - Always use explicit types
+2. **Interfaces for data** - `I` prefix convention
+3. **Types for unions** - No prefix
+4. **Explicit return types** - For all exported functions
+5. **Type guards** - For runtime type checking
+6. **Null safety** - Use optional chaining and nullish coalescing
+7. **Const assertions** - For literal types
+8. **Union types over enums** - Less runtime overhead
+9. **Generic types** - For reusable patterns
+10. **Type-only imports** - When only using types

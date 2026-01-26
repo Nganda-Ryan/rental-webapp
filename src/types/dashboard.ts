@@ -42,6 +42,7 @@ export interface ICounts {
   properties: number;
   pendingInvoices: number;
   pendingRequests: number;
+  unreadMessages?: number;
 }
 
 export interface IPendingRequest {
@@ -50,6 +51,44 @@ export interface IPendingRequest {
   Total: number;
 }
 
+export interface ICurrentLoan {
+  Code: string;
+  AssetCode: string;
+  Title: string;
+  Amount: number;
+  StartDate: string;
+  EndDate: string;
+  Currency: string;
+  AssetTypeCode: string;
+  CoverUrl: string;
+}
+
+export interface IInvoiceStatus {
+  StatusCode: string;
+  Total: number;
+}
+
+export interface IMonthlyFinanceByAsset {
+  AssetCode: string;
+  AssetTitle: string;
+  AssetCurrency: string;
+  Month: string;
+  ItemCode: string;
+  Currency: string;
+  Count: number;
+  Total: number;
+  PaidTotal: number;
+  UnpaidTotal: number;
+}
+
+export interface IArrearsByAsset {
+  AssetCode: string;
+  AssetTitle: string;
+  Currency: string;
+  Total: number;
+  PaidTotal: number;
+  UnpaidTotal: number;
+}
 
 export interface IDashboardResponse {
   PropertiesByStatus: IPropertyStatus[];
@@ -57,4 +96,11 @@ export interface IDashboardResponse {
   allApplications: IApplication[];
   AllPendingRequests: IPendingRequest[];
   Counts: ICounts;
+  CurrentLoans?: ICurrentLoan[];
+  InvoicesByStatus?: IInvoiceStatus[];
+  UnpaidInvoices?: IRentPaymentStatus[];
+  MonthlyFinanceByAsset?: IMonthlyFinanceByAsset[];
+  ArrearsByAsset?: IArrearsByAsset[];
+  TotalFinance?: number;
+  TotalArrears?: number;
 }

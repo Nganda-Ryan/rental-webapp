@@ -98,6 +98,7 @@ export interface AssetDataDetailed {
   VerificationDate?: string;
   CreatedAt: string;
   UpdatedAt: string;
+  IsActive?: number; // 1 or 0 - from API
 }
 
 /**
@@ -150,7 +151,9 @@ export interface AssetActionsHandlers {
   handleCreateContract: () => void;
   handleTerminateLease: () => void;
   handleCancelManagerInvitation: (managerCode: string) => Promise<void>;
-  copyToClipboard: (text: string) => void;
+  copyToClipboard: (text: string) => Promise<void>;
+  showShareLink: boolean;
+  clicked: boolean;
 }
 
 /**

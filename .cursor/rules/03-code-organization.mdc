@@ -1,0 +1,230 @@
+# Code Organization & File Structure
+
+## Directory Guidelines
+
+### `src/actions/` - Server Actions
+
+**Purpose**: ALL backend operations (CRUD, external API calls, mutations)
+
+**Rules**:
+- File naming: `{domain}Action.ts` (e.g., `assetAction.ts`, `userAction.ts`)
+- MUST use `"use server"` directive
+- Return type: `Promise<{ success: boolean, data?: T, error?: string }>`
+- ALWAYS handle errors and return user-friendly messages
+- ALWAYS verify session first
+
+**Example**:
+```typescript
+// src/actions/assetAction.ts
+"use server"
+
+import { verifySession } from '@/lib/session'
+
+export async function createAsset(formData: IAssetForm) {
+  const session = await verifySession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  try {
+    // Logic here
+    return { success: true, data: result }
+  } catch (error) {
+    return { success: false, error: 'Operation failed' }
+  }
+}
+```
+
+### `src/components/` - React Components
+
+**Organization**:
+```
+components/
+├── feature/          # Feature-specific components
+│   ├── Properties/
+│   ├── Support/
+│   └── tenants/
+├── common/           # Shared UI components
+├── Auth/             # Authentication components
+├── Dashboard/        # Dashboard widgets
+├── Charts/           # Data visualizations
+└── pdf/              # PDF generation components
+```
+
+**Naming**: PascalCase (e.g., `PropertyCard.tsx`, `CreatePropertyModal.tsx`)
+
+**Guidelines**:
+- Group by feature first, then by type
+- Keep components focused on single responsibility
+- Use descriptive names that indicate purpose
+
+### `src/types/` - TypeScript Definitions
+
+**File naming**: `{entity}.ts` (e.g., `Property.ts`, `user.ts`)
+
+**Conventions**:
+- Interfaces for data types: prefix with `I` (e.g., `IUserData`, `IProfile`)
+- Form types separately: `IPropertyForm`, `IContractForm`
+- Export all types/interfaces
+
+**Example**:
+```typescript
+// src/types/user.ts
+export interface IUserData {
+  Code: string
+  Email: string
+  Firstname: string
+  // ...
+}
+
+export interface IUserForm {
+  email: string
+  firstname: string
+  // ...
+}
+```
+
+### `src/lib/` - Core Utilities
+
+**Purpose**: Shared utilities, configurations, helpers
+
+**Examples**:
+- `session.ts` - Session management
+- `firebase.ts` - Firebase config
+- `fileUpload.ts` - File upload utilities
+- `utils.ts` - General helper functions
+
+**Rules**:
+- Pure functions when possible
+- Well-typed with explicit return types
+- JSDoc comments for public APIs
+
+### `src/database/` - External API Service Wrappers
+
+**Purpose**: Interface with external APIs (Cloudflare Workers)
+
+**Example**:
+```typescript
+// src/database/userService.ts
+export async function fetchUserByCode(userCode: string, token: string) {
+  const response = await fetch(`${process.env.USER_BASE_URL}/api/v1/User?Code=${userCode}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  return response.json()
+}
+```
+
+### `src/services/` - Business Logic Services
+
+**Purpose**: Business logic that doesn't fit in actions
+
+**Examples**:
+- `locale.ts` - Locale management (getUserLocale, setUserLocale)
+- Other domain-specific business logic
+
+### `src/hooks/` - Custom React Hooks
+
+**Naming**: `use` prefix (e.g., `useAssetDetails.ts`, `useLocale.ts`)
+
+**Rules**:
+- Single responsibility per hook
+- Return consistent data structures
+- Handle loading/error states
+
+**Example**:
+```typescript
+// src/hooks/useAssetDetails.ts
+export function useAssetDetails(assetCode: string) {
+  const [asset, setAsset] = useState<AssetData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Implementation...
+
+  return { asset, loading, error }
+}
+```
+
+### `src/store/` - State Management (Zustand)
+
+**Current stores**:
+- `roleStore.ts` - User role and authentication state
+
+**Rules**:
+- Use sparingly - only for cross-cutting concerns
+- AVOID adding more global state unless absolutely necessary
+- Prefer Server Components and props over global state
+
+### `src/i18n/` - Internationalization
+
+**Files**:
+- `config.ts` - Locale configuration (en, fr)
+- `request.ts` - Request-specific i18n setup
+
+**Translation files**: `messages/en.json`, `messages/fr.json`
+
+### `src/app/` - Next.js App Router
+
+**Route Groups** (use parentheses):
+- `(auth)/` - Authentication pages (signin, signup)
+- `(dashboard)/` - Protected dashboard routes
+
+**Dynamic Routes** (use brackets):
+- `[id]/page.tsx` - Single parameter
+- `[...slug]/page.tsx` - Catch-all
+
+**Special Files**:
+- `page.tsx` - Route page component
+- `layout.tsx` - Shared layout
+- `loading.tsx` - Loading UI
+- `error.tsx` - Error boundary
+- `not-found.tsx` - 404 page
+
+## File Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Components | PascalCase | `PropertyCard.tsx` |
+| Hooks | camelCase with `use` prefix | `useAssetDetails.ts` |
+| Actions | camelCase with Action suffix | `assetAction.ts` |
+| Types | PascalCase (file) + `I` prefix (interface) | `Property.ts` → `IProperty` |
+| Utils | kebab-case | `file-upload.ts` |
+| Constants | UPPER_SNAKE_CASE | `BILLING_ITEMS` |
+
+## Import Organization
+
+Always organize imports in this order:
+
+```typescript
+// 1. External dependencies
+import { useState } from 'react'
+import Image from 'next/image'
+
+// 2. Internal dependencies - absolute imports
+import { createProperty } from '@/actions/assetAction'
+import { IPropertyForm } from '@/types/Property'
+import { Button } from '@/components/common/Button'
+
+// 3. Relative imports
+import { PropertyCard } from './PropertyCard'
+
+// 4. Types (if importing separately)
+import type { Property } from '@/types/Property'
+
+// 5. Styles (if any)
+import './styles.css'
+```
+
+## Code Comments
+
+- **DO comment**: Complex business logic, non-obvious algorithms
+- **DON'T comment**: Obvious code, self-explanatory functions
+- **USE JSDoc**: For public APIs, exported functions, utilities
+
+```typescript
+// ❌ Bad - obvious comment
+// Set the user name
+setUserName(name)
+
+// ✅ Good - explains why
+// Cache results for 5 minutes to reduce API calls during bulk operations
+const CACHE_TTL = 5 * 60 * 1000
+```

@@ -1,0 +1,456 @@
+# Internationalization (i18n)
+
+## Overview
+
+**Library**: `next-intl` (v4.3.4)
+**Locales**: English (en), French (fr)
+**Default**: English
+**Storage**: `NEXT_LOCALE` cookie
+
+## File Structure
+
+```
+messages/
+├── en.json          # English translations (~25KB)
+└── fr.json          # French translations (~28KB)
+
+src/i18n/
+├── config.ts        # Locale configuration
+└── request.ts       # Request-specific setup
+```
+
+## Critical Rule
+
+**NEVER hardcode user-facing text** - Always use translations.
+
+```typescript
+// ❌ Bad
+<button>Create Property</button>
+<h1>Welcome to Dashboard</h1>
+
+// ✅ Good
+const t = useTranslations('properties')
+<button>{t('create')}</button>
+
+const t = useTranslations('dashboard')
+<h1>{t('welcome')}</h1>
+```
+
+## Translation File Structure
+
+Use semantic, nested keys:
+
+```json
+// messages/en.json
+{
+  "properties": {
+    "title": "Properties",
+    "create": "Create Property",
+    "edit": "Edit Property",
+    "delete": "Delete Property",
+    "types": {
+      "STUDMOD": "Studio",
+      "APPART": "Apartment",
+      "CPLXMOD": "Building Complex",
+      "CHAMMOD": "Room"
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome to Dashboard",
+    "overview": "Overview"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalid_email": "Invalid email address",
+    "create_failed": "Failed to create {item}",
+    "update_failed": "Failed to update {item}"
+  }
+}
+```
+
+## Server Components
+
+Use `getTranslations` from `next-intl/server`:
+
+```typescript
+import { getTranslations } from 'next-intl/server'
+
+export default async function PropertiesPage() {
+  const t = await getTranslations('properties')
+
+  return (
+    <div>
+      <h1>{t('title')}</h1>
+      <p>{t('description')}</p>
+    </div>
+  )
+}
+```
+
+## Client Components
+
+Use `useTranslations` hook:
+
+```typescript
+"use client"
+
+import { useTranslations } from 'next-intl'
+
+export function PropertyForm() {
+  const t = useTranslations('properties')
+  const tCommon = useTranslations('common')
+
+  return (
+    <form>
+      <h2>{t('create')}</h2>
+      <button type="submit">{tCommon('save')}</button>
+      <button type="button">{tCommon('cancel')}</button>
+    </form>
+  )
+}
+```
+
+## Dynamic Values (Interpolation)
+
+```json
+// messages/en.json
+{
+  "properties": {
+    "created_success": "Property {name} created successfully",
+    "price_range": "Price: {min} - {max} {currency}"
+  }
+}
+```
+
+```typescript
+const t = useTranslations('properties')
+
+// Usage
+t('created_success', { name: property.Title })
+t('price_range', { min: 1000, max: 5000, currency: 'USD' })
+```
+
+## Pluralization
+
+```json
+// messages/en.json
+{
+  "properties": {
+    "count": "{count, plural, =0 {No properties} =1 {1 property} other {# properties}}"
+  }
+}
+```
+
+```typescript
+const t = useTranslations('properties')
+
+t('count', { count: 0 })  // "No properties"
+t('count', { count: 1 })  // "1 property"
+t('count', { count: 5 })  // "5 properties"
+```
+
+## Rich Text (HTML)
+
+```json
+// messages/en.json
+{
+  "welcome": {
+    "message": "Welcome <b>{name}</b>, you have <a>{count}</a> new messages"
+  }
+}
+```
+
+```typescript
+const t = useTranslations('welcome')
+
+t.rich('message', {
+  name: 'John',
+  count: 5,
+  b: (chunks) => <strong>{chunks}</strong>,
+  a: (chunks) => <Link href="/messages">{chunks}</Link>
+})
+```
+
+## Translated Constants
+
+Use `useTranslatedConstants` hook for dropdown values:
+
+```typescript
+// src/hooks/useTranslatedConstants.ts
+"use client"
+
+import { useTranslations } from 'next-intl'
+
+export function useTranslatedConstants() {
+  const t = useTranslations('constants')
+
+  return {
+    propertyTypes: [
+      { code: 'STUDMOD', label: t('propertyTypes.STUDMOD') },
+      { code: 'APPART', label: t('propertyTypes.APPART') },
+      { code: 'CPLXMOD', label: t('propertyTypes.CPLXMOD') },
+      { code: 'CHAMMOD', label: t('propertyTypes.CHAMMOD') }
+    ],
+    billingItems: [
+      { code: 'WATER', label: t('billingItems.WATER') },
+      { code: 'ELEC', label: t('billingItems.ELEC') },
+      { code: 'INTERNET', label: t('billingItems.INTERNET') },
+      { code: 'GAS', label: t('billingItems.GAS') },
+      { code: 'RENT', label: t('billingItems.RENT') }
+    ],
+    userRoles: [
+      { code: 'ADMIN', label: t('roles.ADMIN') },
+      { code: 'SUPPORT', label: t('roles.SUPPORT') },
+      { code: 'LANDLORD', label: t('roles.LANDLORD') },
+      { code: 'MANAGER', label: t('roles.MANAGER') },
+      { code: 'RENTER', label: t('roles.RENTER') }
+    ]
+  }
+}
+```
+
+```typescript
+// Usage in components
+"use client"
+
+import { useTranslatedConstants } from '@/hooks/useTranslatedConstants'
+
+export function PropertyTypeSelect() {
+  const { propertyTypes } = useTranslatedConstants()
+
+  return (
+    <select>
+      {propertyTypes.map(type => (
+        <option key={type.code} value={type.code}>
+          {type.label}
+        </option>
+      ))}
+    </select>
+  )
+}
+```
+
+## Locale Switching
+
+```typescript
+"use client"
+
+import { useLocale } from 'next-intl'
+import { setUserLocale } from '@/services/locale'
+
+export function LocaleSwitcher() {
+  const currentLocale = useLocale()
+
+  const handleLocaleChange = async (locale: 'en' | 'fr') => {
+    await setUserLocale(locale)
+    // Page will refresh with new locale
+  }
+
+  return (
+    <div>
+      <button
+        onClick={() => handleLocaleChange('en')}
+        disabled={currentLocale === 'en'}
+      >
+        English
+      </button>
+      <button
+        onClick={() => handleLocaleChange('fr')}
+        disabled={currentLocale === 'fr'}
+      >
+        Français
+      </button>
+    </div>
+  )
+}
+```
+
+## Date/Time Formatting
+
+```typescript
+import { useFormatter } from 'next-intl'
+
+export function PropertyCard({ property }: { property: AssetData }) {
+  const format = useFormatter()
+
+  return (
+    <div>
+      <p>{format.dateTime(new Date(property.CreatedAt), {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })}</p>
+    </div>
+  )
+}
+```
+
+## Number/Currency Formatting
+
+```typescript
+import { useFormatter } from 'next-intl'
+
+export function PropertyPrice({ price, currency }: { price: number, currency: string }) {
+  const format = useFormatter()
+
+  return (
+    <p>{format.number(price, {
+      style: 'currency',
+      currency: currency
+    })}</p>
+  )
+}
+```
+
+## Error Messages
+
+**Always translate error messages**:
+
+```typescript
+"use client"
+
+import { useTranslations } from 'next-intl'
+import { toast } from 'sonner'
+
+export function PropertyForm() {
+  const t = useTranslations('properties')
+  const tErrors = useTranslations('errors')
+
+  const handleSubmit = async (formData: IPropertyForm) => {
+    const result = await createProperty(formData)
+
+    if (result.success) {
+      toast.success(t('created_success', { name: formData.Title }))
+    } else {
+      toast.error(tErrors('create_failed', { item: t('singular') }))
+    }
+  }
+}
+```
+
+## Translation Key Naming Convention
+
+```
+{domain}.{action/entity}.{detail}
+
+Examples:
+- properties.create
+- properties.edit
+- properties.types.STUDMOD
+- dashboard.welcome
+- common.save
+- errors.required
+- errors.create_failed
+```
+
+## Server Actions with Translations
+
+Server Actions can't use hooks, so return error keys and translate in component:
+
+```typescript
+// Server Action
+"use server"
+
+export async function createProperty(data: IPropertyForm) {
+  try {
+    // Logic...
+    return { success: true, data: result }
+  } catch (error) {
+    return {
+      success: false,
+      errorKey: 'errors.create_failed',
+      errorParams: { item: 'property' }
+    }
+  }
+}
+```
+
+```typescript
+// Client Component
+"use client"
+
+const t = useTranslations()
+
+const result = await createProperty(formData)
+
+if (!result.success && result.errorKey) {
+  toast.error(t(result.errorKey, result.errorParams))
+}
+```
+
+## Metadata (SEO)
+
+```typescript
+import { getTranslations } from 'next-intl/server'
+import type { Metadata } from 'next'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('properties')
+
+  return {
+    title: t('page_title'),
+    description: t('page_description')
+  }
+}
+```
+
+## Best Practices
+
+1. **Always translate** - No hardcoded text
+2. **Semantic keys** - Use descriptive, hierarchical keys
+3. **Reuse common translations** - Save, Cancel, Edit, Delete in `common`
+4. **Translate errors** - All user-facing errors
+5. **Format dates/numbers** - Use `useFormatter` for locale-aware formatting
+6. **Constants** - Use `useTranslatedConstants` for dropdowns
+7. **Interpolation** - Use dynamic values for personalized messages
+8. **Test both locales** - Ensure all text appears in both languages
+9. **Keep in sync** - When adding keys to en.json, add to fr.json
+10. **Namespace wisely** - Group related translations together
+
+## Common Patterns
+
+### Form Validation Messages
+
+```json
+{
+  "validation": {
+    "required": "{field} is required",
+    "email": "Invalid email address",
+    "min_length": "{field} must be at least {min} characters",
+    "max_length": "{field} must be at most {max} characters",
+    "min_value": "{field} must be at least {min}",
+    "max_value": "{field} must be at most {max}"
+  }
+}
+```
+
+### Status Labels
+
+```json
+{
+  "status": {
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "PENDING": "Pending",
+    "CLOSED": "Closed"
+  }
+}
+```
+
+### Confirmation Messages
+
+```json
+{
+  "confirmations": {
+    "delete": "Are you sure you want to delete {item}?",
+    "cancel": "Are you sure you want to cancel? Unsaved changes will be lost.",
+    "logout": "Are you sure you want to log out?"
+  }
+}
+```

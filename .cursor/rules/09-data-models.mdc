@@ -1,0 +1,443 @@
+# Data Models & Entities
+
+## Core Entities
+
+### User (`IUserData`, `IMe`)
+
+```typescript
+interface IUserData {
+  Code: string                    // Unique identifier
+  Email: string
+  Firstname: string
+  Lastname: string
+  Phone: string
+  Gender: 'MALE' | 'FEMALE'
+  NIU: string                     // National ID
+  AvatarUrl: string
+  Status: 'ACTIVE' | 'PENDING' | 'INACTIVE'
+  Profiles: IProfile[]            // Multiple roles
+  Address: {
+    Code: string
+    City: string
+    Country: string
+    Street: string
+  }
+  Subscriptions: ISubscription[]
+  CreatedAt: string               // ISO date string
+  UpdatedAt: string
+}
+```
+
+### Profile (`IProfile`)
+
+```typescript
+interface IProfile {
+  Code: string                    // Unique identifier
+  UserCode: string                // Foreign key to user
+  RoleCode: 'ADMIN' | 'SUPPORT' | 'LANDLORD' | 'MANAGER' | 'RENTER'
+  Status: 'ACTIVE' | 'INACTIVE'
+  IsActive: 0 | 1                 // Binary flag from API
+  CreatedAt: string
+  UpdatedAt: string
+}
+```
+
+**User Roles**:
+- `ADMIN` - Full system access
+- `SUPPORT` - User verification, support tasks
+- `LANDLORD` - Property owner
+- `MANAGER` - Manages properties for landlords
+- `RENTER` - Tenant looking for properties
+
+### Asset/Property (`AssetData`, `AssetDataDetailed`)
+
+```typescript
+interface AssetData {
+  Code: string                    // Unique identifier
+  Title: string
+  Description?: string
+  TypeCode: PropertyType
+  Price: number
+  Currency: string                // e.g., 'USD', 'EUR'
+  CoverUrl: string                // Cloudflare R2 URL
+  StatusCode: string
+  IsActive: 0 | 1
+  IsVerified: 0 | 1
+  OwnerCode: string               // Foreign key to user
+  ParentCode?: string             // For units (references parent property)
+  Address: {
+    Code: string
+    City: string
+    Country: string
+    Street: string
+  }
+  BillingItems: string[]          // e.g., ['WATER', 'ELEC', 'RENT']
+  CreatedAt: string
+  UpdatedAt: string
+}
+
+interface AssetDataDetailed extends AssetData {
+  Units?: AssetData[]             // For CPLXMOD (complex) type
+  owner?: {
+    firstName: string
+    lastname: string
+    email: string
+    phone: string
+    userCode: string
+  }
+  Permission: string[]            // User permissions on this asset
+}
+```
+
+**Property Types**:
+```typescript
+type PropertyType = 'CPLXMOD' | 'STUDMOD' | 'CHAMMOD' | 'APPART'
+
+// CPLXMOD = Immeuble (Building Complex) - Can contain Units
+// STUDMOD = Studio
+// CHAMMOD = Chambre (Room)
+// APPART = Apartment
+```
+
+**Billing Items**:
+```typescript
+type BillingItem = 'WATER' | 'ELEC' | 'INTERNET' | 'GAS' | 'RENT'
+
+const BILLING_ITEMS = ['WATER', 'ELEC', 'INTERNET', 'GAS', 'RENT'] as const
+```
+
+### Contract (`IContract`, `IContractDetail`)
+
+```typescript
+interface IContract {
+  Code: string
+  AssetCode: string
+  TenantCode: string              // Foreign key to user
+  StartDate: string               // ISO date
+  EndDate: string                 // ISO date
+  MonthlyRent: number
+  Currency: string
+  Status: 'ACTIVE' | 'CLOSED'
+  Notes?: string
+  BillingElements: string[]       // Array of BillingItem codes
+  CreatedAt: string
+  UpdatedAt: string
+}
+
+interface IContractDetail extends IContract {
+  tenant: {
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+    userCode: string
+    address?: {
+      City: string
+      Country: string
+      Street: string
+    }
+  }
+  asset?: AssetData
+}
+```
+
+### Invoice (`IInvoice`, `IInvoiceForm`)
+
+```typescript
+interface IInvoice {
+  Code: string
+  ContractCode: string            // Foreign key to contract
+  StartDate: string
+  EndDate: string
+  TotalAmount: number
+  PaidAmount: number
+  Status: 'PENDING' | 'PAID' | 'OVERDUE'
+  Notes?: string
+  Items: IInvoiceItem[]
+  CreatedAt: string
+  UpdatedAt: string
+}
+
+interface IInvoiceItem {
+  Code: string
+  InvoiceCode: string
+  ItemCode: BillingItem           // WATER, ELEC, etc.
+  Amount: number
+  IsPaid: boolean
+  PaidDate?: string
+}
+
+interface IInvoiceForm {
+  contractCode: string
+  startDate: string
+  endDate: string
+  notes?: string
+  items: {
+    itemCode: BillingItem
+    amount: string
+    isPaid: boolean
+    paidDate?: string
+  }[]
+}
+```
+
+### Request/Application (`IApplication`, `IRequest`)
+
+```typescript
+interface IApplication {
+  Code: string
+  TypeCode: string                // Request type
+  StatusCode: string
+  Description: string
+  SubmittedDate: string
+  ClosedDate?: string
+  IsClosed: 0 | 1
+  RenterCode: string              // Foreign key to user
+  AssetCode?: string              // Optional - for property-specific requests
+  renter: {
+    Code: string
+    Firstname: string
+    Lastname: string
+    Email: string
+    Phone: string
+    AvatarUrl?: string
+  }
+  CreatedAt: string
+  UpdatedAt: string
+}
+```
+
+### Property Verification (`IPropertyVerification`)
+
+```typescript
+interface IPropertyVerification {
+  Code?: string
+  UserId: string
+  AssetCode: string
+  Title: string
+  Notes?: string
+  Body: IVerificationDocument[]
+  Status?: 'PENDING' | 'APPROVED' | 'REJECTED'
+  CreatedAt?: string
+}
+
+interface IVerificationDocument {
+  Title: string
+  ContentUrl: File | string       // File upload or URL
+  Type: VerificationDocumentType
+}
+
+type VerificationDocumentType =
+  | 'DEED_SALE'
+  | 'LAND_TITLE'
+  | 'BUILDING_PERMIT'
+  | 'DOCUMENT'
+  | 'BIRTH_CERTIFICATE'
+  | 'INHERITANCE_CERTIFICATE'
+```
+
+### Subscription (`ISubscription`)
+
+```typescript
+interface ISubscription {
+  Code: string
+  UserCode: string
+  PlanCode: string
+  Status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED'
+  StartDate: string
+  EndDate: string
+  CreatedAt: string
+  UpdatedAt: string
+}
+```
+
+## Common Patterns
+
+### Code-based Identifiers
+
+**ALL entities use `Code` (not `id`)**:
+
+```typescript
+// ✅ Correct
+property.Code
+user.Code
+contract.Code
+
+// ❌ Wrong
+property.id
+user.id
+contract.id
+```
+
+### Binary Flags
+
+API returns `0 | 1` for boolean flags:
+
+```typescript
+interface Entity {
+  IsActive: 0 | 1          // Not boolean
+  IsVerified: 0 | 1
+  IsClosed: 0 | 1
+}
+
+// Convert to boolean when needed
+const isActive = property.IsActive === 1
+```
+
+### Timestamps
+
+All timestamps are **ISO 8601 strings**:
+
+```typescript
+interface Entity {
+  CreatedAt: string        // "2024-01-15T10:30:00.000Z"
+  UpdatedAt: string
+}
+
+// Convert to Date when needed
+const createdDate = new Date(entity.CreatedAt)
+```
+
+### Status Enums
+
+Common status patterns:
+
+```typescript
+// User Status
+type UserStatus = 'ACTIVE' | 'PENDING' | 'INACTIVE'
+
+// Contract Status
+type ContractStatus = 'ACTIVE' | 'CLOSED'
+
+// Invoice Status
+type InvoiceStatus = 'PENDING' | 'PAID' | 'OVERDUE'
+
+// Verification Status
+type VerificationStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+```
+
+### Nested Objects
+
+Entities often include nested data:
+
+```typescript
+// Instead of just IDs
+interface Property {
+  OwnerCode: string        // Foreign key
+  owner?: {                // Nested owner data
+    firstName: string
+    lastname: string
+    email: string
+    phone: string
+    userCode: string
+  }
+}
+```
+
+### Arrays of Related Data
+
+```typescript
+interface User {
+  Profiles: IProfile[]           // User can have multiple roles
+  Subscriptions: ISubscription[] // User can have multiple subscriptions
+}
+
+interface Property {
+  Units?: AssetData[]            // Complex can have multiple units
+  BillingItems: string[]         // Property can have multiple billing items
+  Permission: string[]           // User can have multiple permissions
+}
+```
+
+## Form Types vs Data Types
+
+**Separate form types from data types**:
+
+```typescript
+// Data type (from API)
+interface IProperty {
+  Code: string
+  Title: string
+  Price: number
+  IsActive: 0 | 1
+}
+
+// Form type (for user input)
+interface IPropertyForm {
+  title: string
+  price: string              // Input as string, convert to number
+  isActive: boolean          // Use boolean in forms
+}
+
+// Convert form to API data
+function formToData(form: IPropertyForm): Partial<IProperty> {
+  return {
+    Title: form.title,
+    Price: Number(form.price),
+    IsActive: form.isActive ? 1 : 0
+  }
+}
+```
+
+## Type Guards
+
+Use type guards for runtime checks:
+
+```typescript
+function isProperty(obj: unknown): obj is AssetData {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'Code' in obj &&
+    'Title' in obj &&
+    'TypeCode' in obj
+  )
+}
+
+function isUser(obj: unknown): obj is IUserData {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'Code' in obj &&
+    'Email' in obj &&
+    'Profiles' in obj
+  )
+}
+```
+
+## Utility Types
+
+Create utility types for common patterns:
+
+```typescript
+// Partial update types
+type PropertyUpdate = Partial<Omit<AssetData, 'Code' | 'CreatedAt' | 'UpdatedAt'>>
+
+// List response
+interface ListResponse<T> {
+  data: T[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+// Action result
+interface ActionResult<T = unknown> {
+  success: boolean
+  data?: T
+  error?: string
+}
+```
+
+## Key Principles
+
+1. **Use `Code` for IDs** - Not `id`
+2. **Binary flags** - `0 | 1`, not boolean
+3. **ISO date strings** - Convert to Date when needed
+4. **Nested objects** - Not just foreign keys
+5. **Separate form types** - From API data types
+6. **Type guards** - For runtime validation
+7. **Explicit types** - No `any`
+8. **Status enums** - Use union types
+9. **Arrays for relations** - One-to-many relationships
+10. **Consistent naming** - Follow API conventions

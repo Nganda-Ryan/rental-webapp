@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
-import { useRouter } from '@bprogress/next/app';
+import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import toast from 'react-hot-toast';
+import { copyToClipboard as copyToClipboardUtil } from '@/lib/utils';
 import {
   AssetType,
   AssetActionsHandlers,
@@ -29,15 +30,23 @@ export function useAssetActions({
   const [clicked, setClicked] = useState(false);
 
   /**
+   * Auto-hide share link after 7 seconds
+   */
+  useEffect(() => {
+    if (showShareLink) {
+      const timer = setTimeout(() => {
+        setShowShareLink(false);
+        setClicked(false);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [showShareLink]);
+
+  /**
    * Handle share link action - shows the shareable link for tenant invitation
    */
   const handleShareLink = useCallback(() => {
     setShowShareLink(true);
-    // Auto-hide after 7 seconds
-    setTimeout(() => {
-      setShowShareLink(false);
-      setClicked(false);
-    }, 7000);
   }, []);
 
   /**
@@ -111,44 +120,19 @@ export function useAssetActions({
   }, [onRefetch]);
 
   /**
-   * Copy text to clipboard with fallback for older browsers
+   * Copy text to clipboard using utility function
    */
-  const copyToClipboard = useCallback((text: string) => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).catch((err) => {
-        console.error('Clipboard write failed:', err);
-      });
+  const copyToClipboard = useCallback(async (text: string) => {
+    const success = await copyToClipboardUtil(text);
+    if (success) {
+      setClicked(true);
+      toast.success(commonT('copied') || 'Link copied to clipboard', { position: 'bottom-right' });
     } else {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.top = '0';
-      textArea.style.left = '0';
-      textArea.style.width = '1px';
-      textArea.style.height = '1px';
-      textArea.style.padding = '0';
-      textArea.style.border = 'none';
-      textArea.style.outline = 'none';
-      textArea.style.boxShadow = 'none';
-      textArea.style.background = 'transparent';
-
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-
-      try {
-        document.execCommand('copy');
-      } catch (err) {
-        console.error('Fallback: copy failed', err);
-      }
-
-      document.body.removeChild(textArea);
+      toast.error(commonT('copyFailed') || 'Failed to copy to clipboard', {
+        position: 'bottom-right',
+      });
     }
-
-    setClicked(true);
-    toast.success('Link copied to clipboard', { position: 'bottom-right' });
-  }, []);
+  }, [commonT]);
 
   return {
     handleShareLink,
@@ -160,5 +144,7 @@ export function useAssetActions({
     handleTerminateLease,
     handleCancelManagerInvitation,
     copyToClipboard,
+    showShareLink,
+    clicked,
   };
 }

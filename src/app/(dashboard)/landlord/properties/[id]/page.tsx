@@ -1,48 +1,50 @@
 "use client"
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from "next-intl";
-import {
-  Share2,
-  FileText,
-  Building2,
-  UserPlus,
-  DollarSign,
-  Zap,
-} from "lucide-react";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import SectionWrapper from "@/components/Cards/SectionWrapper";
 import toast from 'react-hot-toast';
-import { capitalize } from "@/lib/utils";
+import { capitalize, mapPermissionsToObject } from "@/lib/utils";
 import { roleStore } from "@/store/roleStore";
 import { ASSET_TYPE_COMPLEXE } from "@/constant";
 
 // Custom hooks
 import { useAssetDetails } from "@/hooks/useAssetDetails";
 import { useAssetPermissions } from "@/hooks/useAssetPermissions";
+import { useModalState } from "@/hooks/useModalState";
+import { useAssetOperations } from "@/hooks/useAssetOperations";
+import { useQuickActions } from "@/hooks/useQuickActions";
 import { AssetType } from "@/types/AssetHooks";
 
-// New components
+// Components
 import { AssetDetailsCard } from "@/components/feature/Properties/AssetDetailsCard";
 import { AssetSections } from "@/components/feature/Properties/AssetSections";
 import { AssetModals } from "@/components/feature/Properties/AssetModals";
-import { QuickAction, QuickActionItem, MobileActionsDrawer, MobileActionFAB } from "@/components/ui/QuickAction";
+import { AssetDetailLayout } from "@/components/feature/Properties/AssetDetailLayout";
+import { ShareLinkCard } from "@/components/feature/Properties/ShareLinkCard";
+import { AssetDashboard } from "@/components/feature/Properties/AssetDashboard";
 import { PropertyManagerSection } from "@/components/feature/Properties/PropertyManagerSection";
-import { PropertySkeletonPageSection1, RightSideAction } from "@/components/skeleton/pages/PropertySkeletonPage";
 import Nodata from "@/components/error/Nodata";
 
 // Actions
-import { createContract, createInvoice, inviteManager, terminateLease, attachAsset } from "@/actions/assetAction";
+import { inviteManager, attachAsset, assetDashboard, deactivateAsset, activateAsset, deleteAsset } from "@/actions/assetAction";
 import { requestPropertyVerification } from "@/actions/requestAction";
-import { IInvoiceForm, IInvoice, IPropertyVerification, IPropertyVerificationDoc, IAttachSimpleAssetToCplx, AssetData } from "@/types/Property";
+import { IInvoiceForm, IPropertyVerification, IPropertyVerificationDoc, IAttachSimpleAssetToCplx, AssetData, IGetAssetDashboard } from "@/types/Property";
 import { IInviteManagerRequest, IUser } from "@/types/user";
+import { QuickActionItem } from "@/components/ui/QuickAction";
 
 const PropertyDetail = () => {
   const params = useParams();
   const router = useRouter();
   const { user } = roleStore();
   const commonT = useTranslations('Common');
+
+  // Memoize profile code
+  const profileCode = useMemo(
+    () => user?.Profiles.find(p => p.RoleCode === "LANDLORD")?.Code ?? "",
+    [user]
+  );
 
   // Use custom hooks
   const {
@@ -59,7 +61,7 @@ const PropertyDetail = () => {
   } = useAssetDetails({
     assetId: params.id as string,
     assetType: AssetType.PROPERTY,
-    profileCode: user?.Profiles.find(p => p.RoleCode === "LANDLORD")?.Code ?? "",
+    profileCode,
   });
 
   const permissions = useAssetPermissions({
@@ -69,124 +71,130 @@ const PropertyDetail = () => {
     userRole: "LANDLORD",
   });
 
+  // Modal state management
+  const { modals, openModal, closeModal } = useModalState();
+
+  // Asset operations
+  const {
+    handleCreateContract: handleCreateContractOperation,
+    handleTerminateLease: handleTerminateLeaseOperation,
+    isTerminatingLease,
+    isCreatingContract,
+  } = useAssetOperations({
+    assetCode: asset?.Code,
+    activeContractId: activeContract?.id,
+    onRefetch: refetch,
+  });
+
   // UI State
   const [showShareLink, setShowShareLink] = useState(false);
-  const [clicked, setClicked] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
-
-  // Modal states
-  const [isManagerSearchOpen, setIsManagerSearchOpen] = useState(false);
-  const [isContractFormOpen, setContractFormOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isAttachPropertiesModalOpen, setIsAttachPropertiesModalOpen] = useState(false);
-  const [isTerminatingContract, setIsTerminatingContract] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
-  const [showActionModal, setShowActionModal] = useState(false);
-
-  const [loadingMessage, setLoadingMessage] = useState("Loading...");
+  const [loadingMessage, setLoadingMessage] = useState(commonT('loadingData') || "Loading...");
   const [successMessage, setSuccessMessage] = useState("");
   const [invoiceFormDefaultValue, setInvoiceFormDefaultValue] = useState<IInvoiceForm>();
   const [tempInvoiceFormDefaultValue, setTempInvoiceFormDefaultValue] = useState<IInvoiceForm>();
   const [action, setAction] = useState<"CREATE" | "UPDATE">("CREATE");
+  const [dashboardData, setDashboardData] = useState<IGetAssetDashboard | null>(null);
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
+  const [isDeactivating, setIsDeactivating] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [actionType, setActionType] = useState<'deactivate' | 'activate' | 'delete' | null>(null);
 
   // Effects
   useEffect(() => {
-    if (showShareLink) {
-      const timer = setTimeout(() => {
-        setShowShareLink(false);
-        setClicked(false);
-      }, 7000);
-      return () => clearTimeout(timer);
-    }
-  }, [showShareLink]);
-
-  useEffect(() => {
-    if (showMobileActions) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [showMobileActions]);
-
-  useEffect(() => {
-    if (showInvoiceGenerator === false) {
+    if (modals.invoiceGenerator === false) {
       setInvoiceFormDefaultValue(tempInvoiceFormDefaultValue);
       setAction("CREATE");
     }
-  }, [showInvoiceGenerator, tempInvoiceFormDefaultValue]);
+  }, [modals.invoiceGenerator, tempInvoiceFormDefaultValue]);
 
-  // Action handlers
-  const handleShareLink = () => {
-    setShowShareLink(true);
-  };
-
-  const handleCreateContract = () => {
-    setContractFormOpen(true);
-    setShowMobileActions(false);
-  };
-
-  const handleVerificationFormOpen = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleClickTerminateLease = () => {
-    setShowActionModal(true);
-  };
-
-  const handleConfirmTerminateLease = async () => {
-    try {
-      setIsTerminatingContract(true);
-      if (activeContract) {
-        const result = await terminateLease(activeContract.id);
-        if (result.error) {
-          if (result.code === 'SESSION_EXPIRED') {
-            router.push('/signin');
-            return;
+  // Fetch dashboard data when asset is loaded
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      if (asset?.Code) {
+        setIsLoadingDashboard(true);
+        try {
+          const result = await assetDashboard(asset.Code);
+          if (result.data?.body) {
+            setDashboardData(result.data.body as IGetAssetDashboard);
+          } else if (result.error) {
+            console.error('Failed to load dashboard:', result.error);
           }
-          toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
+        } catch (error) {
+          console.error('Error loading dashboard:', error);
+        } finally {
+          setIsLoadingDashboard(false);
         }
       }
-    } catch (error) {
-      toast.error("Failed to terminate lease", { position: 'bottom-right' });
-    } finally {
-      await refetch();
-      setIsTerminatingContract(false);
-      setShowActionModal(false);
-      toast.success("Lease terminated", { position: 'bottom-right' });
-    }
-  };
+    };
 
-  const handleInviteManager = async (manager: { userInfo: IUser; permissions: string[] }) => {
+    fetchDashboard();
+  }, [asset?.Code]);
+
+
+  // Action handlers
+  const handleShareLink = useCallback(() => {
+    setShowShareLink(true);
+  }, []);
+
+  const handleCreateContract = useCallback(() => {
+    openModal('contractForm');
+    setShowMobileActions(false);
+  }, [openModal]);
+
+  const handleVerificationFormOpen = useCallback(() => {
+    openModal('verificationForm');
+  }, [openModal]);
+
+  const handleClickTerminateLease = useCallback(() => {
+    openModal('actionModal');
+  }, [openModal]);
+
+  const handleConfirmTerminateLease = useCallback(async () => {
+    await handleTerminateLeaseOperation();
+    closeModal('actionModal');
+  }, [handleTerminateLeaseOperation, closeModal]);
+
+  const handleEditProperty = useCallback(() => {
+    router.push(`/landlord/properties/edit?propertyId=${params.id}`);
+  }, [router, params.id]);
+
+  const handleAttachProperties = useCallback(() => {
+    openModal('attachProperties');
+  }, [openModal]);
+
+  const handleAttachManager = useCallback(() => {
+    openModal('managerSearch');
+    setShowMobileActions(false);
+  }, [openModal]);
+
+  const handleInviteManager = useCallback(async (manager: { userInfo: IUser; permissions: string[] }) => {
     if (asset) {
       try {
         const payload: IInviteManagerRequest = {
           assetCode: asset.Code,
           managerCode: manager.userInfo.id,
-          profilCode: user?.Profiles.find(profile => profile.RoleCode === "LANDLORD")?.Code ?? "",
+          profilCode: profileCode,
           notes: "",
           title: asset.Name,
           body: mapPermissionsToObject(manager.permissions),
         };
 
         setIsLoading(true);
-        setLoadingMessage("Inviting manager...");
+        setLoadingMessage(commonT('invitingManager') || "Inviting manager...");
         const result = await inviteManager(payload);
 
         if (result.data) {
           setIsLoading(false);
-          setLoadingMessage("Loading...");
-          setSuccessMessage("Manager invited successfully");
-          setShowSuccessModal(true);
+          setLoadingMessage(commonT('loadingData') || "Loading...");
+          setSuccessMessage(commonT('managerInvited') || "Manager invited successfully");
+          openModal('successModal');
           await refetch();
         } else if (result.error) {
           setIsLoading(false);
-          setLoadingMessage("Loading...");
+          setLoadingMessage(commonT('loadingData') || "Loading...");
           if (result.code === 'SESSION_EXPIRED') {
             router.push('/signin');
             return;
@@ -194,14 +202,13 @@ const PropertyDetail = () => {
           toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
         }
       } catch (error) {
-        toast.error("An error occurred while inviting the manager", { position: 'bottom-right' });
+        toast.error(commonT('unexpectedError'), { position: 'bottom-right' });
       }
     }
-  };
+  }, [asset, profileCode, commonT, openModal, refetch, router]);
 
-  const handleAttachProperty = async (selectedProperty: AssetData) => {
+  const handleAttachProperty = useCallback(async (selectedProperty: AssetData) => {
     if (asset) {
-      console.log('propertyDetail.handleAttachProperty', selectedProperty)
       try {
         const payload: IAttachSimpleAssetToCplx = {
           parentCode: asset.Code,
@@ -219,24 +226,22 @@ const PropertyDetail = () => {
           },
           billingItems: [],
         };
-        console.log('payload', payload)
 
         setIsLoading(true);
-        setLoadingMessage("Attaching property...");
-        setIsAttachPropertiesModalOpen(false);
+        setLoadingMessage(commonT('attachingProperty') || "Attaching property...");
+        closeModal('attachProperties');
 
         const result = await attachAsset(payload);
-        console.log('-->handleAttachProperty.result', result)
 
         if (result.data) {
           setIsLoading(false);
-          setLoadingMessage("Loading...");
-          setSuccessMessage("Property attached successfully");
-          setShowSuccessModal(true);
+          setLoadingMessage(commonT('loadingData') || "Loading...");
+          setSuccessMessage(commonT('propertyAttached') || "Property attached successfully");
+          openModal('successModal');
           await refetch();
         } else if (result.error) {
           setIsLoading(false);
-          setLoadingMessage("Loading...");
+          setLoadingMessage(commonT('loadingData') || "Loading...");
           if (result.code === 'SESSION_EXPIRED') {
             router.push('/signin');
             return;
@@ -245,341 +250,280 @@ const PropertyDetail = () => {
         }
       } catch (error) {
         setIsLoading(false);
-        setLoadingMessage("Loading...");
-        toast.error("An error occurred while attaching the property", { position: 'bottom-right' });
+        setLoadingMessage(commonT('loadingData') || "Loading...");
+        toast.error(commonT('unexpectedError'), { position: 'bottom-right' });
       }
     }
-  };
+  }, [asset, commonT, closeModal, openModal, refetch, router]);
 
-  const handleContractSubmit = async (contractData: any) => {
-    try {
-      const result = await createContract({
-        ...contractData,
-        assetCode: asset?.Code ?? "",
-      });
-      if (result.contract) {
-        setSuccessMessage("Contract created successfully");
-        setShowSuccessModal(true);
-      } else if (result.error) {
-        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
-      }
-    } catch (error) {
-      toast.error("Failed to create contract", { position: 'bottom-right' });
-    } finally {
-      await refetch();
-      setContractFormOpen(false);
-    }
-  };
-
-  const handleVerificationSubmit = async (body: IPropertyVerificationDoc[], note: string) => {
+  const handleVerificationSubmit = useCallback(async (body: IPropertyVerificationDoc[], note: string) => {
     if (asset && user) {
       try {
         const payload: IPropertyVerification = {
           assetCode: asset.Code,
           body: body,
           notes: note,
-          title: `Verification of ${asset.Name}`,
+          title: `${commonT('verificationOf') || 'Verification of'} ${asset.Name}`,
           userId: user.Code
         };
 
-        setLoadingMessage("Processing...");
+        setLoadingMessage(commonT('processing') || "Processing...");
         setIsLoading(true);
-        setIsModalOpen(false);
+        closeModal('verificationForm');
 
         const result = await requestPropertyVerification(payload);
 
         if (result.data) {
-          setIsModalOpen(false);
           setIsLoading(false);
-          setSuccessMessage("Request sent successfully");
-          setShowSuccessModal(true);
-          setLoadingMessage("Loading...");
-          toast.success(`Request for ${payload.title} property sent successfully`, { position: 'bottom-right' });
+          setSuccessMessage(commonT('requestSent') || "Request sent successfully");
+          openModal('successModal');
+          setLoadingMessage(commonT('loadingData') || "Loading...");
+          toast.success(`${commonT('requestFor') || 'Request for'} ${payload.title} ${commonT('sentSuccessfully') || 'sent successfully'}`, { position: 'bottom-right' });
         } else if (result.error) {
           if (result.code === 'SESSION_EXPIRED') {
             router.push('/signin');
             return;
           }
-          setLoadingMessage("Loading...");
+          setLoadingMessage(commonT('loadingData') || "Loading...");
           setIsLoading(false);
           toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
         }
       } catch (error) {
-        toast.error("Something went wrong during the process", { position: 'bottom-right' });
+        toast.error(commonT('unexpectedError'), { position: 'bottom-right' });
       } finally {
         await refetch();
         setIsLoading(false);
       }
     }
-  };
+  }, [asset, user, commonT, closeModal, openModal, refetch, router]);
 
-  const copyToClipboard = (text: string) => {
-    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).catch((err) => {
-        console.error("Clipboard write failed:", err);
-      });
-    } else {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      textArea.style.position = "fixed";
-      textArea.style.top = "0";
-      textArea.style.left = "0";
-      textArea.style.width = "1px";
-      textArea.style.height = "1px";
-      textArea.style.padding = "0";
-      textArea.style.border = "none";
-      textArea.style.outline = "none";
-      textArea.style.boxShadow = "none";
-      textArea.style.background = "transparent";
+  const handleContractSubmit = useCallback(async (contractData: any) => {
+    await handleCreateContractOperation(contractData);
+    closeModal('contractForm');
+    setSuccessMessage(commonT('contractCreated') || "Contract created successfully");
+    openModal('successModal');
+  }, [handleCreateContractOperation, closeModal, openModal, commonT]);
 
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-
-      try {
-        document.execCommand("copy");
-      } catch (err) {
-        console.error("Fallback: copy failed", err);
-      }
-
-      document.body.removeChild(textArea);
-    }
-    setClicked(true);
-  };
-
-  const mapPermissionsToObject = (permissions: string[]): Record<string, boolean> => {
-    return permissions.reduce((acc, permission) => {
-      acc[permission] = true;
-      return acc;
-    }, {} as Record<string, boolean>);
-  };
-
-  const handleSelectedContract = (contractId: string) => {
+  const handleSelectedContract = useCallback((contractId: string) => {
     router.push(`/landlord/properties/${params.id}/contracts/${contractId}`);
-  };
+  }, [router, params.id]);
 
-  const handleSelectUnit = (unitId: string) => {
+  const handleSelectUnit = useCallback((unitId: string) => {
     router.push(`/landlord/properties/${params.id}/units/${unitId}`);
-  };
+  }, [router, params.id]);
 
-  // Build QuickAction items
-  const quickActions: QuickActionItem[] = [
-    {
-      id: 'invite-tenant',
-      label: 'Invite Tenant',
-      icon: Share2,
-      onClick: handleShareLink,
-      variant: 'neutral',
-      show: permissions.canShareLink,
-    },
-    {
-      id: 'verify-property',
-      label: 'Verify Property',
-      icon: FileText,
-      onClick: handleVerificationFormOpen,
-      variant: 'neutral',
-      show: permissions.canVerifyProperty,
-    },
-    {
-      id: 'attach-properties',
-      label: 'Attach Properties',
-      icon: Building2,
-      onClick: () => setIsAttachPropertiesModalOpen(true),
-      variant: 'neutral',
-      show: permissions.canAttachProperties,
-    },
-    {
-      id: 'edit-property',
-      label: 'Edit Property',
-      icon: Building2,
-      onClick: () => router.push(`/landlord/properties/edit?propertyId=${params.id}`),
-      variant: 'neutral',
-      show: permissions.canEditProperty,
-      disabled: asset?.Status === "PENDING",
-    },
-    {
-      id: 'attach-manager',
-      label: 'Attach Manager',
-      icon: UserPlus,
-      onClick: () => { setIsManagerSearchOpen(true); setShowMobileActions(false); },
-      variant: 'neutral',
-      show: permissions.canAttachManager,
-    },
-    {
-      id: 'create-contract',
-      label: 'Create a contract',
-      icon: FileText,
-      onClick: handleCreateContract,
-      variant: 'neutral',
-      show: permissions.canCreateContract,
-    },
-    {
-      id: 'terminate-lease',
-      label: 'Terminate Lease',
-      icon: DollarSign,
-      onClick: handleClickTerminateLease,
-      variant: 'danger',
-      show: permissions.canTerminateLease,
-      loading: isTerminatingContract,
-    },
-  ];
+  const handleDeactivateAsset = useCallback(() => {
+    setActionType('deactivate');
+    openModal('actionModal');
+  }, [openModal]);
 
-  const shareLinkContent = showShareLink && asset ? (
-    <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-        Share this link with potential renter:
-      </p>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={`https://applink.rentalafrique.com/share/property/${asset.Code}`}
-          readOnly
-          className="flex-1 text-sm p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200"
-        />
-        <button
-          onClick={() => copyToClipboard(`https://applink.rentalafrique.com/share/property/${asset.Code}`)}
-          className={`px-3 py-2 rounded-lg text-sm transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 ${
-            clicked ? "bg-green-500 text-white" : "bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
-          }`}
-        >
-          <span className="inline-flex items-center gap-1">
-            {clicked ? "Copied!" : "Copy"}
-          </span>
-        </button>
-      </div>
-    </div>
-  ) : null;
+  const handleActivateAsset = useCallback(() => {
+    setActionType('activate');
+    openModal('actionModal');
+  }, [openModal]);
+
+  const handleDeleteAsset = useCallback(() => {
+    setActionType('delete');
+    openModal('deleteModal');
+  }, [openModal]);
+
+  const handleConfirmDeactivate = useCallback(async () => {
+    if (!asset?.Code) return;
+    setIsDeactivating(true);
+    try {
+      const result = await deactivateAsset([asset.Code]);
+      if (result.code === 200) {
+        toast.success(commonT('assetDeactivated') || 'Asset deactivated successfully', { position: 'bottom-right' });
+        closeModal('actionModal');
+        await refetch();
+        // router.push('/landlord/properties');
+      } else if (result.error) {
+        if (result.code === 'SESSION_EXPIRED') {
+          router.push('/signin');
+          return;
+        }
+        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
+      }
+    } catch (error) {
+      toast.error(commonT('failedToDeactivateAsset') || 'Failed to deactivate asset', { position: 'bottom-right' });
+    } finally {
+      setIsDeactivating(false);
+      setActionType(null);
+    }
+  }, [asset, commonT, closeModal, refetch, router]);
+
+  const handleConfirmActivate = useCallback(async () => {
+    if (!asset?.Code) return;
+    setIsActivating(true);
+    try {
+      const result = await activateAsset([asset.Code]);
+      if (result.code === 200) {
+        toast.success(commonT('assetActivated') || 'Asset activated successfully', { position: 'bottom-right' });
+        closeModal('actionModal');
+        await refetch();
+      } else if (result.error) {
+        if (result.code === 'SESSION_EXPIRED') {
+          router.push('/signin');
+          return;
+        }
+        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
+      }
+    } catch (error) {
+      toast.error(commonT('failedToActivateAsset') || 'Failed to activate asset', { position: 'bottom-right' });
+    } finally {
+      setIsActivating(false);
+      setActionType(null);
+    }
+  }, [asset, commonT, closeModal, refetch, router]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!asset?.Code) return;
+    setIsDeleting(true);
+    try {
+      const result = await deleteAsset([asset.Code]);
+      if (result.code === 200) {
+        toast.success(commonT('assetDeleted') || 'Asset deleted successfully', { position: 'bottom-right' });
+        closeModal('deleteModal');
+        router.push('/landlord/properties');
+      } else if (result.error) {
+        if (result.code === 'SESSION_EXPIRED') {
+          router.push('/signin');
+          return;
+        }
+        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
+      }
+    } catch (error) {
+      toast.error(commonT('failedToDeleteAsset') || 'Failed to delete asset', { position: 'bottom-right' });
+    } finally {
+      setIsDeleting(false);
+      setActionType(null);
+    }
+  }, [asset, commonT, closeModal, router]);
+
+  // Build QuickAction items using hook
+  const quickActions: QuickActionItem[] = useQuickActions({
+    asset,
+    assetType: AssetType.PROPERTY,
+    permissions,
+    isTerminatingLease,
+    onShareLink: handleShareLink,
+    onVerificationFormOpen: handleVerificationFormOpen,
+    onAttachProperties: handleAttachProperties,
+    onEditProperty: handleEditProperty,
+    onAttachManager: handleAttachManager,
+    onCreateContract: handleCreateContract,
+    onTerminateLease: handleClickTerminateLease,
+    onDeactivateAsset: handleDeactivateAsset,
+    onActivateAsset: handleActivateAsset,
+    onDeleteAsset: handleDeleteAsset,
+    isAssetActive: asset?.IsActive === 1,
+  });
+  console.log('quickActions', quickActions)
+
+  // Main content
+  const mainContent = asset ? (
+    <>
+      <AssetDetailsCard
+        asset={asset}
+        tenantInfo={tenantInfo}
+        showImage={true}
+      />
+      <AssetDashboard
+        dashboardData={dashboardData}
+        isLoading={isLoadingDashboard}
+      />
+      <AssetSections
+        asset={asset}
+        contracts={contracts}
+        invoices={invoices}
+        units={units}
+        user={user}
+        showUnits={asset.Type === ASSET_TYPE_COMPLEXE}
+        showInvoices={asset.Type !== ASSET_TYPE_COMPLEXE}
+        showContracts={asset.Type !== ASSET_TYPE_COMPLEXE}
+        onContractClick={handleSelectedContract}
+        onUnitClick={handleSelectUnit}
+      />
+    </>
+  ) : (
+    <Nodata />
+  );
+
+  // Manager section
+  const managerSection = managerList.length > 0 ? (
+    <PropertyManagerSection
+      managerList={managerList as any}
+      onCancelInvitation={() => {}}
+    />
+  ) : undefined;
 
   return (
     <DefaultLayout>
-      <Breadcrumb previousPage pageName={`Property ${asset ? ("- " + capitalize(asset.Name)) : ""}`} />
+      <Breadcrumb previousPage pageName={`${commonT('property')} ${asset ? ("- " + capitalize(asset.Name)) : ""}`} />
 
-      <div className="w-full mt-7">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {!isLoadingAsset ? (
-            <>
-              {asset ? (
-                <div className="lg:col-span-2 space-y-4 h-fit">
-                  {/* Asset Details Card */}
-                  <AssetDetailsCard
-                    asset={asset}
-                    tenantInfo={tenantInfo}
-                    showImage={true}
-                  />
-
-                  {/* Asset Sections */}
-                  <AssetSections
-                    asset={asset}
-                    contracts={contracts}
-                    invoices={invoices}
-                    units={units}
-                    user={user}
-                    showUnits={asset.Type === ASSET_TYPE_COMPLEXE}
-                    showInvoices={asset.Type !== ASSET_TYPE_COMPLEXE}
-                    showContracts={asset.Type !== ASSET_TYPE_COMPLEXE}
-                    onContractClick={handleSelectedContract}
-                    onUnitClick={handleSelectUnit}
-                  />
-                </div>
-              ) : (
-                <div className="lg:col-span-2 space-y-6 h-fit">
-                  <Nodata />
-                </div>
-              )}
-            </>
-          ) : (
-            <PropertySkeletonPageSection1 />
-          )}
-
-          {/* SIDE SECTION */}
-          <div className="space-y-6">
-            {!isLoadingAsset ? (
-              <div>
-                {/* DESKTOP ACTIONS */}
-                <div className="hidden lg:block">
-                  <SectionWrapper title="Quick Actions" Icon={Zap}>
-                    <QuickAction
-                      actions={quickActions}
-                      additionalContent={{
-                        content: shareLinkContent,
-                        show: showShareLink,
-                      }}
-                    />
-                  </SectionWrapper>
-                </div>
-
-                {/* MANAGER SECTION */}
-                {managerList.length > 0 && (
-                  <PropertyManagerSection
-                    managerList={managerList as any}
-                    onCancelInvitation={() => {}}
-                  />
-                )}
-              </div>
-            ) : (
-              <RightSideAction />
-            )}
-          </div>
-        </div>
-
-        {/* MOBILE DRAWER */}
-        <MobileActionsDrawer
-          showMobileActions={showMobileActions}
-          onClose={() => setShowMobileActions(false)}
-        >
-          <QuickAction
-            actions={quickActions}
-            additionalContent={{
-              content: shareLinkContent,
-              show: showShareLink,
-            }}
-            isMobile={true}
+      <AssetDetailLayout
+        mainContent={mainContent}
+        quickActions={quickActions}
+        shareLinkContent={
+          <ShareLinkCard
+            asset={asset}
+            show={showShareLink}
           />
-        </MobileActionsDrawer>
+        }
+        managerSection={managerSection}
+        isLoading={isLoadingAsset}
+        showMobileActions={showMobileActions}
+        onToggleMobileActions={() => setShowMobileActions(!showMobileActions)}
+      />
 
-        {/* MOBILE FAB */}
-        <MobileActionFAB
-          onClick={() => setShowMobileActions(true)}
-          show={!showMobileActions}
-          icon={Zap}
-        />
-
-        {/* MODALS */}
-        <AssetModals
-          showInvoiceGenerator={showInvoiceGenerator}
-          showManagerSearch={isManagerSearchOpen}
-          showVerificationForm={isModalOpen}
-          showDeleteModal={isDeleteModalOpen}
-          showAttachPropertiesModal={isAttachPropertiesModalOpen}
-          showContractForm={isContractFormOpen}
-          showSuccessModal={showSuccessModal}
-          showActionModal={showActionModal}
-          showProcessingModal={isLoading}
-          invoiceFormDefaultValue={invoiceFormDefaultValue}
-          invoiceAction={action}
-          permissionList={permissionList}
-          successMessage={successMessage}
-          processingMessage={loadingMessage}
-          assetTitle={asset?.Name}
-          activeContractId={activeContract?.id}
-          profileCode={user?.Profiles.find(p => p.RoleCode === "LANDLORD")?.Code}
-          onCloseInvoiceGenerator={() => setShowInvoiceGenerator(false)}
-          onCreateInvoice={() => {}}
-          onCloseManagerSearch={() => setIsManagerSearchOpen(false)}
-          onSelectManager={handleInviteManager}
-          onCloseVerificationForm={() => setIsModalOpen(false)}
-          onSubmitVerification={handleVerificationSubmit}
-          onCloseDeleteModal={() => setIsDeleteModalOpen(false)}
-          onConfirmDelete={() => {}}
-          onCloseAttachPropertiesModal={() => setIsAttachPropertiesModalOpen(false)}
-          onAttachProperties={handleAttachProperty}
-          onCloseContractForm={() => setContractFormOpen(false)}
-          onSubmitContract={handleContractSubmit}
-          onCloseSuccessModal={() => setShowSuccessModal(false)}
-          onCloseActionModal={() => setShowActionModal(false)}
-          onConfirmAction={handleConfirmTerminateLease}
-        />
-      </div>
+      {/* MODALS */}
+      <AssetModals
+        showInvoiceGenerator={modals.invoiceGenerator}
+        showManagerSearch={modals.managerSearch}
+        showVerificationForm={modals.verificationForm}
+        showDeleteModal={modals.deleteModal}
+        showAttachPropertiesModal={modals.attachProperties}
+        showContractForm={modals.contractForm}
+        showSuccessModal={modals.successModal}
+        showActionModal={modals.actionModal}
+        showProcessingModal={isLoading}
+        invoiceFormDefaultValue={invoiceFormDefaultValue}
+        invoiceAction={action}
+        permissionList={permissionList}
+        successMessage={successMessage}
+        processingMessage={loadingMessage}
+        assetTitle={asset?.Name}
+        activeContractId={activeContract?.id}
+        profileCode={profileCode}
+        onCloseInvoiceGenerator={() => closeModal('invoiceGenerator')}
+        onCreateInvoice={() => {}}
+        onCloseManagerSearch={() => closeModal('managerSearch')}
+        onSelectManager={handleInviteManager}
+        onCloseVerificationForm={() => closeModal('verificationForm')}
+        onSubmitVerification={handleVerificationSubmit}
+        onCloseDeleteModal={() => {
+          closeModal('deleteModal');
+          setActionType(null);
+        }}
+        onConfirmDelete={handleConfirmDelete}
+        isUnit={false}
+        isDeactivating={isDeactivating}
+        isActivating={isActivating}
+        isDeleting={isDeleting}
+        onCloseAttachPropertiesModal={() => closeModal('attachProperties')}
+        onAttachProperties={handleAttachProperty}
+        onCloseContractForm={() => closeModal('contractForm')}
+        onSubmitContract={handleContractSubmit}
+        onCloseSuccessModal={() => closeModal('successModal')}
+        onCloseActionModal={() => {
+          closeModal('actionModal');
+          setActionType(null);
+        }}
+        onConfirmAction={actionType === 'deactivate' ? handleConfirmDeactivate : actionType === 'activate' ? handleConfirmActivate : handleConfirmTerminateLease}
+        actionType={actionType === 'deactivate' ? 'deactivate' : actionType === 'activate' ? 'activate' : 'terminate'}
+        actionTitle={actionType === 'deactivate' ? commonT('deactivateProperty') : actionType === 'activate' ? commonT('activateProperty') : undefined}
+        actionMessage={actionType === 'deactivate' ? `${commonT('confirmDeactivateProperty')} ${asset?.Name || ''}?` : actionType === 'activate' ? `${commonT('confirmActivateProperty')} ${asset?.Name || ''}?` : undefined}
+      />
     </DefaultLayout>
   );
 };

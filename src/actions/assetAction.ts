@@ -1,7 +1,7 @@
 "use server";
 
 import axios, { AxiosInstance } from "axios";
-import { CreatePropertyType, IAssetApplication, IAttachSimpleAssetToCplx, IContractForm, IDashBoardParams, IInvoice, IPropertyApplication, IPropertyVerification, IUpdateAssetRequest, IUpdateInvoiceParam, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
+import { CreatePropertyType, IAttachSimpleAssetToCplx, IContractForm, IDashBoardParams, IInvoice, IPropertyApplication, IUpdateAssetRequest, IUpdateInvoiceParam, SeachInvoiceParams, SeachPropertyParams } from "@/types/Property";
 import { verifySession } from "@/lib/session";
 import { getExtension } from "@/lib/utils";
 import { uploadFile } from "@/lib/fileUpload";
@@ -557,6 +557,50 @@ export async function dashboard (params: IDashBoardParams) {
     }
   }
 }
+export async function assetDashboard (code: string) {
+  try {
+    const session = await verifySession();
+    const token = session.accessToken;
+    // console.log('token', token)
+
+    const apiClient: AxiosInstance = axios.create({
+      baseURL: process.env.ASSET_BASE_URL,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    const response = await apiClient.request({
+      method: 'GET',
+      url: '/api/v1/Asset/Dashboard',
+      params: {
+        Code: code
+      },
+    });
+
+    
+    return {
+      code: null,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->error', error.response)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
 
 export async function applyHouse (param: IPropertyApplication ) {
   try {
@@ -625,6 +669,116 @@ export async function attachAsset (param: IAttachSimpleAssetToCplx ) {
     }
   } catch (error: any) {
     console.log('-->attachAsset.error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
+
+export async function deactivateAsset(assetCodes: string[]) {
+  try {
+    const session = await verifySession();
+    const token = session.accessToken;
+   
+    const response = await axios.post(`${process.env.ASSET_BASE_URL}/api/v1/Asset/Deactivation`, {
+      codes: assetCodes
+    },{
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return {
+      code: 200,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->desactivateAsset.error', error);
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
+export async function activateAsset(assetCodes: string[]) {
+  try {
+    const session = await verifySession();
+    const token = session.accessToken;
+   
+    const response = await axios.post(`${process.env.ASSET_BASE_URL}/api/v1/Asset/Activation`, {
+      codes: assetCodes
+    },{
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    return {
+      code: 200,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->activateAsset.error', error);
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
+export async function deleteAsset(assetCodes: string[]) {
+  try {
+    const session = await verifySession();
+    const token = session.accessToken;
+   
+    const response = await axios.post(`${process.env.ASSET_BASE_URL}/api/v1/Asset/Deletion`, {
+      codes: assetCodes
+    },{
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    return {
+      code: 200,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->deleteAsset.error', error);
     const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
     if (isRedirect) {
       return {

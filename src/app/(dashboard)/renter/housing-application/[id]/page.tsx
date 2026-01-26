@@ -112,7 +112,7 @@ const PropertyDetail = () => {
           IsVerified: item.IsVerified, // 1 ou 0
           Permission: result.data.body.ConfigPermissionList.map((item:any) => (item.Code)),
           whoIs: result.data.body.whoIs,
-          BillingItems: result.data.body.billingItems.map((item: any) => (item.ItemCode)),
+          BillingItems: result.data.body.billingItems?.map((item: any) => (item.ItemCode)) ?? [],
           Units: [],
           Address: {
               Code: item.Address.Code,

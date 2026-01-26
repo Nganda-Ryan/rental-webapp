@@ -1,0 +1,519 @@
+# Security Best Practices
+
+## Session Security
+
+### HTTP-Only Cookies
+
+**NEVER use localStorage or sessionStorage for tokens**:
+
+```typescript
+// ❌ NEVER do this
+localStorage.setItem('token', token)
+sessionStorage.setItem('user', JSON.stringify(user))
+
+// ✅ ALWAYS use HTTP-only cookies
+import { cookies } from 'next/headers'
+
+const cookieStore = await cookies()
+cookieStore.set('session', encryptedSession, {
+  httpOnly: true,      // Not accessible via JavaScript
+  secure: true,        // HTTPS only
+  sameSite: 'lax',     // CSRF protection
+  maxAge: 60 * 60,     // 1 hour
+  path: '/'
+})
+```
+
+### Session Verification
+
+**ALWAYS verify session in Server Actions**:
+
+```typescript
+"use server"
+
+import { verifySession } from '@/lib/session'
+
+export async function protectedAction(data: any) {
+  // 1. ALWAYS verify session first
+  const session = await verifySession()
+
+  if (!session) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  // 2. Continue with logic
+  // ...
+}
+```
+
+### JWT Best Practices
+
+```typescript
+// ✅ Use strong secret (256-bit minimum)
+const AUTH_SECRET = process.env.AUTH_SECRET // Min 32 characters
+
+// ✅ Set reasonable expiration
+const payload = {
+  user: userData,
+  exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hour
+}
+
+// ✅ Include necessary claims only
+const session = {
+  user: {
+    Code: user.Code,
+    Email: user.Email,
+    Profiles: user.Profiles
+  },
+  accessToken: firebaseToken
+}
+// Don't include passwords, sensitive data
+```
+
+## Input Validation
+
+### Server-Side Validation (Critical)
+
+**NEVER trust client input** - Always validate on server:
+
+```typescript
+"use server"
+
+export async function createProperty(formData: IPropertyForm) {
+  const session = await verifySession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  // 1. Validate required fields
+  if (!formData.Title || !formData.TypeCode) {
+    return { success: false, error: 'Missing required fields' }
+  }
+
+  // 2. Validate field types
+  if (typeof formData.Price !== 'number' || formData.Price < 0) {
+    return { success: false, error: 'Invalid price' }
+  }
+
+  // 3. Validate enums
+  const validTypes = ['CPLXMOD', 'STUDMOD', 'CHAMMOD', 'APPART']
+  if (!validTypes.includes(formData.TypeCode)) {
+    return { success: false, error: 'Invalid property type' }
+  }
+
+  // 4. Sanitize strings
+  const sanitizedTitle = formData.Title.trim().substring(0, 100)
+
+  // Continue...
+}
+```
+
+### Client-Side Validation (UX only)
+
+Client validation improves UX but is NOT security:
+
+```typescript
+"use client"
+
+export function PropertyForm() {
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const validate = (data: IPropertyForm) => {
+    const newErrors: Record<string, string> = {}
+
+    if (!data.Title) newErrors.title = 'Title is required'
+    if (!data.TypeCode) newErrors.type = 'Type is required'
+    if (data.Price <= 0) newErrors.price = 'Price must be positive'
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Client validation for UX
+    if (!validate(formData)) return
+
+    // Server Action handles real security validation
+    const result = await createProperty(formData)
+  }
+}
+```
+
+## File Upload Security
+
+### Validation
+
+```typescript
+"use server"
+
+import { uploadToR2 } from '@/lib/fileUpload'
+
+export async function uploadFile(formData: FormData) {
+  const session = await verifySession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  const file = formData.get('file') as File
+
+  // 1. Validate file exists
+  if (!file) {
+    return { success: false, error: 'No file provided' }
+  }
+
+  // 2. Validate file size (100MB max)
+  const MAX_SIZE = 100 * 1024 * 1024
+  if (file.size > MAX_SIZE) {
+    return { success: false, error: 'File too large (max 100MB)' }
+  }
+
+  // 3. Validate file type by extension
+  const allowedExtensions = ['.png', '.jpg', '.jpeg', '.pdf', '.doc', '.docx']
+  const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
+
+  if (!allowedExtensions.includes(ext)) {
+    return { success: false, error: 'Invalid file type' }
+  }
+
+  // 4. Validate MIME type
+  const allowedMimeTypes = [
+    'image/png',
+    'image/jpeg',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ]
+
+  if (!allowedMimeTypes.includes(file.type)) {
+    return { success: false, error: 'Invalid file format' }
+  }
+
+  // 5. Sanitize filename
+  const sanitizedFilename = file.name
+    .replace(/[^a-zA-Z0-9.-]/g, '_')
+    .substring(0, 255)
+
+  try {
+    const url = await uploadToR2(file, 'properties')
+    return { success: true, data: { url } }
+  } catch (error) {
+    console.error('Upload error:', error)
+    return { success: false, error: 'Upload failed' }
+  }
+}
+```
+
+### Allowed File Types
+
+```typescript
+// Defined in src/constant/index.ts
+const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.svg']
+const DOCUMENT_EXTENSIONS = ['.pdf', '.doc', '.docx']
+
+// Corresponding MIME types
+const IMAGE_MIMES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/svg+xml'
+]
+
+const DOCUMENT_MIMES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+]
+```
+
+## XSS Prevention
+
+### React Auto-Escaping
+
+React automatically escapes values:
+
+```typescript
+// ✅ Safe - React escapes automatically
+<p>{userInput}</p>
+<div>{property.Title}</div>
+```
+
+### Dangerous HTML (Avoid)
+
+**AVOID `dangerouslySetInnerHTML`** unless absolutely necessary:
+
+```typescript
+// ❌ Dangerous - avoid unless necessary
+<div dangerouslySetInnerHTML={{ __html: userContent }} />
+
+// ✅ If you must use it, sanitize first
+import DOMPurify from 'isomorphic-dompurify'
+
+const sanitized = DOMPurify.sanitize(userContent)
+<div dangerouslySetInnerHTML={{ __html: sanitized }} />
+```
+
+### URL Safety
+
+```typescript
+// ❌ Dangerous - user could inject javascript:
+<a href={userProvidedUrl}>Link</a>
+
+// ✅ Validate URLs
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return ['http:', 'https:'].includes(parsed.protocol)
+  } catch {
+    return false
+  }
+}
+
+<a href={isSafeUrl(url) ? url : '#'}>Link</a>
+```
+
+## Authorization
+
+### Role-Based Access Control
+
+```typescript
+"use server"
+
+export async function deleteProperty(propertyCode: string) {
+  const session = await verifySession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  // 1. Check user role
+  const userRole = session.user.Profiles.find(p => p.IsActive === 1)?.RoleCode
+
+  const allowedRoles = ['ADMIN', 'LANDLORD', 'MANAGER']
+  if (!userRole || !allowedRoles.includes(userRole)) {
+    return { success: false, error: 'Forbidden - insufficient permissions' }
+  }
+
+  // 2. Check ownership (if applicable)
+  const property = await fetchProperty(propertyCode)
+
+  if (property.OwnerCode !== session.user.Code && userRole !== 'ADMIN') {
+    return { success: false, error: 'Forbidden - not the owner' }
+  }
+
+  // 3. Proceed with deletion
+  // ...
+}
+```
+
+### Permission Checks
+
+```typescript
+// Check if user has specific permission on asset
+function hasPermission(asset: AssetDataDetailed, permission: string): boolean {
+  return asset.Permission?.includes(permission) ?? false
+}
+
+// Usage
+if (!hasPermission(property, 'EDIT')) {
+  return { success: false, error: 'No edit permission' }
+}
+```
+
+## API Security
+
+### Environment Variables
+
+```typescript
+// ❌ NEVER hardcode secrets
+const apiKey = 'abc123secret'
+
+// ✅ Use environment variables
+const apiKey = process.env.API_KEY
+
+// ❌ NEVER expose server-side secrets to client
+const secret = process.env.AUTH_SECRET // Server only
+
+// ✅ Client-side env vars must be prefixed
+const firebaseKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY // OK for client
+```
+
+### API Request Security
+
+```typescript
+"use server"
+
+export async function callExternalAPI(data: any) {
+  const session = await verifySession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  try {
+    const response = await fetch(`${process.env.API_BASE_URL}/endpoint`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+        // ✅ Add request ID for tracking
+        'X-Request-ID': crypto.randomUUID(),
+        // ✅ Add user agent
+        'User-Agent': 'RentalApp/1.0'
+      },
+      body: JSON.stringify(data)
+    })
+
+    // Check response
+    if (!response.ok) {
+      // ❌ Don't expose detailed API errors to client
+      console.error('API Error:', await response.text())
+      return { success: false, error: 'Operation failed' }
+    }
+
+    return { success: true, data: await response.json() }
+  } catch (error) {
+    // ❌ Don't expose stack traces or sensitive details
+    console.error('Request failed:', error)
+    return { success: false, error: 'Network error' }
+  }
+}
+```
+
+## Logging & Monitoring
+
+### Safe Logging
+
+```typescript
+// ❌ NEVER log sensitive data
+console.log('User password:', password)
+console.log('Session token:', token)
+console.log('User object:', user) // May contain sensitive data
+
+// ✅ Log safely
+console.log('User login attempt:', { email: user.Email, timestamp: new Date() })
+console.error('API Error:', { endpoint: url, status: response.status })
+
+// ✅ Sanitize before logging
+const sanitizedError = {
+  message: error.message,
+  code: error.code,
+  // Omit stack trace, sensitive details
+}
+console.error('Error occurred:', sanitizedError)
+```
+
+## Rate Limiting
+
+### Consider Rate Limiting for Sensitive Actions
+
+```typescript
+// Example pattern (implementation depends on your setup)
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
+
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(10, '10 s') // 10 requests per 10 seconds
+})
+
+export async function sensitiveAction(data: any) {
+  const session = await verifySession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  // Rate limit by user
+  const { success } = await ratelimit.limit(session.user.Code)
+
+  if (!success) {
+    return { success: false, error: 'Rate limit exceeded' }
+  }
+
+  // Continue...
+}
+```
+
+## CSRF Protection
+
+**Next.js Server Actions automatically protect against CSRF** - No additional action needed.
+
+## SQL Injection Prevention
+
+**We use external APIs, not direct database access**, but if you ever do:
+
+```typescript
+// ❌ NEVER concatenate user input
+const query = `SELECT * FROM users WHERE email = '${userEmail}'`
+
+// ✅ Use parameterized queries
+const query = 'SELECT * FROM users WHERE email = ?'
+db.query(query, [userEmail])
+```
+
+## Security Headers
+
+Ensure proper security headers in `next.config.js`:
+
+```typescript
+const nextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Security Checklist
+
+### Before Deploying
+
+- [ ] All secrets in environment variables
+- [ ] Session verification in all Server Actions
+- [ ] Input validation on all user inputs
+- [ ] File upload validation (type, size, extension)
+- [ ] HTTPS only (secure cookies)
+- [ ] No sensitive data in logs
+- [ ] Proper error messages (don't expose internals)
+- [ ] Authorization checks (role + ownership)
+- [ ] Rate limiting on sensitive endpoints
+- [ ] Security headers configured
+- [ ] Dependencies updated (no known vulnerabilities)
+- [ ] No hardcoded credentials
+- [ ] Client-side env vars prefixed with NEXT_PUBLIC_
+
+## Common Vulnerabilities to Prevent
+
+1. **XSS** - Use React's auto-escaping, sanitize HTML
+2. **CSRF** - Next.js Server Actions handle this
+3. **Injection** - Validate and sanitize all inputs
+4. **Broken Auth** - HTTP-only cookies, JWT expiration
+5. **Sensitive Data Exposure** - Don't log secrets, use HTTPS
+6. **Broken Access Control** - Check roles and ownership
+7. **Security Misconfiguration** - Set security headers
+8. **Insecure Deserialization** - Validate all external data
+9. **Using Components with Known Vulnerabilities** - Keep dependencies updated
+10. **Insufficient Logging** - Log security events (but sanitize)
+
+## Key Principles
+
+1. **Never trust user input** - Validate everything
+2. **HTTP-only cookies** - Never localStorage for tokens
+3. **Verify session** - First step of every Server Action
+4. **Validate files** - Type, size, extension, MIME
+5. **Check authorization** - Role + ownership
+6. **Sanitize logs** - No sensitive data
+7. **Use HTTPS** - Always in production
+8. **Environment variables** - For all secrets
+9. **Graceful errors** - Don't expose internals
+10. **Defense in depth** - Multiple layers of security

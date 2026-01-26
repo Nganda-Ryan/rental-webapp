@@ -1,0 +1,514 @@
+# External Integrations
+
+## Cloudflare Workers API
+
+### Base URLs
+
+Use environment variables for API endpoints:
+
+```typescript
+// User API
+const USER_BASE_URL = process.env.USER_BASE_URL
+
+// Asset API
+const ASSET_BASE_URL = process.env.ASSET_BASE_URL
+```
+
+### Authentication Pattern
+
+**ALWAYS use session token** for API requests:
+
+```typescript
+import { verifySession } from '@/lib/session'
+
+const session = await verifySession()
+
+const response = await fetch(`${process.env.USER_BASE_URL}/api/v1/User/me`, {
+  headers: {
+    'Authorization': `Bearer ${session.accessToken}`,
+    'Content-Type': 'application/json'
+  }
+})
+```
+
+### API Request Pattern
+
+```typescript
+"use server"
+
+import { verifySession } from '@/lib/session'
+
+export async function fetchUserData(userCode: string) {
+  const session = await verifySession()
+
+  if (!session) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.USER_BASE_URL}/api/v1/User?Code=${userCode}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        cache: 'no-store' // or 'force-cache' depending on requirements
+      }
+    )
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || `API error: ${response.status}`)
+    }
+
+    const data = await response.json()
+    return { success: true, data }
+  } catch (error) {
+    console.error('Fetch user error:', error)
+    return { success: false, error: 'Failed to fetch user data' }
+  }
+}
+```
+
+### POST Request Pattern
+
+```typescript
+"use server"
+
+export async function createAsset(formData: IAssetForm) {
+  const session = await verifySession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  try {
+    const response = await fetch(`${process.env.ASSET_BASE_URL}/api/v1/Asset`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.message || 'Failed to create asset'
+      }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Create asset error:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+```
+
+### PUT/PATCH Request Pattern
+
+```typescript
+"use server"
+
+export async function updateAsset(assetCode: string, updates: Partial<IAssetForm>) {
+  const session = await verifySession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  try {
+    const response = await fetch(
+      `${process.env.ASSET_BASE_URL}/api/v1/Asset/${assetCode}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updates)
+      }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      return { success: false, error: data.message || 'Update failed' }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Update asset error:', error)
+    return { success: false, error: 'Failed to update asset' }
+  }
+}
+```
+
+### Error Handling
+
+**ALWAYS handle API errors gracefully**:
+
+```typescript
+try {
+  const response = await fetch(url, options)
+
+  // Check response status
+  if (!response.ok) {
+    const errorData = await response.json()
+
+    // Log for debugging
+    console.error('API Error:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: errorData
+    })
+
+    // Return user-friendly error
+    return {
+      success: false,
+      error: errorData.message || 'Operation failed'
+    }
+  }
+
+  const data = await response.json()
+  return { success: true, data }
+} catch (error) {
+  // Network errors, JSON parse errors, etc.
+  console.error('Request error:', error)
+  return {
+    success: false,
+    error: 'Network error. Please check your connection.'
+  }
+}
+```
+
+### Common API Endpoints
+
+```typescript
+// User Management
+GET    ${USER_BASE_URL}/api/v1/User?Code={userCode}
+GET    ${USER_BASE_URL}/api/v1/User/me
+POST   ${USER_BASE_URL}/api/v1/User
+PUT    ${USER_BASE_URL}/api/v1/User/{userCode}
+
+// Asset/Property Management
+GET    ${ASSET_BASE_URL}/api/v1/Asset
+GET    ${ASSET_BASE_URL}/api/v1/Asset/{assetCode}
+POST   ${ASSET_BASE_URL}/api/v1/Asset
+PUT    ${ASSET_BASE_URL}/api/v1/Asset/{assetCode}
+DELETE ${ASSET_BASE_URL}/api/v1/Asset/{assetCode}
+
+// Contracts
+GET    ${ASSET_BASE_URL}/api/v1/Contract
+POST   ${ASSET_BASE_URL}/api/v1/Contract
+PUT    ${ASSET_BASE_URL}/api/v1/Contract/{contractCode}
+
+// Invoices
+GET    ${ASSET_BASE_URL}/api/v1/Invoice
+POST   ${ASSET_BASE_URL}/api/v1/Invoice
+```
+
+## Cloudflare R2 (File Storage)
+
+### Configuration
+
+**SDK**: `@aws-sdk/client-s3` (S3-compatible)
+**Domain**: `pub-5482c8c79e08450d875d1ba6b0afe368.r2.dev`
+
+### Upload Utility
+
+Location: `src/lib/fileUpload.ts`
+
+```typescript
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+
+const s3Client = new S3Client({
+  region: 'auto',
+  endpoint: process.env.R2_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!
+  }
+})
+
+export async function uploadToR2(
+  file: File,
+  folder: string = 'properties'
+): Promise<string> {
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const key = `${folder}/${Date.now()}-${file.name}`
+
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: file.type
+    })
+  )
+
+  return `https://pub-5482c8c79e08450d875d1ba6b0afe368.r2.dev/${key}`
+}
+```
+
+### File Upload Pattern
+
+```typescript
+"use server"
+
+import { uploadToR2 } from '@/lib/fileUpload'
+
+export async function uploadPropertyImage(formData: FormData) {
+  const session = await verifySession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  const file = formData.get('image') as File
+
+  // Validate file
+  if (!file) {
+    return { success: false, error: 'No file provided' }
+  }
+
+  // Validate file type
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    return { success: false, error: 'Invalid file type' }
+  }
+
+  // Validate file size (100MB max)
+  const maxSize = 100 * 1024 * 1024
+  if (file.size > maxSize) {
+    return { success: false, error: 'File too large (max 100MB)' }
+  }
+
+  try {
+    const url = await uploadToR2(file, 'properties')
+    return { success: true, data: { url } }
+  } catch (error) {
+    console.error('Upload error:', error)
+    return { success: false, error: 'Upload failed' }
+  }
+}
+```
+
+### Allowed File Types
+
+Defined in `src/constant/index.ts`:
+
+```typescript
+// Images
+const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.svg']
+
+// Documents
+const DOCUMENT_EXTENSIONS = ['.pdf', '.doc', '.docx']
+
+// All allowed
+const ALLOWED_EXTENSIONS = [...IMAGE_EXTENSIONS, ...DOCUMENT_EXTENSIONS]
+```
+
+### File Validation
+
+```typescript
+function validateFile(file: File): { valid: boolean; error?: string } {
+  // Check extension
+  const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
+
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    return { valid: false, error: 'Invalid file type' }
+  }
+
+  // Check size (100MB max)
+  if (file.size > 100 * 1024 * 1024) {
+    return { valid: false, error: 'File too large' }
+  }
+
+  // Check MIME type for images
+  if (IMAGE_EXTENSIONS.includes(ext)) {
+    const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml']
+    if (!allowedMimeTypes.includes(file.type)) {
+      return { valid: false, error: 'Invalid image format' }
+    }
+  }
+
+  return { valid: true }
+}
+```
+
+## Firebase Authentication
+
+### ⚠️ ONLY for Authentication
+
+**DO NOT use**: Firestore, Firebase Storage, Realtime Database, etc.
+**ONLY use**: Firebase Auth for initial authentication
+
+### Configuration
+
+Location: `src/lib/firebase.ts`
+
+```typescript
+import { initializeApp } from 'firebase/app'
+import { getAuth, browserSessionPersistence, setPersistence } from 'firebase/auth'
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+}
+
+const app = initializeApp(firebaseConfig)
+export const auth = getAuth(app)
+
+// Browser session only (not local storage)
+setPersistence(auth, browserSessionPersistence)
+```
+
+### Sign In Pattern
+
+```typescript
+"use client"
+
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+import { createSession } from '@/actions/authAction'
+
+export function SignInForm() {
+  const handleSignIn = async (email: string, password: string) => {
+    try {
+      // 1. Sign in with Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+
+      // 2. Get Firebase token
+      const firebaseToken = await userCredential.user.getIdToken()
+
+      // 3. Create session on server (validates token, fetches user, creates JWT)
+      const result = await createSession(firebaseToken)
+
+      if (result.success) {
+        // Redirect to dashboard
+      } else {
+        // Show error
+      }
+    } catch (error) {
+      console.error('Sign in error:', error)
+      // Show error to user
+    }
+  }
+}
+```
+
+### Sign Out Pattern
+
+```typescript
+"use client"
+
+import { signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+import { deleteSession } from '@/actions/authAction'
+
+export async function handleSignOut() {
+  try {
+    // 1. Sign out from Firebase
+    await signOut(auth)
+
+    // 2. Delete session cookie
+    await deleteSession()
+
+    // 3. Redirect to sign in
+    window.location.href = '/signin'
+  } catch (error) {
+    console.error('Sign out error:', error)
+  }
+}
+```
+
+## Environment Variables
+
+### Required Variables
+
+```env
+# Firebase (prefix with NEXT_PUBLIC_ for client-side access)
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+
+# JWT Session
+AUTH_SECRET=
+
+# Cloudflare Workers API
+USER_BASE_URL=
+ASSET_BASE_URL=
+
+# Cloudflare R2
+R2_ENDPOINT=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET_NAME=
+
+# Environment
+NODE_ENV=production
+```
+
+### Access in Code
+
+```typescript
+// Server-side only
+const secret = process.env.AUTH_SECRET
+
+// Client-side (must be prefixed with NEXT_PUBLIC_)
+const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY
+```
+
+## API Service Layer
+
+Organize API calls in `src/database/`:
+
+```typescript
+// src/database/userService.ts
+"use server"
+
+import { verifySession } from '@/lib/session'
+
+export async function fetchCurrentUser() {
+  const session = await verifySession()
+  if (!session) return null
+
+  const response = await fetch(`${process.env.USER_BASE_URL}/api/v1/User/me`, {
+    headers: { Authorization: `Bearer ${session.accessToken}` }
+  })
+
+  if (!response.ok) return null
+
+  return response.json()
+}
+
+export async function fetchUserByCode(userCode: string) {
+  const session = await verifySession()
+  if (!session) return null
+
+  const response = await fetch(
+    `${process.env.USER_BASE_URL}/api/v1/User?Code=${userCode}`,
+    { headers: { Authorization: `Bearer ${session.accessToken}` } }
+  )
+
+  if (!response.ok) return null
+
+  return response.json()
+}
+```
+
+## Key Principles
+
+1. **ALWAYS verify session** before API calls
+2. **Use environment variables** for endpoints
+3. **Handle errors gracefully** - User-friendly messages
+4. **Validate files** before upload - Type, size, extension
+5. **Firebase for auth only** - Not for data storage
+6. **Log errors** for debugging - But sanitize sensitive data
+7. **Use service layer** - Organize API calls in `database/`
+8. **Type API responses** - Create interfaces for all responses

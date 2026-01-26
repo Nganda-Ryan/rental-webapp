@@ -377,7 +377,17 @@ export interface ApplicationSelectableItem {
 }
 
 
-
+export interface IGetInvoiceList {
+        
+  orderBy: string,
+  orderMode: "asc" | "desc",
+  profileCode: string,
+  statusCodes?: string[],
+  codes?: string[],
+  contractCodes?: string[],
+  assetCodes?: string[],
+   
+}
 
 // Définition de l'interface pour un utilisateur
 interface IUser {
@@ -513,4 +523,152 @@ export interface IAddressData {
    * Le nom de la rue ou du quartier. Ex: "Bonapriso"
    */
   street: string;
+}
+
+export interface IGetAssetDashboard {
+  counts: {
+    units: number;
+    managers: number;
+    managersActive: number;
+    managersPending: number;
+    contracts: number;
+    tenants: number;
+    openRequests: number;
+    billingConfigs: number;
+  };
+
+  financials: {
+    currency: string;
+
+    currentMonth: {
+      billed: number;
+      paid: number;
+      outstanding: number;
+      unpaidInvoiceCount: number;
+      nextDueDate: string | null;
+      collectionRate: number;
+    };
+
+    revenueYTD: number;
+    collectionRateYTD: number;
+    billedYTD: number;
+
+    monthlyRevenue: {
+      month: string;
+      total: number;
+    }[];
+
+    aging: {
+      bucket_0_30: number;
+      bucket_31_60: number;
+      bucket_61_90: number;
+      bucket_90_plus: number;
+    };
+
+    avgRentActive: number;
+  };
+}
+
+export interface IPaymentHistory {
+  Code: string;
+  AssetCode: string;
+  ContractCode: string;
+  InvoicerCode: string;
+  CreatedAt: string;
+  StartDate: string;
+  EndDate: string;
+  InvoicedDate: string;
+  StatusCode: string;
+  Notes: string;
+  IsActive: number;
+  RenterCode: string;
+  HandlerCodes: string;
+
+  asset: {
+    Code: string;
+    Title: string;
+    TypeCode: string;
+    OwnerCode: string;
+    Price: number;
+    Currency: string;
+    CoverUrl: string;
+    Tag: string;
+    Notes: string | null;
+    StatusCode: string;
+    IsActive: number;
+    IsVerified: number;
+    CreatedAt: string;
+    ManagerCode: string;
+    EndDate: string;
+    ParentCode: string;
+    AddressCode: string;
+    ManagerPermissionCode: string;
+    RenterCode: string;
+
+    Address: {
+      Code: string;
+      City: string;
+      Country: string;
+      Street: string;
+      Details: string;
+    };
+  };
+
+  contract: {
+    Code: string;
+    AssetCode: string;
+    RenterCode: string;
+    ContractorCode: string;
+    Amount: number;
+    Currency: string;
+    InitialDuration: number;
+    ReminderDay: number;
+    CreatedAt: string;
+    StartDate: string;
+    EndDate: string;
+    StatusCode: string;
+    ContractedDate: string;
+    ClosedDate: string | null;
+    Notes: string;
+    IsActive: number;
+
+    renter: {
+      Code: string;
+      Status: string;
+      RoleCode: string;
+      CreatedAt: string;
+      IsActive: number;
+      UserCode: string;
+
+      user: {
+        Code: string;
+        AddressCode: string;
+        Email: string;
+        Firstname: string;
+        Gender: string;
+        Lastname: string;
+        NIU: string;
+        OtherEmail: string | null;
+        OtherPhone: string | null;
+        Phone: string;
+        Status: string;
+        AvatarUrl: string;
+        Profiles: any[];
+      };
+    };
+  };
+
+  items: {
+    Code: string;
+    ItemCode: string;
+    InvoiceCode: string;
+    Amount: number;
+    CreatedAt: string;
+    StartDate: string;
+    EndDate: string;
+    PaidDate: string | null;
+    Currency: string;
+    Notes: string;
+    IsPaid: number;
+  }[];
 }

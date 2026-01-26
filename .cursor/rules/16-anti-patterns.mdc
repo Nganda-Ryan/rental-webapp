@@ -1,0 +1,659 @@
+# Anti-Patterns to Avoid
+
+## ❌ Authentication & Session
+
+### NEVER Use NextAuth
+
+```typescript
+// ❌ WRONG - We don't use NextAuth
+import { getServerSession } from 'next-auth'
+
+// ✅ CORRECT - Use our custom session system
+import { verifySession } from '@/lib/session'
+```
+
+### NEVER Store Tokens in localStorage
+
+```typescript
+// ❌ WRONG - Security risk
+localStorage.setItem('token', accessToken)
+sessionStorage.setItem('user', JSON.stringify(user))
+
+// ✅ CORRECT - HTTP-only cookies
+await createSession({ user, accessToken }) // Sets HTTP-only cookie
+```
+
+### NEVER Skip Session Verification
+
+```typescript
+// ❌ WRONG - No auth check
+"use server"
+export async function deleteProperty(code: string) {
+  await fetch(`${API_URL}/properties/${code}`, { method: 'DELETE' })
+}
+
+// ✅ CORRECT - Always verify session first
+"use server"
+export async function deleteProperty(code: string) {
+  const session = await verifySession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  // Continue...
+}
+```
+
+### NEVER Check Auth in Components
+
+```typescript
+// ❌ WRONG - Auth logic in component
+"use client"
+export default function PropertiesPage() {
+  const { user } = useRoleStore()
+
+  if (!user) {
+    redirect('/signin')
+  }
+
+  return <div>Properties</div>
+}
+
+// ✅ CORRECT - Middleware handles all auth
+// Middleware in src/middleware.ts protects routes
+export default function PropertiesPage() {
+  // User is already authenticated via middleware
+  return <div>Properties</div>
+}
+```
+
+## ❌ Component Patterns
+
+### NEVER Use "use client" by Default
+
+```typescript
+// ❌ WRONG - Unnecessary Client Component
+"use client"
+
+export default function PropertyList({ properties }: Props) {
+  return (
+    <div>
+      {properties.map(p => <PropertyCard key={p.Code} property={p} />)}
+    </div>
+  )
+}
+
+// ✅ CORRECT - Server Component (default)
+export default function PropertyList({ properties }: Props) {
+  // No hooks, no events = Server Component
+  return (
+    <div>
+      {properties.map(p => <PropertyCard key={p.Code} property={p} />)}
+    </div>
+  )
+}
+```
+
+### NEVER Fetch Data in Client Components
+
+```typescript
+// ❌ WRONG - Fetching in Client Component
+"use client"
+export default function PropertiesPage() {
+  const [properties, setProperties] = useState([])
+
+  useEffect(() => {
+    fetch('/api/properties').then(r => r.json()).then(setProperties)
+  }, [])
+
+  return <PropertyList properties={properties} />
+}
+
+// ✅ CORRECT - Fetch in Server Component
+export default async function PropertiesPage() {
+  const properties = await fetchProperties()
+  return <PropertyList properties={properties} />
+}
+```
+
+### NEVER Use Prop Drilling for Deep Nesting
+
+```typescript
+// ❌ WRONG - Passing props through many levels
+<Parent user={user}>
+  <Child user={user}>
+    <GrandChild user={user}>
+      <GreatGrandChild user={user} />
+
+// ✅ CORRECT - Use Zustand or Context
+const { user } = useRoleStore()
+```
+
+## ❌ State Management
+
+### NEVER Use Global State for Server Data
+
+```typescript
+// ❌ WRONG - Storing server data in global state
+const usePropertyStore = create((set) => ({
+  properties: [],
+  setProperties: (properties) => set({ properties })
+}))
+
+// ✅ CORRECT - Fetch in Server Component
+export default async function PropertiesPage() {
+  const properties = await fetchProperties()
+  return <PropertyList properties={properties} />
+}
+```
+
+### NEVER Use React Query or SWR
+
+```typescript
+// ❌ WRONG - Don't add these libraries
+import { useQuery } from '@tanstack/react-query'
+
+const { data } = useQuery(['properties'], fetchProperties)
+
+// ✅ CORRECT - Use Server Components and Server Actions
+// Server Component
+const properties = await fetchProperties()
+
+// Server Action for mutations
+const result = await createProperty(formData)
+```
+
+## ❌ Data Fetching
+
+### NEVER Use API Routes for Internal Data
+
+```typescript
+// ❌ WRONG - Creating API routes
+// app/api/properties/route.ts
+export async function GET() {
+  const properties = await fetchProperties()
+  return Response.json(properties)
+}
+
+// ✅ CORRECT - Use Server Actions
+// actions/assetAction.ts
+"use server"
+export async function getProperties() {
+  const session = await verifySession()
+  const properties = await fetchProperties(session.accessToken)
+  return properties
+}
+```
+
+### NEVER Use .then() Chains
+
+```typescript
+// ❌ WRONG - Promise chains
+fetch(url)
+  .then(response => response.json())
+  .then(data => setData(data))
+  .catch(error => console.error(error))
+
+// ✅ CORRECT - Async/await
+try {
+  const response = await fetch(url)
+  const data = await response.json()
+  setData(data)
+} catch (error) {
+  console.error(error)
+}
+```
+
+## ❌ TypeScript
+
+### NEVER Use `any`
+
+```typescript
+// ❌ WRONG
+const data: any = await fetchUser()
+function handleClick(event: any) { }
+
+// ✅ CORRECT
+const data: IUserData = await fetchUser()
+function handleClick(event: React.MouseEvent<HTMLButtonElement>) { }
+```
+
+### NEVER Skip Type Definitions
+
+```typescript
+// ❌ WRONG - Implicit any
+function calculateTotal(items) {
+  return items.reduce((sum, item) => sum + item.price, 0)
+}
+
+// ✅ CORRECT - Explicit types
+function calculateTotal(items: { price: number }[]): number {
+  return items.reduce((sum, item) => sum + item.price, 0)
+}
+```
+
+### NEVER Use Enums
+
+```typescript
+// ❌ WRONG - Enums generate runtime code
+enum UserRole {
+  ADMIN = 'ADMIN',
+  LANDLORD = 'LANDLORD'
+}
+
+// ✅ CORRECT - Union types (no runtime overhead)
+type UserRole = 'ADMIN' | 'LANDLORD' | 'MANAGER' | 'RENTER' | 'SUPPORT'
+
+const USER_ROLES = {
+  ADMIN: 'ADMIN',
+  LANDLORD: 'LANDLORD'
+} as const
+```
+
+## ❌ Internationalization
+
+### NEVER Hardcode User-Facing Text
+
+```typescript
+// ❌ WRONG
+<button>Create Property</button>
+<h1>Welcome to Dashboard</h1>
+
+// ✅ CORRECT
+const t = useTranslations('properties')
+<button>{t('create')}</button>
+
+const t = useTranslations('dashboard')
+<h1>{t('welcome')}</h1>
+```
+
+### NEVER Skip Translations in Both Languages
+
+```json
+// ❌ WRONG - Only in en.json
+{
+  "properties": {
+    "create": "Create Property"
+  }
+}
+
+// ✅ CORRECT - In both en.json AND fr.json
+// en.json
+{
+  "properties": {
+    "create": "Create Property"
+  }
+}
+
+// fr.json
+{
+  "properties": {
+    "create": "Créer une propriété"
+  }
+}
+```
+
+## ❌ File Organization
+
+### NEVER Use Relative Imports for src/
+
+```typescript
+// ❌ WRONG - Deep relative imports
+import { Button } from '../../../components/common/Button'
+import { verifySession } from '../../../../lib/session'
+
+// ✅ CORRECT - Use @ alias
+import { Button } from '@/components/common/Button'
+import { verifySession } from '@/lib/session'
+```
+
+### NEVER Put Business Logic in Components
+
+```typescript
+// ❌ WRONG - Complex logic in component
+"use client"
+export function PropertyForm() {
+  const handleSubmit = async (data: IPropertyForm) => {
+    const response = await fetch('/api/properties', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+
+    const result = await response.json()
+    // ...
+  }
+}
+
+// ✅ CORRECT - Logic in Server Action
+"use server"
+export async function createProperty(data: IPropertyForm) {
+  const session = await verifySession()
+  // Logic here
+}
+
+"use client"
+export function PropertyForm() {
+  const handleSubmit = async (data: IPropertyForm) => {
+    const result = await createProperty(data)
+  }
+}
+```
+
+## ❌ Performance
+
+### NEVER Import Entire Libraries
+
+```typescript
+// ❌ WRONG
+import _ from 'lodash'
+import * as Icons from 'lucide-react'
+
+// ✅ CORRECT
+import debounce from 'lodash/debounce'
+import { Home, User, Settings } from 'lucide-react'
+```
+
+### NEVER Inline Large Components
+
+```typescript
+// ❌ WRONG - Heavy component blocks page load
+export default function Page() {
+  return (
+    <div>
+      <Header />
+      <HugeDataTable data={millionsOfRows} />
+      <Footer />
+    </div>
+  )
+}
+
+// ✅ CORRECT - Lazy load heavy components
+import dynamic from 'next/dynamic'
+
+const HugeDataTable = dynamic(() => import('./HugeDataTable'), {
+  loading: () => <Skeleton />
+})
+
+export default function Page() {
+  return (
+    <div>
+      <Header />
+      <HugeDataTable data={data} />
+      <Footer />
+    </div>
+  )
+}
+```
+
+## ❌ Security
+
+### NEVER Expose Secrets
+
+```typescript
+// ❌ WRONG
+const apiKey = 'sk_live_abc123xyz'
+const authSecret = 'my-secret-key'
+
+// ✅ CORRECT
+const apiKey = process.env.API_KEY
+const authSecret = process.env.AUTH_SECRET
+```
+
+### NEVER Trust Client Input
+
+```typescript
+// ❌ WRONG - No validation
+"use server"
+export async function createProperty(data: IPropertyForm) {
+  await fetch(url, { body: JSON.stringify(data) })
+}
+
+// ✅ CORRECT - Always validate
+"use server"
+export async function createProperty(data: IPropertyForm) {
+  const session = await verifySession()
+  if (!session) return { success: false, error: 'Unauthorized' }
+
+  if (!data.Title || data.Price < 0) {
+    return { success: false, error: 'Invalid data' }
+  }
+
+  // Continue...
+}
+```
+
+### NEVER Log Sensitive Data
+
+```typescript
+// ❌ WRONG
+console.log('User data:', user)
+console.log('Session token:', session.accessToken)
+
+// ✅ CORRECT
+console.log('User login:', { userCode: user.Code, timestamp: new Date() })
+console.error('API error:', { status: response.status, endpoint: url })
+```
+
+## ❌ Error Handling
+
+### NEVER Expose Internal Errors
+
+```typescript
+// ❌ WRONG - Exposes internal details
+catch (error) {
+  return { success: false, error: error.message }
+}
+
+// ✅ CORRECT - User-friendly errors
+catch (error) {
+  console.error('Internal error:', error)
+  return { success: false, error: 'An unexpected error occurred' }
+}
+```
+
+### NEVER Swallow Errors Silently
+
+```typescript
+// ❌ WRONG
+try {
+  await dangerousOperation()
+} catch (error) {
+  // Silent failure
+}
+
+// ✅ CORRECT
+try {
+  await dangerousOperation()
+} catch (error) {
+  console.error('Operation failed:', error)
+  return { success: false, error: 'Operation failed' }
+}
+```
+
+## ❌ Styling
+
+### NEVER Use Inline Styles
+
+```typescript
+// ❌ WRONG
+<div style={{ backgroundColor: 'blue', padding: '16px' }}>
+
+// ✅ CORRECT
+<div className="bg-primary p-4">
+```
+
+### NEVER Skip Dark Mode
+
+```typescript
+// ❌ WRONG - Only light mode
+<div className="bg-white text-black">
+
+// ✅ CORRECT - Light + dark mode
+<div className="bg-white dark:bg-boxdark text-black dark:text-white">
+```
+
+### NEVER Use Emojis Unless Requested
+
+```typescript
+// ❌ WRONG
+<button>✨ Create Property 🏠</button>
+
+// ✅ CORRECT
+import { Plus } from 'lucide-react'
+<button>
+  <Plus className="h-4 w-4" />
+  {t('create')}
+</button>
+```
+
+## ❌ Images
+
+### NEVER Use <img> Tag
+
+```typescript
+// ❌ WRONG
+<img src={property.CoverUrl} alt="Property" />
+
+// ✅ CORRECT
+import Image from 'next/image'
+
+<Image
+  src={property.CoverUrl}
+  alt={property.Title}
+  width={400}
+  height={300}
+/>
+```
+
+## ❌ Forms
+
+### NEVER Skip Client AND Server Validation
+
+```typescript
+// ❌ WRONG - Only client validation
+"use client"
+const handleSubmit = (data) => {
+  if (!data.title) return // Only client check
+  await createProperty(data)
+}
+
+// ✅ CORRECT - Both client and server
+"use client"
+const handleSubmit = (data) => {
+  if (!data.title) return // Client UX
+
+  const result = await createProperty(data) // Server validates too
+}
+
+"use server"
+export async function createProperty(data: IPropertyForm) {
+  if (!data.Title) return { success: false, error: 'Title required' }
+  // Server validation is security
+}
+```
+
+## ❌ Dependencies
+
+### NEVER Add Unused Dependencies
+
+```typescript
+// ❌ WRONG - Installing libraries "just in case"
+npm install moment axios redux
+
+// ✅ CORRECT - Only install what you actively use
+// Use built-in Date, fetch, Zustand
+```
+
+### NEVER Use Deprecated Libraries
+
+```typescript
+// ❌ WRONG
+import moment from 'moment'
+
+// ✅ CORRECT
+// Use native Date or date-fns
+const date = new Date()
+```
+
+## ❌ Backwards Compatibility Hacks
+
+### NEVER Keep Dead Code
+
+```typescript
+// ❌ WRONG
+const _unusedFunction = () => { } // Removed
+
+export function myFunction() {
+  // Old implementation
+}
+
+// ✅ CORRECT - Delete unused code completely
+export function myFunction() {
+  // Current implementation only
+}
+```
+
+### NEVER Rename with Underscore
+
+```typescript
+// ❌ WRONG
+interface IUserData {
+  Code: string
+  _oldField: string // Kept for compatibility
+}
+
+// ✅ CORRECT - Remove completely
+interface IUserData {
+  Code: string
+  // oldField removed
+}
+```
+
+## ❌ Over-Engineering
+
+### NEVER Create Premature Abstractions
+
+```typescript
+// ❌ WRONG - Abstract for 2 uses
+function createPropertyTitleRenderer(config: Config) {
+  return (title: string) => {
+    // Complex abstraction
+  }
+}
+
+// ✅ CORRECT - Keep it simple
+function renderPropertyTitle(title: string) {
+  return <h2>{title}</h2>
+}
+```
+
+### NEVER Add Features Not Requested
+
+```typescript
+// ❌ WRONG - Adding unrequested features
+// User asks: "Add a delete button"
+// You add: Delete button + undo + confirmation + bulk delete + archive
+
+// ✅ CORRECT - Add only what's requested
+// User asks: "Add a delete button"
+// You add: Delete button with confirmation
+```
+
+## Summary: Critical DON'Ts
+
+1. ❌ **DON'T use NextAuth** - Custom JWT sessions only
+2. ❌ **DON'T use localStorage for tokens** - HTTP-only cookies
+3. ❌ **DON'T skip session verification** - First step in Server Actions
+4. ❌ **DON'T use "use client" by default** - Server Components first
+5. ❌ **DON'T fetch in Client Components** - Use Server Components
+6. ❌ **DON'T use React Query/SWR** - Native Next.js patterns
+7. ❌ **DON'T use `any` type** - Explicit types always
+8. ❌ **DON'T hardcode text** - Use translations
+9. ❌ **DON'T expose secrets** - Environment variables
+10. ❌ **DON'T trust client input** - Validate on server
+11. ❌ **DON'T use inline styles** - Tailwind classes
+12. ❌ **DON'T use <img>** - Next.js Image
+13. ❌ **DON'T import entire libraries** - Import only what you need
+14. ❌ **DON'T skip dark mode** - Always provide dark variants
+15. ❌ **DON'T over-engineer** - Keep solutions simple
+
+**Remember**: Follow established patterns. Consistency > novelty.

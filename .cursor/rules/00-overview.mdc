@@ -1,0 +1,38 @@
+# Project Overview
+
+## Application Type
+Multi-role rental property management platform
+
+## Tech Stack
+- **Framework**: Next.js 15 with App Router
+- **UI Library**: React 19
+- **Language**: TypeScript 5
+- **Styling**: Tailwind CSS 3.4
+- **Deployment**: Cloudflare Pages
+
+## User Roles
+The application supports 5 distinct user roles with role-based access control:
+- **ADMIN** - Full system access, user/profile management
+- **SUPPORT** - Account verification, user administration
+- **LANDLORD** - Property/unit/contract management, tenant requests
+- **MANAGER** - Same as landlord (manages on behalf of property owners)
+- **RENTER** - Browse properties, submit applications, view contracts
+
+## Key Features
+- Multi-profile user system (one user, multiple roles)
+- Property management (4 types: Complex, Studio, Room, Apartment)
+- Contract & invoice management
+- Maintenance request system
+- Multi-language support (English/French)
+- Document uploads to Cloudflare R2
+- Role-based route protection via middleware
+
+## External Services
+- **Cloudflare Workers** - Backend API for user/property data
+- **Cloudflare R2** - Object storage for images/documents
+- **Firebase Auth** - Initial authentication only
+
+## Environment
+- Development: Turbopack
+- Production: Cloudflare Pages (Edge runtime)
+- Session: Custom JWT (HTTP-only cookies, 1hr expiry)

@@ -1,0 +1,415 @@
+# React 19 & Next.js 15 Patterns
+
+## Server Components vs Client Components
+
+### Default: Server Components
+
+**Use Server Components by default** - No `"use client"` directive needed.
+
+```typescript
+// ✅ Server Component (default)
+export default async function PropertiesPage() {
+  const properties = await getProperties() // Direct async call
+  return <PropertyList properties={properties} />
+}
+```
+
+**Benefits**:
+- Zero JavaScript sent to client
+- Direct database/API access
+- Better SEO and performance
+- Simpler data fetching
+
+### When to Use Client Components
+
+Add `"use client"` ONLY when you need:
+
+1. **React Hooks** - useState, useEffect, useContext, etc.
+2. **Event Handlers** - onClick, onChange, onSubmit
+3. **Browser APIs** - window, document, localStorage
+4. **Third-party libraries** that use hooks
+5. **React 19 features** - useOptimistic, useTransition, useFormStatus
+
+```typescript
+// ✅ Client Component (needs hooks)
+"use client"
+
+import { useState } from 'react'
+
+export function PropertyForm() {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const handleClick = () => setIsOpen(true)
+
+  return <button onClick={handleClick}>Open</button>
+}
+```
+
+## Server Actions Pattern
+
+### Structure
+
+```typescript
+"use server"
+
+import { verifySession } from '@/lib/session'
+import { revalidatePath } from 'next/cache'
+
+export async function createProperty(formData: IPropertyForm) {
+  // 1. Verify session
+  const session = await verifySession()
+  if (!session) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  // 2. Validate input
+  if (!formData.Title || !formData.TypeCode) {
+    return { success: false, error: 'Missing required fields' }
+  }
+
+  try {
+    // 3. Call external API
+    const response = await fetch(`${process.env.ASSET_BASE_URL}/api/v1/Asset`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      return { success: false, error: data.message || 'Failed to create property' }
+    }
+
+    // 4. Revalidate cache
+    revalidatePath('/landlord/properties')
+
+    // 5. Return success
+    return { success: true, data }
+  } catch (error) {
+    console.error('Create property error:', error)
+    return { success: false, error: 'An unexpected error occurred' }
+  }
+}
+```
+
+### Return Type Convention
+
+```typescript
+interface ActionResult<T = unknown> {
+  success: boolean
+  data?: T
+  error?: string
+}
+
+// Usage
+export async function myAction(): Promise<ActionResult<IUserData>> {
+  // Implementation
+}
+```
+
+## Form Handling with useTransition
+
+### Client Component Pattern
+
+```typescript
+"use client"
+
+import { useTransition } from 'react'
+import { createProperty } from '@/actions/assetAction'
+import { toast } from 'sonner'
+
+export function PropertyForm() {
+  const [isPending, startTransition] = useTransition()
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+
+    startTransition(async () => {
+      const result = await createProperty({
+        Title: formData.get('title') as string,
+        TypeCode: formData.get('type') as PropertyType,
+        Price: Number(formData.get('price')),
+        // ...
+      })
+
+      if (result.success) {
+        toast.success('Property created successfully')
+        // Reset form, redirect, etc.
+      } else {
+        toast.error(result.error)
+      }
+    })
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="title" required />
+      <button type="submit" disabled={isPending}>
+        {isPending ? 'Creating...' : 'Create Property'}
+      </button>
+    </form>
+  )
+}
+```
+
+## Data Fetching Patterns
+
+### Server Component (Preferred)
+
+```typescript
+// ✅ Fetch directly in Server Component
+export default async function PropertyPage({ params }: { params: { id: string } }) {
+  const session = await verifySession()
+
+  const response = await fetch(
+    `${process.env.ASSET_BASE_URL}/api/v1/Asset/${params.id}`,
+    {
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+      cache: 'no-store' // or 'force-cache' depending on needs
+    }
+  )
+
+  const property: AssetData = await response.json()
+
+  return <PropertyDetails property={property} />
+}
+```
+
+### Parallel Data Fetching
+
+```typescript
+export default async function Page() {
+  // Fetch in parallel
+  const [properties, users, contracts] = await Promise.all([
+    fetchProperties(),
+    fetchUsers(),
+    fetchContracts()
+  ])
+
+  return (
+    <>
+      <PropertyList properties={properties} />
+      <UserList users={users} />
+      <ContractList contracts={contracts} />
+    </>
+  )
+}
+```
+
+### Streaming with Suspense
+
+```typescript
+import { Suspense } from 'react'
+
+export default function Page() {
+  return (
+    <div>
+      <h1>Properties</h1>
+      <Suspense fallback={<PropertyListSkeleton />}>
+        <PropertyList />
+      </Suspense>
+    </div>
+  )
+}
+
+// In PropertyList component
+async function PropertyList() {
+  const properties = await fetchProperties() // Slow fetch
+  return <div>{/* Render properties */}</div>
+}
+```
+
+## Optimistic Updates with useOptimistic
+
+```typescript
+"use client"
+
+import { useOptimistic } from 'react'
+import { deleteProperty } from '@/actions/assetAction'
+
+export function PropertyList({ initialProperties }: { initialProperties: AssetData[] }) {
+  const [optimisticProperties, setOptimisticProperties] = useOptimistic(initialProperties)
+
+  const handleDelete = async (propertyCode: string) => {
+    // Optimistically remove from UI
+    setOptimisticProperties(prev => prev.filter(p => p.Code !== propertyCode))
+
+    // Perform actual deletion
+    const result = await deleteProperty(propertyCode)
+
+    if (!result.success) {
+      // Revert on error (Next.js will automatically revalidate)
+      toast.error(result.error)
+    }
+  }
+
+  return (
+    <>
+      {optimisticProperties.map(property => (
+        <PropertyCard key={property.Code} property={property} onDelete={handleDelete} />
+      ))}
+    </>
+  )
+}
+```
+
+## Cache and Revalidation
+
+### Revalidate Paths
+
+```typescript
+import { revalidatePath } from 'next/cache'
+
+export async function updateProperty(code: string, data: Partial<AssetData>) {
+  // Update property...
+
+  // Revalidate specific path
+  revalidatePath('/landlord/properties')
+
+  // Revalidate specific property page
+  revalidatePath(`/landlord/properties/${code}`)
+
+  // Revalidate all landlord routes
+  revalidatePath('/landlord', 'layout')
+}
+```
+
+### Revalidate Tags
+
+```typescript
+import { revalidateTag } from 'next/cache'
+
+// When fetching, tag the data
+const response = await fetch(url, {
+  next: { tags: ['properties'] }
+})
+
+// Later, revalidate by tag
+await revalidateTag('properties')
+```
+
+## Loading States
+
+### Page-level Loading
+
+```typescript
+// app/(dashboard)/landlord/properties/loading.tsx
+export default function Loading() {
+  return <PropertyListSkeleton />
+}
+```
+
+### Component-level Loading
+
+```typescript
+"use client"
+
+import { useFormStatus } from 'react-dom'
+
+function SubmitButton() {
+  const { pending } = useFormStatus()
+
+  return (
+    <button type="submit" disabled={pending}>
+      {pending ? 'Saving...' : 'Save'}
+    </button>
+  )
+}
+```
+
+## Error Handling
+
+### Error Boundary
+
+```typescript
+// app/(dashboard)/landlord/properties/error.tsx
+"use client"
+
+export default function Error({
+  error,
+  reset
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <p>{error.message}</p>
+      <button onClick={reset}>Try again</button>
+    </div>
+  )
+}
+```
+
+## Metadata (SEO)
+
+```typescript
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Properties | Rental Management',
+  description: 'Manage your rental properties',
+}
+
+// Dynamic metadata
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const property = await fetchProperty(params.id)
+
+  return {
+    title: property.Title,
+    description: property.Description
+  }
+}
+```
+
+## Route Groups
+
+Use for layout organization without affecting URLs:
+
+```typescript
+// app/(dashboard)/layout.tsx - applies to all dashboard routes
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return <div className="dashboard">{children}</div>
+}
+
+// app/(auth)/layout.tsx - applies to all auth routes
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  return <div className="auth">{children}</div>
+}
+```
+
+## Dynamic Routes
+
+```typescript
+// app/properties/[id]/page.tsx
+export default async function PropertyPage({ params }: { params: { id: string } }) {
+  const property = await fetchProperty(params.id)
+  return <PropertyDetails property={property} />
+}
+
+// Generate static params
+export async function generateStaticParams() {
+  const properties = await fetchAllProperties()
+
+  return properties.map(property => ({
+    id: property.Code
+  }))
+}
+```
+
+## Key Principles
+
+1. **Server Components by default** - Only use `"use client"` when necessary
+2. **Fetch data in Server Components** - Pass as props to Client Components
+3. **Use Server Actions for mutations** - Not API routes
+4. **useTransition for pending states** - Better UX during actions
+5. **Revalidate after mutations** - Keep UI in sync
+6. **Suspense for streaming** - Progressive loading
+7. **Error boundaries** - Graceful error handling
+8. **Type everything** - Props, params, return types

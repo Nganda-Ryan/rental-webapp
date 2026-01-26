@@ -4,10 +4,12 @@
 import { uploadFile } from '@/lib/fileUpload';
 import { verifySession } from '@/lib/session';
 import { getExtension } from '@/lib/utils';
-import { IPropertyApplication, IPropertyVerification } from '@/types/Property';
+import { IGetInvoiceList, IPropertyApplication, IPropertyVerification } from '@/types/Property';
 import { GetRequestsParams, ProfileApplication_T, VerifyRequestType } from '@/types/requestTypes';
 import axios, { AxiosInstance } from 'axios';
 import path from "node:path";
+import { dashboard } from './assetAction';
+import { IApproveApplicationRequest, SearchRequest } from '@/types/rentalRequest';
 
 /**
  * Pre-configured Axios instance for API calls.
@@ -313,6 +315,130 @@ export async function applyRequest(application: IPropertyApplication) {
     }
   } catch (error: any) {
     console.log('-->Action.ApplyRequest.error', error?.response?.data)
+    
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
+export async function getInvoiceList(payload: IGetInvoiceList) {
+  try {
+    const session = await verifySession();
+    const apiClient: AxiosInstance = axios.create({
+        baseURL: process.env.SEARCH_WORKER_ENDPOINT,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.accessToken}`,
+        },
+    });
+    const response = await apiClient.request({
+      method: 'POST',
+      url: `/api/v1/Invoices`,
+      data: {
+        query: payload
+      }
+    });
+
+    return {
+      code: null,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->Action.getInvoiceList.error', error?.response?.data)
+    
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
+export async function searchRequest(params: SearchRequest) {
+  try {
+    const session = await verifySession();
+    const apiClient: AxiosInstance = axios.create({
+        baseURL: process.env.SEARCH_WORKER_ENDPOINT,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.accessToken}`,
+        },
+    });
+    const response = await apiClient.request({
+      method: 'GET',
+      url: `/api/v1/Request`,
+      params: params
+    });
+
+    return {
+      code: null,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->Action.searchRequest.error', error?.response?.data)
+    
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}
+
+export async function approveApplicationRequest(payload: IApproveApplicationRequest): Promise<any> {
+  try {
+    const session = await verifySession();
+    const apiClient: AxiosInstance = axios.create({
+      baseURL: process.env.USER_BASE_URL,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.accessToken}`,
+      },
+    });
+    const response = await apiClient.request({
+      method: 'POST',
+      url: `/api/v1/Approval/Access`,
+      data: {
+        Approval: payload
+      }
+    });
+
+    return {
+      code: null,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->error',error?.response?.data)
     
     const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
     if (isRedirect) {

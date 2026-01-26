@@ -1,0 +1,400 @@
+# State Management
+
+## Principle: Minimize Global State
+
+**Prefer this order**:
+1. Server Components (fetch data, pass as props)
+2. React hooks (local state)
+3. Zustand (only for cross-cutting concerns)
+
+## Server State (Preferred)
+
+### Use Server Components + Server Actions
+
+**NO React Query, SWR, or similar libraries** - Use native Next.js patterns.
+
+```typescript
+// ✅ Server Component fetches data
+export default async function PropertiesPage() {
+  const properties = await fetchProperties()
+  return <PropertyList properties={properties} />
+}
+
+// ✅ Client Component receives data as props
+"use client"
+
+export function PropertyList({ properties }: { properties: AssetData[] }) {
+  return (
+    <>
+      {properties.map(property => (
+        <PropertyCard key={property.Code} property={property} />
+      ))}
+    </>
+  )
+}
+```
+
+### Mutations with Server Actions
+
+```typescript
+"use client"
+
+import { useTransition } from 'react'
+import { updateProperty } from '@/actions/assetAction'
+
+export function EditPropertyForm({ property }: { property: AssetData }) {
+  const [isPending, startTransition] = useTransition()
+
+  const handleSubmit = async (formData: FormData) => {
+    startTransition(async () => {
+      const result = await updateProperty(property.Code, {
+        Title: formData.get('title') as string
+      })
+
+      if (result.success) {
+        // Success handling
+      }
+    })
+  }
+
+  return <form action={handleSubmit}>...</form>
+}
+```
+
+## Local State (React Hooks)
+
+### useState for Component State
+
+```typescript
+"use client"
+
+import { useState } from 'react'
+
+export function PropertyForm() {
+  // Form state
+  const [formData, setFormData] = useState<IPropertyForm>({
+    Title: '',
+    TypeCode: 'STUDMOD',
+    Price: 0
+  })
+
+  // UI state
+  const [isOpen, setIsOpen] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  return (
+    // Component JSX
+  )
+}
+```
+
+### useReducer for Complex State
+
+```typescript
+"use client"
+
+import { useReducer } from 'react'
+
+type State = {
+  properties: AssetData[]
+  filter: string
+  sortBy: 'title' | 'price'
+}
+
+type Action =
+  | { type: 'SET_PROPERTIES'; payload: AssetData[] }
+  | { type: 'SET_FILTER'; payload: string }
+  | { type: 'SET_SORT'; payload: 'title' | 'price' }
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'SET_PROPERTIES':
+      return { ...state, properties: action.payload }
+    case 'SET_FILTER':
+      return { ...state, filter: action.payload }
+    case 'SET_SORT':
+      return { ...state, sortBy: action.payload }
+    default:
+      return state
+  }
+}
+
+export function PropertyManager() {
+  const [state, dispatch] = useReducer(reducer, {
+    properties: [],
+    filter: '',
+    sortBy: 'title'
+  })
+
+  // Use dispatch to update state
+  dispatch({ type: 'SET_FILTER', payload: 'apartment' })
+}
+```
+
+## Global State (Zustand) - Use Sparingly
+
+### Current Implementation
+
+**Only one global store**: `src/store/roleStore.ts`
+
+```typescript
+import { create } from 'zustand'
+
+interface RoleStore {
+  user: IUserData | null
+  activeRole: IProfile | null
+  setUser: (user: IUserData | null) => void
+  setActiveRole: (role: IProfile | null) => void
+  logout: () => void
+}
+
+export const useRoleStore = create<RoleStore>((set) => ({
+  user: null,
+  activeRole: null,
+  setUser: (user) => set({ user }),
+  setActiveRole: (role) => set({ activeRole: role }),
+  logout: () => set({ user: null, activeRole: null })
+}))
+```
+
+### Usage
+
+```typescript
+"use client"
+
+import { useRoleStore } from '@/store/roleStore'
+
+export function UserMenu() {
+  const { user, activeRole, logout } = useRoleStore()
+
+  if (!user) return null
+
+  return (
+    <div>
+      <p>{user.Firstname} {user.Lastname}</p>
+      <p>Role: {activeRole?.RoleCode}</p>
+      <button onClick={logout}>Logout</button>
+    </div>
+  )
+}
+```
+
+### When to Add Global State
+
+**ONLY add to Zustand if**:
+- Data is needed across many unrelated components
+- Passing props would be extremely cumbersome
+- Data doesn't change often
+- Examples: theme, user session, notifications
+
+**AVOID Zustand for**:
+- Data that can be fetched in Server Components
+- Form state (use local state)
+- Temporary UI state (use local state)
+- Data that only 2-3 components need (use props)
+
+## Context API - Rarely Needed
+
+With Server Components, Context API is rarely needed. Only use for:
+- Theme provider
+- Internationalization provider
+- Modal/Toast providers
+
+```typescript
+"use client"
+
+import { createContext, useContext, useState } from 'react'
+
+interface ModalContextType {
+  isOpen: boolean
+  openModal: () => void
+  closeModal: () => void
+}
+
+const ModalContext = createContext<ModalContextType | undefined>(undefined)
+
+export function ModalProvider({ children }: { children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <ModalContext.Provider
+      value={{
+        isOpen,
+        openModal: () => setIsOpen(true),
+        closeModal: () => setIsOpen(false)
+      }}
+    >
+      {children}
+    </ModalContext.Provider>
+  )
+}
+
+export function useModal() {
+  const context = useContext(ModalContext)
+  if (!context) {
+    throw new Error('useModal must be used within ModalProvider')
+  }
+  return context
+}
+```
+
+## URL State
+
+Use URL for shareable/bookmarkable state:
+
+```typescript
+"use client"
+
+import { useSearchParams, useRouter } from 'next/navigation'
+
+export function PropertyFilters() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  const currentFilter = searchParams.get('type') || 'all'
+
+  const handleFilterChange = (type: string) => {
+    const params = new URLSearchParams(searchParams)
+    params.set('type', type)
+    router.push(`?${params.toString()}`)
+  }
+
+  return (
+    <select value={currentFilter} onChange={(e) => handleFilterChange(e.target.value)}>
+      <option value="all">All Types</option>
+      <option value="STUDMOD">Studio</option>
+      <option value="APPART">Apartment</option>
+    </select>
+  )
+}
+```
+
+## Form State Management
+
+### Simple Forms - Controlled Components
+
+```typescript
+"use client"
+
+import { useState } from 'react'
+
+export function PropertyForm() {
+  const [title, setTitle] = useState('')
+  const [price, setPrice] = useState(0)
+
+  return (
+    <form>
+      <input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <input
+        type="number"
+        value={price}
+        onChange={(e) => setPrice(Number(e.target.value))}
+      />
+    </form>
+  )
+}
+```
+
+### Complex Forms - FormData
+
+```typescript
+"use client"
+
+export function PropertyForm() {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+
+    const data = {
+      title: formData.get('title') as string,
+      price: Number(formData.get('price')),
+      type: formData.get('type') as PropertyType
+    }
+
+    // Submit data
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="title" />
+      <input name="price" type="number" />
+      <select name="type">...</select>
+    </form>
+  )
+}
+```
+
+## Data Synchronization
+
+### Optimistic Updates
+
+```typescript
+"use client"
+
+import { useOptimistic } from 'react'
+
+export function PropertyList({ properties }: { properties: AssetData[] }) {
+  const [optimisticProperties, addOptimisticProperty] = useOptimistic(
+    properties,
+    (state, newProperty: AssetData) => [...state, newProperty]
+  )
+
+  const handleCreate = async (formData: IPropertyForm) => {
+    // Optimistically add to UI
+    const tempProperty: AssetData = {
+      Code: 'temp-' + Date.now(),
+      ...formData,
+      IsActive: 1,
+      CreatedAt: new Date().toISOString()
+    }
+    addOptimisticProperty(tempProperty)
+
+    // Actual creation
+    const result = await createProperty(formData)
+
+    // Next.js will revalidate and update with real data
+  }
+
+  return (
+    <>
+      {optimisticProperties.map(property => (
+        <PropertyCard key={property.Code} property={property} />
+      ))}
+    </>
+  )
+}
+```
+
+## State Management Decision Tree
+
+```
+Need state?
+  ↓
+  ├─ Can Server Component fetch it?
+  │  └─ YES → Use Server Component ✅
+  │
+  ├─ Only 1-2 components need it?
+  │  └─ YES → Use local state (useState/useReducer) ✅
+  │
+  ├─ Need to share across URL?
+  │  └─ YES → Use URL search params ✅
+  │
+  ├─ Needs to persist across navigation?
+  │  └─ YES → Consider cookies/localStorage + local state ✅
+  │
+  └─ Cross-cutting concern (theme, user, etc.)?
+     └─ YES → Use Zustand (sparingly) ✅
+```
+
+## Key Principles
+
+1. **Server Components first** - Fetch and pass as props
+2. **Local state for UI** - useState, useReducer
+3. **URL for shareable state** - Search params, routes
+4. **Zustand only when necessary** - Cross-cutting concerns
+5. **No React Query/SWR** - Use native Next.js patterns
+6. **Optimistic updates** - Use useOptimistic for better UX
+7. **Server Actions for mutations** - Automatic revalidation

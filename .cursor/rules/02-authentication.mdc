@@ -1,0 +1,137 @@
+# Authentication & Authorization
+
+## ⚠️ CRITICAL: We DO NOT use NextAuth
+
+Despite the package being installed, this project uses a **custom JWT-based session system**.
+
+## Authentication Flow
+
+```
+1. User signs in with Firebase Auth
+   ↓
+2. Frontend receives Firebase JWT
+   ↓
+3. Backend validates Firebase token
+   ↓
+4. Backend fetches user from Cloudflare Workers API
+   ↓
+5. Backend creates custom JWT session (user data + roles)
+   ↓
+6. Session stored in HTTP-only cookie
+   ↓
+7. Session expires after 1 hour (30min grace period)
+```
+
+## Session Management
+
+**Location**: `src/lib/session.ts`
+
+**Core Functions**:
+```typescript
+// Create new session
+await createSession({
+  user: userData,
+  accessToken: firebaseToken
+})
+
+// Verify existing session
+const session = await verifySession()
+
+// Delete session (logout)
+await deleteSession()
+
+// Decrypt session cookie
+const session = await decrypt(cookieValue)
+```
+
+**ALWAYS verify session in Server Actions**:
+```typescript
+"use server"
+
+export async function myAction() {
+  const session = await verifySession()
+  if (!session) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  // Continue with action...
+}
+```
+
+## Authorization (Route Protection)
+
+**Middleware Location**: `src/middleware.ts`
+
+**How it works**:
+1. Middleware intercepts ALL requests to protected routes
+2. Decrypts session cookie
+3. Validates user has required role for the route
+4. Redirects unauthorized users to `/unauthorized`
+
+**Route-to-Role Mappings** (defined in middleware):
+- `ADMIN` → `/support/*`, `/settings/*`, `/profile/*`, `/images/*`, `/payment/*`
+- `SUPPORT` → `/support/*`, `/settings/*`, `/profile/*`, `/images/*`, `/payment/*`
+- `LANDLORD` → `/landlord/*`, `/renter/*`, `/settings/*`, `/profile/*`, `/images/*`, `/payment/*`
+- `MANAGER` → `/manager/*`, `/settings/*`, `/profile/*`, `/images/*`, `/payment/*`
+- `RENTER` → `/renter/*`, `/settings/*`, `/profile/*`, `/images/*`, `/payment/*`
+
+## Role Management
+
+**Client-Side State**: `src/store/roleStore.ts` (Zustand)
+
+**Usage**:
+```typescript
+// Get current user and active role
+const { user, activeRole } = useRoleStore()
+
+// Check role
+if (activeRole?.RoleCode === 'LANDLORD') {
+  // Landlord-specific logic
+}
+```
+
+**Role Constants**: `src/constant/index.ts`
+```typescript
+const ROLES = {
+  ADMIN: 'ADMIN',
+  SUPPORT: 'SUPPORT',
+  LANDLORD: 'LANDLORD',
+  MANAGER: 'MANAGER',
+  RENTER: 'RENTER'
+} as const
+```
+
+## Multi-Profile Support
+
+Users can have **multiple profiles/roles**:
+```typescript
+interface IUserData {
+  Code: string
+  Email: string
+  Profiles: IProfile[] // Multiple roles
+  // ...
+}
+
+interface IProfile {
+  Code: string
+  UserCode: string
+  RoleCode: 'ADMIN' | 'SUPPORT' | 'LANDLORD' | 'MANAGER' | 'RENTER'
+  Status: 'ACTIVE' | 'INACTIVE'
+}
+```
+
+## Security Rules
+
+1. **NEVER implement route protection in components** - Middleware handles it
+2. **NEVER store tokens in localStorage** - Use HTTP-only cookies
+3. **ALWAYS verify session in Server Actions** - First step of every action
+4. **NEVER expose session data to client** - Keep sensitive data server-side
+5. **Use session.accessToken** for API calls to Cloudflare Workers
+
+## Firebase Usage
+
+**ONLY for initial authentication** - Not for database, storage, etc.
+
+**Location**: `src/lib/firebase.ts`
+
+**Persistence**: Browser session only (not local)

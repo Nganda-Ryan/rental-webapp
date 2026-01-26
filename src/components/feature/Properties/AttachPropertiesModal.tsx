@@ -12,23 +12,9 @@ import { useTranslations } from "next-intl";
 import { ASSET_TYPE_COMPLEXE } from "@/constant";
 import Button from "@/components/ui/Button";
 import { roleStore } from "@/store/roleStore";
+import { PropertyCard } from "./PropertyCard";
+import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 
-interface Property {
-  Code: string;
-  Name: string;
-  Type: string;
-  Price: number;
-  Currency: string;
-  CoverUrl: string;
-  AddressData: {
-    City: string;
-    Street: string;
-    Country: string;
-  };
-  Tag: string[];
-  Notes: string;
-  BillingItems: string[];
-}
 
 interface AttachPropertiesModalProps {
   onClose: () => void;
@@ -43,7 +29,6 @@ export const AttachPropertiesModal = ({
 }: AttachPropertiesModalProps) => {
   const [selectedProperty, setSelectedProperty] = useState<AssetData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  // const [propertyList, setPropertyList] = useState<Property[]>([]);
   const [isFetchingProperties, setIsFetchingProperties] = useState(false);
   const [isAttaching, setIsAttaching] = useState(false);
   const commonT = useTranslations('Common');
@@ -54,9 +39,9 @@ export const AttachPropertiesModal = ({
   const [filteredAssets, setFilteredAssets] = useState<AssetData[]>([]);
   const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    listRef.current && autoAnimate(listRef.current, { duration: 300 });
-  }, []);
+  // useEffect(() => {
+  //   listRef.current && autoAnimate(listRef.current, { duration: 300 });
+  // }, []);
 
   const filteredProperties = assetList.filter(
     (property) =>
@@ -243,63 +228,6 @@ export const AttachPropertiesModal = ({
           </div>
         </div>
       )}
-    </div>
-  );
-};
-
-const PropertyCard = ({
-  property,
-  handleSelectProperty,
-}: {
-  property: AssetData;
-  handleSelectProperty: (property: AssetData) => void;
-}) => {
-  return (
-    <div
-      onClick={() => handleSelectProperty(property)}
-      className="group border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800 hover:shadow-sm transition-all cursor-pointer hover:border-blue-500"
-    >
-      <div className="flex items-center gap-4">
-        <div className="flex-shrink-0 w-16 h-16">
-          <Image
-            height={200}
-            width={200}
-            src={`${property.CoverUrl}` || '#'}
-            alt={property.Title}
-            className="w-full h-full object-cover rounded"
-          />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-base text-gray-800 dark:text-white leading-snug mb-1">
-            {property.Title}
-          </h3>
-          <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-            <p className="flex items-center gap-2">
-              <MapPin size={14} className="text-blue-500" />
-              {property.Address.City}
-            </p>
-            <p className="flex items-center gap-2">
-              <DollarSign size={14} className="text-green-500" />
-              {property.Price} {property.Currency}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const PropertyCardSkeleton = () => {
-  return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800">
-      <div className="flex items-center gap-4">
-        <div className="flex-shrink-0 w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2" />
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/3" />
-        </div>
-      </div>
     </div>
   );
 };

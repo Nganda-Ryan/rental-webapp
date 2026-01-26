@@ -1,0 +1,546 @@
+# Styling & UI Guidelines
+
+## Tailwind CSS
+
+### Custom Theme
+
+**Configuration**: `tailwind.config.ts`
+
+**Custom Colors**:
+```typescript
+colors: {
+  primary: '#3C50E0',
+  secondary: '#80CAEE',
+  'blue-marin': '#083959',
+  // Plus default colors
+}
+```
+
+**Custom Breakpoints**:
+```typescript
+screens: {
+  '2xsm': '375px',
+  'xsm': '425px',
+  'sm': '640px',
+  'md': '768px',
+  'lg': '1024px',
+  'xl': '1280px',
+  '2xl': '1536px',
+  '3xl': '2000px'
+}
+```
+
+### Usage Patterns
+
+```typescript
+// ✅ Use custom theme colors
+<button className="bg-primary text-white hover:bg-primary/90">
+
+// ✅ Responsive design (mobile-first)
+<div className="w-full md:w-1/2 lg:w-1/3 3xl:w-1/4">
+
+// ✅ Dark mode support
+<div className="bg-white dark:bg-gray-dark text-black dark:text-white">
+```
+
+### Dark Mode
+
+**Strategy**: Class-based (`darkMode: 'class'` in config)
+
+```typescript
+// ✅ Always provide dark mode variants
+<div className="bg-white dark:bg-boxdark">
+<p className="text-black dark:text-white">
+<button className="bg-primary dark:bg-primary-dark">
+```
+
+### Responsive Design
+
+**Mobile-first approach**:
+
+```typescript
+// ✅ Start with mobile, add larger breakpoints
+<div className="
+  p-4
+  md:p-6
+  lg:p-8
+  xl:p-10
+">
+
+// ✅ Grid layout
+<div className="
+  grid
+  grid-cols-1
+  md:grid-cols-2
+  lg:grid-cols-3
+  xl:grid-cols-4
+  gap-4
+">
+```
+
+### Common Patterns
+
+```typescript
+// Card
+<div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+
+// Button Primary
+<button className="flex justify-center rounded bg-primary p-3 font-medium text-gray hover:bg-opacity-90">
+
+// Input
+<input className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+```
+
+## Typography
+
+### Fonts
+
+**Custom fonts** (defined in Tailwind config):
+
+```typescript
+fontFamily: {
+  satoshi: ['Satoshi', 'sans-serif'],     // Primary font
+  glancyr: ['Glancyr', 'serif']            // Decorative font
+}
+```
+
+**Usage**:
+```typescript
+<h1 className="font-satoshi text-2xl font-bold">
+<p className="font-glancyr text-lg">
+```
+
+### Text Sizes
+
+```typescript
+// Headings
+<h1 className="text-3xl font-bold">
+<h2 className="text-2xl font-bold">
+<h3 className="text-xl font-semibold">
+
+// Body
+<p className="text-base">
+<p className="text-sm text-body">
+<span className="text-xs text-bodydark">
+```
+
+## Component Libraries
+
+### Radix UI
+
+**Installed Components**:
+- `@radix-ui/react-dialog` - Modals/Dialogs
+- `@radix-ui/react-popover` - Popovers
+- `@radix-ui/react-select` - Select dropdowns
+- `@radix-ui/react-toast` - Toast notifications
+
+**Usage**:
+```typescript
+import * as Dialog from '@radix-ui/react-dialog'
+
+export function Modal({ children }: { children: React.ReactNode }) {
+  return (
+    <Dialog.Root>
+      <Dialog.Trigger asChild>
+        <button>Open</button>
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/50" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6">
+          {children}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
+```
+
+### Headless UI
+
+**Usage for accessible components**:
+
+```typescript
+import { Menu, Transition } from '@headlessui/react'
+
+export function Dropdown() {
+  return (
+    <Menu as="div" className="relative">
+      <Menu.Button className="...">Options</Menu.Button>
+      <Transition>
+        <Menu.Items className="...">
+          <Menu.Item>
+            {({ active }) => (
+              <button className={active ? 'bg-primary' : ''}>
+                Edit
+              </button>
+            )}
+          </Menu.Item>
+        </Menu.Items>
+      </Transition>
+    </Menu>
+  )
+}
+```
+
+## Icons
+
+### Lucide React (Preferred)
+
+**ONLY use Lucide React** - No other icon libraries.
+
+```typescript
+import { Home, User, Settings, LogOut, Plus, Edit, Trash2 } from 'lucide-react'
+
+export function Navigation() {
+  return (
+    <nav>
+      <button>
+        <Home className="h-5 w-5" />
+        <span>Home</span>
+      </button>
+      <button>
+        <User className="h-5 w-5" />
+        <span>Profile</span>
+      </button>
+    </nav>
+  )
+}
+```
+
+**Common icons**:
+- `Home`, `User`, `Settings`, `LogOut`
+- `Plus`, `Edit`, `Trash2`, `Save`
+- `ChevronDown`, `ChevronUp`, `ChevronLeft`, `ChevronRight`
+- `Search`, `Filter`, `X`
+- `Check`, `AlertCircle`, `Info`
+
+## Images
+
+### Next.js Image Component
+
+**ALWAYS use Next.js Image** for optimization:
+
+```typescript
+import Image from 'next/image'
+
+export function PropertyCard({ property }: { property: AssetData }) {
+  return (
+    <div>
+      <Image
+        src={property.CoverUrl}
+        alt={property.Title}
+        width={400}
+        height={300}
+        className="object-cover rounded-lg"
+        priority={false} // Set to true for above-fold images
+      />
+    </div>
+  )
+}
+```
+
+### Image Shimmer Effect
+
+```typescript
+<Image
+  src={imageUrl}
+  alt={alt}
+  width={400}
+  height={300}
+  className="object-cover"
+  placeholder="blur"
+  blurDataURL="data:image/svg+xml;base64,..."
+/>
+```
+
+### Cloudflare R2 Images
+
+```typescript
+// Images are hosted on R2
+const imageUrl = 'https://pub-5482c8c79e08450d875d1ba6b0afe368.r2.dev/properties/image.jpg'
+
+<Image
+  src={imageUrl}
+  alt="Property"
+  width={800}
+  height={600}
+  className="w-full h-auto"
+/>
+```
+
+## Animations
+
+### Framer Motion
+
+```typescript
+import { motion } from 'framer-motion'
+
+export function FadeIn({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+```
+
+### @formkit/auto-animate
+
+For automatic list animations:
+
+```typescript
+import { useAutoAnimate } from '@formkit/auto-animate/react'
+
+export function PropertyList({ properties }: { properties: AssetData[] }) {
+  const [parent] = useAutoAnimate()
+
+  return (
+    <ul ref={parent}>
+      {properties.map(property => (
+        <li key={property.Code}>
+          <PropertyCard property={property} />
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+## Data Visualization
+
+### Chart.js
+
+```typescript
+import { Line, Bar, Pie } from 'react-chartjs-2'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+)
+
+export function RevenueChart({ data }: { data: number[] }) {
+  return (
+    <Line
+      data={{
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+          label: 'Revenue',
+          data: data,
+          borderColor: '#3C50E0',
+          backgroundColor: 'rgba(60, 80, 224, 0.1)'
+        }]
+      }}
+      options={{
+        responsive: true,
+        maintainAspectRatio: false
+      }}
+    />
+  )
+}
+```
+
+### ApexCharts
+
+```typescript
+import dynamic from 'next/dynamic'
+
+const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+  ssr: false
+})
+
+export function PieChart({ data }: { data: number[] }) {
+  return (
+    <ReactApexChart
+      options={{
+        labels: ['Studio', 'Apartment', 'Complex', 'Room'],
+        colors: ['#3C50E0', '#80CAEE', '#083959', '#10B981']
+      }}
+      series={data}
+      type="pie"
+      height={350}
+    />
+  )
+}
+```
+
+### ag-grid-react (Data Tables)
+
+```typescript
+import { AgGridReact } from 'ag-grid-react'
+import 'ag-grid-community/styles/ag-grid.css'
+import 'ag-grid-community/styles/ag-theme-alpine.css'
+
+export function PropertyTable({ properties }: { properties: AssetData[] }) {
+  return (
+    <div className="ag-theme-alpine" style={{ height: 400, width: '100%' }}>
+      <AgGridReact
+        rowData={properties}
+        columnDefs={[
+          { field: 'Title', sortable: true, filter: true },
+          { field: 'TypeCode', sortable: true, filter: true },
+          { field: 'Price', sortable: true, filter: true }
+        ]}
+      />
+    </div>
+  )
+}
+```
+
+## Form Components
+
+### Input
+
+```typescript
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string
+  error?: string
+}
+
+export function Input({ label, error, ...props }: InputProps) {
+  return (
+    <div className="mb-4">
+      {label && (
+        <label className="mb-2.5 block text-black dark:text-white">
+          {label}
+        </label>
+      )}
+      <input
+        className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+        {...props}
+      />
+      {error && (
+        <p className="mt-1 text-sm text-danger">{error}</p>
+      )}
+    </div>
+  )
+}
+```
+
+### Button
+
+```typescript
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'danger'
+  size?: 'sm' | 'md' | 'lg'
+}
+
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  children,
+  className,
+  ...props
+}: ButtonProps) {
+  const baseClasses = 'inline-flex items-center justify-center rounded font-medium transition'
+
+  const variantClasses = {
+    primary: 'bg-primary text-white hover:bg-opacity-90',
+    secondary: 'bg-secondary text-white hover:bg-opacity-90',
+    danger: 'bg-danger text-white hover:bg-opacity-90'
+  }
+
+  const sizeClasses = {
+    sm: 'px-3 py-2 text-sm',
+    md: 'px-5 py-3 text-base',
+    lg: 'px-6 py-4 text-lg'
+  }
+
+  return (
+    <button
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
+```
+
+## Layout Components
+
+### Container
+
+```typescript
+export function Container({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+      {children}
+    </div>
+  )
+}
+```
+
+### Card
+
+```typescript
+export function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      {children}
+    </div>
+  )
+}
+```
+
+## Accessibility
+
+### WCAG Compliance
+
+```typescript
+// ✅ Always include alt text
+<Image src={url} alt="Property exterior view" />
+
+// ✅ Use semantic HTML
+<nav>, <main>, <article>, <section>, <aside>
+
+// ✅ Keyboard navigation
+<button
+  onClick={handleClick}
+  onKeyDown={(e) => e.key === 'Enter' && handleClick()}
+  tabIndex={0}
+>
+
+// ✅ ARIA labels when needed
+<button aria-label="Close dialog">
+  <X className="h-5 w-5" />
+</button>
+
+// ✅ Focus management
+<input
+  ref={inputRef}
+  onFocus={() => setFocused(true)}
+  onBlur={() => setFocused(false)}
+/>
+```
+
+## Key Principles
+
+1. **Tailwind first** - No inline styles, use Tailwind classes
+2. **Mobile-first** - Start with mobile, add larger breakpoints
+3. **Dark mode** - Always provide dark variants
+4. **Lucide icons only** - Consistent icon system
+5. **Next.js Image** - For all images
+6. **Semantic HTML** - Use proper HTML5 elements
+7. **Accessibility** - Alt text, ARIA labels, keyboard navigation
+8. **Consistent spacing** - Use Tailwind spacing scale
+9. **Custom theme** - Use defined colors and fonts
+10. **Component reuse** - Create reusable UI components

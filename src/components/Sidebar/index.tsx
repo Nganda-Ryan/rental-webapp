@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   UserCog,
   Users,
+  FileText,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import logoImage from "../../../public/images/logo.svg";
@@ -61,6 +62,13 @@ const ALL_MENU_GROUPS = [
         label: "Properties",
         labelKey: "properties",
         route: "/landlord/properties",
+        profiles: ["LANDLORD"],
+      },
+      {
+        icon: <FileText size={20} />,
+        label: "Requests",
+        labelKey: "applicationsReceived",
+        route: "/landlord/requests",
         profiles: ["LANDLORD"],
       },
       {
