@@ -30,9 +30,13 @@ import Nodata from "@/components/error/Nodata";
 // Actions
 import { inviteManager, attachAsset, assetDashboard, deactivateAsset, activateAsset, deleteAsset } from "@/actions/assetAction";
 import { requestPropertyVerification } from "@/actions/requestAction";
-import { IInvoiceForm, IPropertyVerification, IPropertyVerificationDoc, IAttachSimpleAssetToCplx, AssetData, IGetAssetDashboard } from "@/types/Property";
+import { IInvoiceForm, IPropertyVerification, IPropertyVerificationDoc, IAttachSimpleAssetToCplx, AssetData, IGetAssetDashboard, IContractDetail, AssetDataDetailed as PropertyAssetDataDetailed } from "@/types/Property";
+import type { PropertyRequestItem } from "@/config/propertyTableColumns";
 import { IInviteManagerRequest, IUser } from "@/types/user";
 import { QuickActionItem } from "@/components/ui/QuickAction";
+import { ContractPdfViewerModal } from "@/components/feature/Properties/ContractPdfViewerModal";
+import { RequestDetailModal } from "@/components/feature/Properties/RequestDetailModal";
+import Overlay from "@/components/Overlay";
 
 const PropertyDetail = () => {
   const params = useParams();
@@ -101,6 +105,8 @@ const PropertyDetail = () => {
   const [isActivating, setIsActivating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [actionType, setActionType] = useState<'deactivate' | 'activate' | 'delete' | null>(null);
+  const [pdfViewerContract, setPdfViewerContract] = useState<IContractDetail | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<PropertyRequestItem | null>(null);
 
   // Effects
   useEffect(() => {
@@ -117,6 +123,7 @@ const PropertyDetail = () => {
         setIsLoadingDashboard(true);
         try {
           const result = await assetDashboard(asset.Code);
+          console.log('-->assetDashboard.result', result)
           if (result.data?.body) {
             setDashboardData(result.data.body as IGetAssetDashboard);
           } else if (result.error) {
@@ -418,7 +425,6 @@ const PropertyDetail = () => {
     onDeleteAsset: handleDeleteAsset,
     isAssetActive: asset?.IsActive === 1,
   });
-  console.log('quickActions', quickActions)
 
   // Main content
   const mainContent = asset ? (
@@ -427,10 +433,6 @@ const PropertyDetail = () => {
         asset={asset}
         tenantInfo={tenantInfo}
         showImage={true}
-      />
-      <AssetDashboard
-        dashboardData={dashboardData}
-        isLoading={isLoadingDashboard}
       />
       <AssetSections
         asset={asset}
@@ -442,7 +444,13 @@ const PropertyDetail = () => {
         showInvoices={asset.Type !== ASSET_TYPE_COMPLEXE}
         showContracts={asset.Type !== ASSET_TYPE_COMPLEXE}
         onContractClick={handleSelectedContract}
+        onViewContractPdf={(c) => setPdfViewerContract(c)}
+        onViewRequestDetail={(item) => setSelectedRequest(item)}
         onUnitClick={handleSelectUnit}
+      />
+      <AssetDashboard
+        dashboardData={dashboardData}
+        isLoading={isLoadingDashboard}
       />
     </>
   ) : (
@@ -524,6 +532,41 @@ const PropertyDetail = () => {
         actionTitle={actionType === 'deactivate' ? commonT('deactivateProperty') : actionType === 'activate' ? commonT('activateProperty') : undefined}
         actionMessage={actionType === 'deactivate' ? `${commonT('confirmDeactivateProperty')} ${asset?.Name || ''}?` : actionType === 'activate' ? `${commonT('confirmActivateProperty')} ${asset?.Name || ''}?` : undefined}
       />
+
+      {/* Request detail modal - at page level to avoid layout shift */}
+      <Overlay isOpen={!!selectedRequest} onClose={() => setSelectedRequest(null)}>
+        <RequestDetailModal request={selectedRequest} onClose={() => setSelectedRequest(null)} />
+      </Overlay>
+
+      {/* Contract PDF viewer modal */}
+      {pdfViewerContract && asset && user && (
+        <ContractPdfViewerModal
+          isOpen={!!pdfViewerContract}
+          onClose={() => setPdfViewerContract(null)}
+          contract={pdfViewerContract}
+          asset={{
+            Code: asset.Code,
+            Title: asset.Name,
+            Price: asset.Rent,
+            Currency: 'XOF',
+            Permission: [],
+            CoverUrl: asset.Image ?? '',
+            StatusCode: asset.Status,
+            IsActive: asset.IsActive ?? 1,
+            TypeCode: asset.Type,
+            IsVerified: asset.IsVerified ? 1 : 0,
+            whoIs: asset.OwnerCode ?? '',
+            BillingItems: asset.BillingItems?.map((b) => (typeof b === 'string' ? b : b.label)) ?? [],
+            Address: {
+              Code: '',
+              City: asset.City,
+              Country: asset.Country,
+              Street: asset.Address,
+            },
+          } as PropertyAssetDataDetailed}
+          contractor={user}
+        />
+      )}
     </DefaultLayout>
   );
 };

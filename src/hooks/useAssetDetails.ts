@@ -142,9 +142,10 @@ export function useAssetDetails({
       setError(null);
 
       const result = await getAsset(assetId);
-      console.log('getAsset result', result.data.body?.ConfigPermissionList);
-      if (!result?.data?.body?.assetData) {
-        if (result.error) {
+      const body = result?.data?.body;
+      console.log('getAsset result', body?.ConfigPermissionList);
+      if (!body?.assetData) {
+        if (result?.error) {
           if (result.code === 'SESSION_EXPIRED') {
             router.push('/signin');
             return;
@@ -153,10 +154,11 @@ export function useAssetDetails({
         }
         throw new Error('Asset not found');
       }
-      setPermissionList(result.data.body?.ConfigPermissionList)
+      setPermissionList(body.ConfigPermissionList ?? []);
+      console.log('permissionList', body.ConfigPermissionList);
+      console.log('result.data.body', body);
 
-      const item = result.data.body.assetData;
-      const body = result.data.body;
+      const item = body.assetData;
 
       // Transform asset data
       const assetData: AssetDataDetailed = {
@@ -195,9 +197,10 @@ export function useAssetDetails({
         IsActive: item.IsActive, // 1 or 0
       };
 
-      // Transform units (for properties only)
-      const unitsData = assetType === AssetType.PROPERTY && item.assets
-        ? transformUnits(item.assets ?? [])
+      // Transform units (for properties only); API may return assets or Units
+      const rawUnits = item.assets ?? item.Units ?? [];
+      const unitsData = assetType === AssetType.PROPERTY && Array.isArray(rawUnits)
+        ? transformUnits(rawUnits)
         : [];
 
         console.log('unitsData', unitsData)

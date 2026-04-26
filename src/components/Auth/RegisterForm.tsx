@@ -65,7 +65,7 @@ export const RegisterForm = () => {
         country: data.country as string,
       }
       const result = await signUpAction(payload);
-
+      console.log(result);
       if(result){
         if(result?.error){
           if(result.code == "validation"){

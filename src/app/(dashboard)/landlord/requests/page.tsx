@@ -53,6 +53,7 @@ export default function Request() {
         offset: offset.toString(),
         page: currentPage.toString(),
         term: debouncedSearchTerm.trim() || undefined,
+        ApplyUser: false
       };
       
       console.log('-->searchRequest params', params);

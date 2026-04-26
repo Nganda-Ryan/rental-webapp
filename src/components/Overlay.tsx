@@ -40,7 +40,7 @@ const Overlay = ({children, isOpen, onClose} : Props) => {
             className={`fixed -inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-[1000000]`}
             onClick={handleOverlayClick}
         >
-            <div onClick={handleOverlayClick} ref={overlayRef2} className='w-full p-2'>
+            <div onClick={handleOverlayClick} ref={overlayRef2} className='w-full min-h-full flex items-center justify-center p-4'>
                 {children}
             </div>
         </div>

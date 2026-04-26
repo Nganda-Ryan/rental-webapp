@@ -1,12 +1,13 @@
-import React from 'react';
-import { House, FileText } from 'lucide-react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { House, FileText, MessageSquare } from 'lucide-react';
 import { useRouter } from '@bprogress/next/app';
 import { useTranslations } from 'next-intl';
 import SectionWrapper from '@/components/Cards/SectionWrapper';
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
-import { getContractColumns, getInvoiceColumns, getUnitColumns } from '@/config/propertyTableColumns';
+import { getContractColumns, getInvoiceColumns, getUnitColumns, getRequestColumns, type PropertyRequestItem } from '@/config/propertyTableColumns';
 import { AssetDataDetailed, ContractData, InvoiceData, UnitData } from '@/types/AssetHooks';
 import { IUser } from '@/types/user';
+import { searchRequest } from '@/actions/requestAction';
 
 export interface AssetSectionsProps {
   /** Asset data */
@@ -25,14 +26,18 @@ export interface AssetSectionsProps {
   showInvoices?: boolean;
   /** Whether to show contracts section */
   showContracts?: boolean;
-  /** Handler for contract click */
+  /** Handler for contract click (navigate to detail) */
   onContractClick?: (contractId: string) => void;
+  /** Handler to open PDF viewer for a contract */
+  onViewContractPdf?: (contract: import('@/types/Property').IContractDetail) => void;
   /** Handler for invoice click */
   onInvoiceClick?: (invoiceId: string) => void;
   /** Handler for unit click */
   onUnitClick?: (unitId: string) => void;
   /** Handler for invoice update */
   onInvoiceUpdate?: (invoice: any) => void;
+  /** Handler to open request detail (modal at page level) */
+  onViewRequestDetail?: (item: PropertyRequestItem) => void;
 }
 
 /**
@@ -49,22 +54,75 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
   showInvoices = true,
   showContracts = true,
   onContractClick,
+  onViewContractPdf,
   onInvoiceClick,
   onUnitClick,
   onInvoiceUpdate,
+  onViewRequestDetail,
 }) => {
   const router = useRouter();
   const t = useTranslations('Common');
-  console.log('contracts', contracts)
+  const [requests, setRequests] = useState<PropertyRequestItem[]>([]);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
 
-  // Get column configurations
-  const contractColumns = user ? getContractColumns(asset as any, user) : [];
+  const fetchRequests = useCallback(async () => {
+    if (!asset?.Code) return;
+    setIsLoadingRequests(true);
+    try {
+      const result = await searchRequest({
+        parentCodes: asset.Code,
+        orderBy: 'SubmittedDate',
+        orderMode: 'desc',
+        limit: '20',
+      });
+      if (result.data?.body?.items) {
+        setRequests(
+          result.data.body.items.map((item: any) => ({
+            Code: item.Code,
+            StatusCode: item.StatusCode,
+            SubmittedDate: item.SubmittedDate,
+            CreatedAt: item.CreatedAt,
+            Object: item.Object,
+            Description: item.Description,
+            creator: item.creator,
+          }))
+        );
+      }
+    } catch {
+      setRequests([]);
+    } finally {
+      setIsLoadingRequests(false);
+    }
+  }, [asset?.Code]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  // Get column configurations (Detail + View PDF actions)
+  const contractColumns = user
+    ? getContractColumns(asset as any, user, {
+        onViewDetail: onContractClick,
+        onViewPdf: onViewContractPdf,
+      })
+    : [];
   const invoiceColumns = onInvoiceUpdate ? getInvoiceColumns(onInvoiceUpdate) : [];
   const unitColumns = getUnitColumns(asset as any, (unitCode) => {
     if (onUnitClick) {
       onUnitClick(unitCode);
     }
   }, t);
+
+  const handleViewRequestDetail = useCallback(
+    (item: PropertyRequestItem) => {
+      onViewRequestDetail?.(item);
+    },
+    [onViewRequestDetail]
+  );
+  const requestColumns = useMemo(
+    () => getRequestColumns(handleViewRequestDetail, t),
+    [handleViewRequestDetail, t]
+  );
 
   if (!asset) {
     return null;
@@ -73,28 +131,88 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
   return (
     <>
       {/* UNITS SECTION - For complex properties */}
-      {showUnits && units.length > 0 && (
+      {showUnits && (
         <SectionWrapper title={t('units')} Icon={House}>
+          {units.length > 0 ? (
+            <ResponsiveTable
+              columns={unitColumns}
+              data={units.slice(0, 3)}
+              onRowClick={(unit) => onUnitClick && onUnitClick(unit.Code)}
+              keyField="Code"
+              searchKey="Name"
+              showMore={
+                units.length > 3
+                  ? {
+                      url: `/landlord/properties/${asset.Code}/units`,
+                      label: t('showMoreUnits'),
+                    }
+                  : undefined
+              }
+            />
+          ) : (
+            <>
+              <p className="text-gray-500 dark:text-gray-400 text-sm p-3">
+                {t('noUnitsAvailable')}
+              </p>
+              <a
+                href={`/landlord/properties/${asset.Code}/units`}
+                className="text-sm text-primary-600 dark:text-primary-400 hover:underline px-3 pb-2 block"
+                onClick={(e) => {
+                  e.preventDefault();
+                  router.push(`/landlord/properties/${asset.Code}/units`);
+                }}
+              >
+                {t('viewOrAddUnits')}
+              </a>
+            </>
+          )}
+        </SectionWrapper>
+      )}
+
+      {/* REQUESTS SECTION */}
+      <SectionWrapper title={t('requests')} Icon={MessageSquare}>
+        {isLoadingRequests ? (
+          <p className="text-gray-500 dark:text-gray-400 text-sm p-3">{t('loadingData')}</p>
+        ) : requests.length === 0 ? (
+          <p className="text-gray-500 dark:text-gray-400 text-sm p-3">{t('noRequestsAvailable')}</p>
+        ) : (
           <ResponsiveTable
-            columns={unitColumns}
-            data={units.slice(0, 3)}
-            onRowClick={(unit) => onUnitClick && onUnitClick(unit.Code)}
+            columns={requestColumns}
+            data={requests.slice(0, 5)}
+            onRowClick={(row) => onViewRequestDetail?.(row)}
             keyField="Code"
-            searchKey="Name"
-            showMore={
-              units.length > 3
-                ? {
-                    url: `/landlord/properties/${asset.Code}/units`,
-                    label: t('showMoreUnits'),
-                  }
-                : undefined
-            }
           />
+        )}
+      </SectionWrapper>
+
+      {/* CONTRACTS SECTION */}
+      {showContracts && (
+        <SectionWrapper title={t('leaseContracts')} Icon={FileText}>
+          {contracts.length > 0 ? (
+            <ResponsiveTable
+              columns={contractColumns}
+              data={contracts.slice(0, 5)}
+              onRowClick={(contract) => onContractClick?.(contract.id)}
+              keyField="Code"
+              showMore={
+                contracts.length > 5
+                  ? {
+                      url: `/landlord/properties/${asset.Code}/contracts`,
+                      label: 'Show more contracts',
+                    }
+                  : undefined
+              }
+            />
+          ) : (
+            <p className="text-gray-500 dark:text-gray-400 text-sm p-3">
+              No lease contracts available
+            </p>
+          )}
         </SectionWrapper>
       )}
 
       {/* INVOICES SECTION */}
-      {showInvoices && invoices.length > 0 && (
+      {/* {showInvoices && invoices.length > 0 && (
         <SectionWrapper title={t('invoiceHistory')} Icon={FileText}>
           {invoices.length > 0 ? (
             <ResponsiveTable
@@ -117,36 +235,7 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
             </p>
           )}
         </SectionWrapper>
-      )}
-
-      {/* CONTRACTS SECTION */}
-      {showContracts && (
-        <SectionWrapper title={t('leaseContracts')} Icon={FileText}>
-          {contracts.length > 0 ? (
-            <ResponsiveTable
-              columns={contractColumns}
-              data={contracts.slice(0, 5)}
-              onRowClick={(contract) => {
-                console.log('-->contract', contract)
-                onContractClick && onContractClick(contract.id)
-              }}
-              keyField="Code"
-              showMore={
-                contracts.length > 5
-                  ? {
-                      url: `/landlord/properties/${asset.Code}/contracts`,
-                      label: 'Show more contracts',
-                    }
-                  : undefined
-              }
-            />
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-sm p-3">
-              No lease contracts available
-            </p>
-          )}
-        </SectionWrapper>
-      )}
+          )} */}
     </>
   );
 };

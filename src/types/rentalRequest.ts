@@ -199,7 +199,7 @@ export interface IGetRentalScore {
 }
 
 export interface SearchRequest {
-    ApplyUser?:   string;
+    ApplyUser?:   boolean;
     limit?:       string;
     offset?:      string;
     orderBy?:     string;

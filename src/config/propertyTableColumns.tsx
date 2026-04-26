@@ -3,13 +3,21 @@ import { IContractColumn } from "@/types/TableTypes";
 import { capitalize, capitalizeEachWord, formatDateToText, formatNumberWithSpaces } from "@/lib/utils";
 import { getStatusBadge } from "@/lib/utils-component";
 import Button from "@/components/ui/Button";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import { ContractPdf } from "@/components/pdf/ContractPdf";
-// import { IUserData } from "@/types/user";
 import { ProfileDetail } from "@/types/authTypes";
 import { UnitData } from "@/types/AssetHooks";
 
-export const getContractColumns = (asset: any, user: ProfileDetail | null) => [
+export interface GetContractColumnsOptions {
+  /** Navigate to contract detail page */
+  onViewDetail?: (contractId: string) => void;
+  /** Open PDF viewer for this contract */
+  onViewPdf?: (contract: IContractDetail) => void;
+}
+
+export const getContractColumns = (
+  asset: any,
+  user: ProfileDetail | null,
+  options?: GetContractColumnsOptions
+) => [
   {
     key: 'tenant',
     label: 'Tenant',
@@ -56,31 +64,36 @@ export const getContractColumns = (asset: any, user: ProfileDetail | null) => [
     label: 'Action',
     priority: 'high' as const,
     render: (_: any, contract: IContractDetail) => (
-      <>
-        {(asset && user) &&
-          <PDFDownloadLink document={<ContractPdf contract={contract} asset={asset} contractor={user} />} fileName={`contrat-${contract.id}.pdf`}>
-            {({ loading, url }) => (
-              <Button
-                variant="info"
-                isSubmitBtn={false}
-                fullWidth={false}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (url) {
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = `contrat-${contract.id}.pdf`;
-                    link.click();
-                  }
-                }}
-              >
-                Print
-              </Button>
-            )}
-          </PDFDownloadLink>
-        }
-      </>
+      <div className="flex gap-2 flex-wrap">
+        {options?.onViewDetail && (
+          <Button
+            variant="neutral"
+            isSubmitBtn={false}
+            fullWidth={false}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              options.onViewDetail?.(contract.id);
+            }}
+          >
+            Detail
+          </Button>
+        )}
+        {(asset && user && options?.onViewPdf) && (
+          <Button
+            variant="info"
+            isSubmitBtn={false}
+            fullWidth={false}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              options.onViewPdf?.(contract);
+            }}
+          >
+            View PDF
+          </Button>
+        )}
+      </div>
     ),
   }
 ];
@@ -235,6 +248,78 @@ export const getUnitColumns = (
           {t ? t('viewDetails') : 'viewDetails'}
         </Button>
       </div>
+    ),
+  },
+];
+
+/** Request list item from searchRequest API (body.items) */
+export interface PropertyRequestItem {
+  Code: string;
+  StatusCode: string;
+  SubmittedDate?: string;
+  CreatedAt?: string;
+  Object?: string;
+  Description?: string;
+  creator?: { user?: { Firstname?: string; Lastname?: string } };
+}
+
+export const getRequestColumns = (
+  onViewDetail: (item: PropertyRequestItem) => void,
+  t?: (key: string) => string
+) => [
+  {
+    key: 'status',
+    label: t ? t('status') : 'Status',
+    priority: 'medium' as const,
+    render: (_: any, row: PropertyRequestItem) => getStatusBadge(row.StatusCode, t),
+  },
+  {
+    key: 'submittedDate',
+    label: t ? t('submittedDate') : 'Submitted',
+    priority: 'medium' as const,
+    render: (_: any, row: PropertyRequestItem) => (
+      <div className="text-sm text-gray-800 dark:text-gray-100">
+        {formatDateToText(row.SubmittedDate || row.CreatedAt || '')}
+      </div>
+    ),
+  },
+  {
+    key: 'object',
+    label: t ? t('object') : 'Object',
+    priority: 'high' as const,
+    render: (_: any, row: PropertyRequestItem) => (
+      <div className="font-medium text-gray-800 dark:text-gray-100 line-clamp-1">
+        {row.Object || row.Description || '—'}
+      </div>
+    ),
+  },
+  {
+    key: 'submittedBy',
+    label: t ? t('submittedBy') : 'Submitted by',
+    priority: 'medium' as const,
+    render: (_: any, row: PropertyRequestItem) => {
+      const u = row.creator?.user;
+      const name = u ? [u.Lastname, u.Firstname].filter(Boolean).join(' ') || '—' : '—';
+      return <div className="text-sm text-gray-800 dark:text-gray-100">{capitalizeEachWord(name)}</div>;
+    },
+  },
+  {
+    key: 'action',
+    label: t ? t('actions') : 'Actions',
+    priority: 'high' as const,
+    render: (_: any, row: PropertyRequestItem) => (
+      <Button
+        variant="neutral"
+        isSubmitBtn={false}
+        fullWidth={false}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onViewDetail(row);
+        }}
+      >
+        {t ? t('viewDetails') : 'View details'}
+      </Button>
     ),
   },
 ];

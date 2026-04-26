@@ -794,3 +794,42 @@ export async function deleteAsset(assetCodes: string[]) {
     }
   }
 }
+
+export async function postPoneContract(contractCode: string, newEndDate: string) {
+  try {
+    const session = await verifySession();
+    const token = session.accessToken;
+    
+    const response = await axios.put(`${process.env.CONTRACT_BASE_URL}/api/v1/Contract`, {
+      Contract: {
+        Code: contractCode,
+        endDate: newEndDate
+      }
+    },{
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    return {
+      code: 200,
+      error: null,
+      data: response.data
+    }
+  } catch (error: any) {
+    console.log('-->postPoneContract.error', error)
+    const isRedirect = error.digest?.startsWith('NEXT_REDIRECT');
+    if (isRedirect) {
+      return {
+        data: null,
+        error: 'Session expired',
+        code: 'SESSION_EXPIRED',
+      };
+    }
+    return {
+      code: error.code ?? "unknown",
+      error: error.response?.data?.message ?? "An unexpected error occurred",
+      data: null
+    }
+  }
+}

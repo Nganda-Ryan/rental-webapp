@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   Building2,
   Users,
@@ -36,9 +36,28 @@ export interface AssetDashboardProps {
  * />
  * ```
  */
+/**
+ * Formats a month string (e.g. "2025-01") to a localized display string
+ */
+function formatMonthLabel(monthStr: string, locale: string): string {
+  const parts = monthStr.split('-');
+  if (parts.length >= 2) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    if (!isNaN(year) && !isNaN(month)) {
+      return new Date(year, month).toLocaleDateString(locale, {
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+  }
+  return monthStr;
+}
+
 export function AssetDashboard({ dashboardData, isLoading }: AssetDashboardProps) {
   const commonT = useTranslations('Common');
   const landlordT = useTranslations('Landlord.assets');
+  const locale = useLocale();
 
   if (isLoading) {
     return (
@@ -120,6 +139,32 @@ export function AssetDashboard({ dashboardData, isLoading }: AssetDashboardProps
               {counts.tenants}
             </p>
           </div>
+
+          {/* Open Requests */}
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle size={18} className="text-gray-600 dark:text-gray-400" />
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                {landlordT('openRequests')}
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {counts.openRequests}
+            </p>
+          </div>
+
+          {/* Billing Configs */}
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText size={18} className="text-gray-600 dark:text-gray-400" />
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                {landlordT('billingConfigs')}
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {counts.billingConfigs}
+            </p>
+          </div>
         </div>
       </SectionWrapper>
 
@@ -129,7 +174,7 @@ export function AssetDashboard({ dashboardData, isLoading }: AssetDashboardProps
           {/* Current Month */}
           <div>
             <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
-              {landlordT('currentMonth') || 'Current Month'}
+              {landlordT('currentMonth')} ({new Date().toLocaleDateString(locale, { month: 'long', year: 'numeric' })})
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
@@ -186,17 +231,50 @@ export function AssetDashboard({ dashboardData, isLoading }: AssetDashboardProps
                     </p>
                   </div>
                   <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {new Date(financials.currentMonth.nextDueDate).toLocaleDateString()}
+                    {new Date(financials.currentMonth.nextDueDate).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}
                   </p>
                 </div>
               )}
             </div>
           </div>
 
+          {/* Monthly Revenue */}
+          {financials.monthlyRevenue && financials.monthlyRevenue.length > 0 ? (
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                {landlordT('monthlyRevenue')}
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                {landlordT('revenueByMonth')}
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {financials.monthlyRevenue.map((item, index) => (
+                  <div
+                    key={`${item.month}-${index}`}
+                    className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3"
+                  >
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      {formatMonthLabel(item.month, locale)}
+                    </p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {formatNumberWithSpaces(item.total)} {financials.currency}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            financials.monthlyRevenue && (
+              <div className="rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50 text-center text-sm text-gray-500 dark:text-gray-400">
+                {landlordT('noMonthlyRevenueData')}
+              </div>
+            )
+          )}
+
           {/* Year to Date */}
           <div>
             <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
-              {landlordT('yearToDate') || 'Year to Date'}
+              {landlordT('yearToDate')}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">

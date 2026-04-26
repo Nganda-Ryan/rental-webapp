@@ -14,7 +14,7 @@ export async function getCloudflareUser(userId: string, token: string) {
             user: response.data
         };
     } catch (error: any) {
-        console.log('-->getCloudflareUser.error', error.toJSON())
+        // console.log('-->getCloudflareUser.error', error.toJSON())
         return {
             code: error.code ?? "unknown",
             error: error.response?.data?.message ?? "An unexpected error occurred",
