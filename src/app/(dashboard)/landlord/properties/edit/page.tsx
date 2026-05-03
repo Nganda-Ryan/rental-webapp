@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { Building2 } from "lucide-react";
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
@@ -44,11 +44,74 @@ const Page = () => {
     formState: { errors },
   } = useForm<IUpdateAssetRequest>();
 
+  const init = useCallback(async () => {
+    if (!propertyId) return;
+    try {
+      setIsLoading(true);
+      const result = await getAsset(propertyId);
+      console.log('-->result', result);
+      if(result?.data?.body?.assetData) {
+        const item = result.data.body.assetData;
+        const assetData: AssetDataDetailed  = { 
+          Code: item.Code,
+          Title: item.Title,
+          Price: item.Price,
+          Currency: item.Currency,
+          CoverUrl: item.CoverUrl,
+          StatusCode: item.StatusCode,
+          IsActive: item.IsActive, // 1 ou 0
+          TypeCode: item.TypeCode,
+          IsVerified: item.IsVerified, // 1 ou 0
+          Permission: result.data.body.ConfigPermissionList.map((perm: any) => (perm.Code)),
+          whoIs: result.data.body.whoIs,
+          BillingItems: result.data.body.billingItems.map((bi: any) => (bi.ItemCode)),
+          Units: [],
+          Tag: item.Tag,
+          Notes: item.Notes,
+          Address: {
+              Code: item.Address.Code,
+              City: item.Address.City,
+              Country: item.Address.Country,
+              Street: item.Address.Street,
+          },
+        }
+        console.log('-->item', item);
+        
+        setAsset(assetData)
+        reset({
+          code: assetData.Code,
+          typeCode: assetData.TypeCode,
+          title: assetData.Title,
+          notes: assetData.Notes,
+          price: assetData.Price,
+          currency: assetData.Currency,
+          coverUrl: assetData.CoverUrl,
+          tag: item.Tag,
+          addressData: {
+            city: assetData.Address.City,
+            country: assetData.Address.Country,
+            street: assetData.Address.Street,
+          },
+        });
+        if (assetData.CoverUrl) {setImagePreview(assetData.CoverUrl);}
+      } else if(result.error){
+        if(result.code == 'SESSION_EXPIRED'){
+            router.push('/signin');
+            return;
+        }
+        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false);
+    }
+  }, [propertyId, router, reset, commonT]);
 
   useEffect(() => {
     console.log('-->propertyId', propertyId);
-    init();
-  }, [init, propertyId])
+    void init();
+  }, [init, propertyId]);
 
   useEffect(() => {
     if (asset) {
@@ -129,69 +192,6 @@ const Page = () => {
       reader.readAsDataURL(file);
     }
   };
-
-  const init = async () => {
-    try {
-      setIsLoading(true);
-      const result = await getAsset(propertyId as string);
-      console.log('-->result', result);
-      if(result?.data?.body?.assetData) {
-        const item = result.data.body.assetData;
-        const assetData: AssetDataDetailed  = { 
-          Code: item.Code,
-          Title: item.Title,
-          Price: item.Price,
-          Currency: item.Currency,
-          CoverUrl: item.CoverUrl,
-          StatusCode: item.StatusCode,
-          IsActive: item.IsActive, // 1 ou 0
-          TypeCode: item.TypeCode,
-          IsVerified: item.IsVerified, // 1 ou 0
-          Permission: result.data.body.ConfigPermissionList.map((item:any) => (item.Code)),
-          whoIs: result.data.body.whoIs,
-          BillingItems: result.data.body.billingItems.map((item: any) => (item.ItemCode)),
-          Units: [],
-          Tag: item.Tag,
-          Notes: item.Notes,
-          Address: {
-              Code: item.Address.Code,
-              City: item.Address.City,
-              Country: item.Address.Country,
-              Street: item.Address.Street,
-          },
-        }
-        console.log('-->item', item);
-        
-        setAsset(assetData)
-        reset({
-          code: assetData.Code,
-          typeCode: assetData.TypeCode,
-          title: assetData.Title,
-          notes: assetData.Notes,
-          price: assetData.Price,
-          currency: assetData.Currency,
-          coverUrl: assetData.CoverUrl,
-          tag: item.Tag,
-          addressData: {
-            city: assetData.Address.City,
-            country: assetData.Address.Country,
-            street: assetData.Address.Street,
-          },
-        });
-        if (assetData.CoverUrl) {setImagePreview(assetData.CoverUrl);}
-      } else if(result.error){
-        if(result.code == 'SESSION_EXPIRED'){
-            router.push('/signin');
-            return;
-        }
-        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
-      }
-    } catch (error) {
-      console.log(error)
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
 
   // if (!isAuthorized(PROFILE_LANDLORD_LIST)) {
