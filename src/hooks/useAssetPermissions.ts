@@ -5,23 +5,25 @@ import {
   UseAssetPermissionsParams,
 } from '@/types/AssetHooks';
 import { ASSET_TYPE_COMPLEXE } from '@/constant';
+import {
+  ASSET_USER_PERMISSION_CODE,
+  getActiveAssetUserPermissionCodes,
+} from '@/constant/assetUserPermissions';
 
 /**
- * Custom hook to calculate permissions for the current asset
- * Determines what actions the user can perform based on:
- * - Asset type (property vs unit)
- * - Asset status and verification
- * - User role and asset ownership
- * - Active contract status
+ * Calculates UI/action permissions for the current asset from business rules.
+ * When `grantedPermissions` is passed (manager asset views), ConfigPermissionList
+ * from getAsset further restricts the UI for non-owners. Omit it on landlord pages.
+ * Owners (whoIs → OwnerCode === 'OWNER') always pass API permission checks.
  */
 export function useAssetPermissions({
   asset,
   assetType,
   activeContract,
-  userRole,
+  userRole: _userRole,
+  grantedPermissions,
 }: UseAssetPermissionsParams): AssetPermissions {
-
-  const permissions = useMemo(() => {
+  return useMemo(() => {
     if (!asset) {
       return {
         canCreateContract: false,
@@ -34,10 +36,15 @@ export function useAssetPermissions({
         canViewUnits: false,
         canAttachProperties: false,
         canShareLink: false,
+        canViewAssetDashboard: false,
+        canViewTenantInfo: false,
+        canDeleteAsset: false,
+        canDeactivateAsset: false,
+        canActivateAsset: false,
       };
     }
 
-    const isOwner = asset.OwnerCode === 'OWNER'; // Using whoIs field
+    const isOwner = asset.OwnerCode === 'OWNER';
     const isVerified = asset.IsVerified;
     const isComplex = asset.Type === ASSET_TYPE_COMPLEXE;
     const isUnit = assetType === AssetType.UNIT;
@@ -45,93 +52,88 @@ export function useAssetPermissions({
     const isInactive = asset.Status === 'INACTIVE';
     const isPending = asset.Status === 'PENDING';
     const hasActiveContract = activeContract?.status === 'ACTIVE';
+    const isExplicitlyActive = asset.IsActive === 1;
+    const isExplicitlyInactive = asset.IsActive === 0;
 
-    // Determine if user has specific permissions from asset
-    // Note: asset.Permission would come from the API if available
-    // For now, we'll use basic ownership logic
-    const hasGenerateContractPermission = true; // This should come from asset.Permission
+    const useApiPermissionGating = grantedPermissions !== undefined;
+    const activeCodes = useApiPermissionGating
+      ? getActiveAssetUserPermissionCodes(grantedPermissions)
+      : new Set<string>();
+
+    const has = (code: string) => {
+      if (!useApiPermissionGating || isOwner) return true;
+      return activeCodes.has(code);
+    };
+    const hasAny = (codes: readonly string[]) => {
+      if (!useApiPermissionGating || isOwner) return true;
+      return codes.some((c) => activeCodes.has(c));
+    };
+
+    const hasGenerateContract = has(ASSET_USER_PERMISSION_CODE.GenerateContract);
+    const hasManageBilling = has(ASSET_USER_PERMISSION_CODE.ManageBilling);
+    const hasRentCollector =
+      useApiPermissionGating &&
+      !isOwner &&
+      activeCodes.has(ASSET_USER_PERMISSION_CODE.RentCollector);
+    const hasDashboardViewer = has(ASSET_USER_PERMISSION_CODE.DashBoardViewer);
+    const hasTenantView =
+      hasAny([
+        ASSET_USER_PERMISSION_CODE.TenantsViewer,
+        ASSET_USER_PERMISSION_CODE.TenantsSuperViewer,
+      ]);
+
+    const canViewContractsBase = !isComplex;
+    /**
+     * Invoices section:
+     * - Landlord (no API gating): keep legacy rule — need a contract context.
+     * - Manager (API gating): non-complex is enough; managers often have no
+     *   contracts in getAsset while still having ManageBilling + invoice API data.
+     */
+    const canViewInvoicesBase =
+      !isComplex && (useApiPermissionGating || activeContract !== null);
 
     return {
-      /**
-       * Can create a contract if:
-       * - Asset is verified
-       * - Asset is not a complex (units can have contracts, not complexes)
-       * - No active contract exists
-       * - User has permission to generate contracts
-       */
       canCreateContract:
         isVerified &&
         !isComplex &&
         !hasActiveContract &&
-        hasGenerateContractPermission,
+        hasGenerateContract,
 
-      /**
-       * Can terminate lease if:
-       * - User is the owner
-       * - There is an active contract
-       */
-      canTerminateLease: isOwner && hasActiveContract,
+      canTerminateLease:
+        hasActiveContract && (isOwner || hasRentCollector),
 
-      /**
-       * Can attach manager if:
-       * - User is the owner
-       * - Asset is verified
-       * - Asset is not a unit (only properties have managers)
-       */
       canAttachManager: isOwner && isVerified && !isUnit,
 
-      /**
-       * Can verify property if:
-       * - User is the owner
-       * - Asset is in draft or inactive status
-       * - Asset is not a unit (units are verified through parent property)
-       */
       canVerifyProperty: isOwner && (isDraft || isInactive) && !isUnit,
 
-      /**
-       * Can edit property if:
-       * - User is the owner or has permission
-       * - Asset is not pending verification
-       */
       canEditProperty: isOwner && !isPending,
 
-      /**
-       * Can view invoices if:
-       * - Asset is not a complex
-       * - There are contracts
-       */
-      canViewInvoices: !isComplex && (activeContract !== null),
+      canViewInvoices: canViewInvoicesBase && (isOwner || hasManageBilling),
 
-      /**
-       * Can view contracts if:
-       * - Asset is not a complex
-       */
-      canViewContracts: !isComplex,
+      canViewContracts:
+        canViewContractsBase &&
+        (isOwner ||
+          hasAny([
+            ASSET_USER_PERMISSION_CODE.TenantsViewer,
+            ASSET_USER_PERMISSION_CODE.TenantsSuperViewer,
+            ASSET_USER_PERMISSION_CODE.GenerateContract,
+          ])),
 
-      /**
-       * Can view units if:
-       * - Asset is a complex
-       * - Asset is a property (not a unit)
-       */
       canViewUnits: isComplex && !isUnit,
 
-      /**
-       * Can attach properties if:
-       * - User is the owner
-       * - Asset is a complex
-       * - Asset is verified
-       */
       canAttachProperties: isOwner && isComplex && isVerified,
 
-      /**
-       * Can share link (invite tenant) if:
-       * - User is the owner
-       * - Asset is verified
-       * - Asset is not a complex
-       */
-      canShareLink: isOwner && isVerified && !isComplex,
-    };
-  }, [asset, assetType, activeContract]);
+      canShareLink: isOwner && isVerified && !isComplex && hasGenerateContract,
 
-  return permissions;
+      canViewAssetDashboard: isOwner || hasDashboardViewer,
+
+      canViewTenantInfo: isOwner || hasTenantView,
+
+      canDeleteAsset: isOwner,
+
+      canDeactivateAsset: isOwner && isExplicitlyActive,
+
+      canActivateAsset: isOwner && isExplicitlyInactive,
+    };
+  }, [asset, assetType, activeContract, grantedPermissions]);
 }

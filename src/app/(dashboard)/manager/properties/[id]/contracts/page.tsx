@@ -212,7 +212,7 @@ const Page = () => {
   }
 
   const handleSelectedContract = (contractId: string) => {
-    router.push(`/landlord/properties/${params.id}/contracts/${contractId}`)
+    router.push(`/manager/properties/${params.id}/contracts/${contractId}`)
   }
 
   const handleConfirmTerminateLease = async (contractId: string) => {

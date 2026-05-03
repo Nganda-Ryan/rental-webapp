@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { Building2 } from "lucide-react";
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb'
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
@@ -40,7 +41,6 @@ const Page = () => {
     register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm<IUpdateAssetRequest>();
 
@@ -48,7 +48,7 @@ const Page = () => {
   useEffect(() => {
     console.log('-->propertyId', propertyId);
     init();
-  }, [])
+  }, [init, propertyId])
 
   useEffect(() => {
     if (asset) {
@@ -228,9 +228,16 @@ const Page = () => {
                       {/* Colonne gauche : Image */}
                       <div className="flex flex-col space-y-2">
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Property Image</label>
-                        <div className="w-full h-40 sm:h-62.5 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="relative w-full h-40 sm:h-62.5 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
                           {imagePreview ? (
-                            <img src={imagePreview} alt="Property" className="w-full h-full object-cover" />
+                            <Image
+                              src={imagePreview}
+                              alt="Property cover preview"
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 640px) 100vw, 432px"
+                              unoptimized
+                            />
                           ) : (
                             <div className="text-gray-400 dark:text-gray-500">
                               <Building2 size={40} />

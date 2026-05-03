@@ -49,6 +49,7 @@ const UnitDetail = () => {
     tenantInfo,
     isLoading: isLoadingAsset,
     refetch,
+    permissionList,
   } = useAssetDetails({
     assetId: params.unitId as string,
     assetType: AssetType.UNIT,
@@ -257,17 +258,18 @@ const UnitDetail = () => {
       <AssetDetailsCard
         asset={asset}
         tenantInfo={tenantInfo}
+        showTenantInfo={permissions.canViewTenantInfo}
         showImage={true}
       />
       <AssetSections
         asset={asset}
         contracts={contracts}
-        invoices={[]}
+        invoices={invoices}
         units={[]}
         user={user}
         showUnits={false}
-        showInvoices={false}
-        showContracts={true}
+        showInvoices={permissions.canViewInvoices}
+        showContracts={permissions.canViewContracts}
         onContractClick={handleSelectedContract}
       />
     </>
@@ -313,7 +315,7 @@ const UnitDetail = () => {
         showProcessingModal={false}
         invoiceFormDefaultValue={invoiceFormDefaultValue}
         invoiceAction={action}
-        permissionList={[]}
+        permissionList={permissionList}
         successMessage={successMessage}
         processingMessage={commonT('loadingData') || "Loading..."}
         assetTitle={asset?.Name}

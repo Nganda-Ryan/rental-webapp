@@ -30,7 +30,6 @@ const Page = () => {
   const [isCplxAsset, setIsCplxAsset] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
   const [manualRemoval, setManualRemoval] = useState(false);
-  const [categories, setCategories] = useState(["Basic Information", "Billing Items"]);
   const [filteredStates, setFilteredStates] = useState<IState[]>([]);
   const [filteredCities, setFilteredCities] = useState<ICity[]>([]);
   const [filteredStreets, setFilteredStreet] = useState<IStreet[]>([]);
@@ -78,7 +77,6 @@ const Page = () => {
   });
 
   const fieldToTab: { [key: string]: number } = {
-    // Tab 0 = Basic Information
     country: 0,
     propertyName: 0,
     propertyType: 0,
@@ -87,10 +85,8 @@ const Page = () => {
     street: 0,
     description: 0,
     UnitsType: 0,
-    // Tab 1 = Billing Items
     billingItem: 1,
     rent: 1,
-    // Tab 2 = Units
     numberOfUnit: 2,
     UnitList: 2,
   };
@@ -226,7 +222,7 @@ const Page = () => {
         setShowSuccessModal(true);
         toast.success(`Votre propriété ${payload.title} a été crée avec succès`, { position: 'bottom-right' });
         const asset = result.asset.body.asset;
-        router.push(`/landlord/properties/${asset.Code}`)
+        router.push(`/manager/properties/${asset.Code}`)
       } else {
         toast.error(result.error, { position: 'bottom-right' });
         console.log('-->Result error', result)
@@ -280,13 +276,17 @@ const Page = () => {
     setSelectedPropertyType(e.target.value);
     if(e.target.value == "CPLXMOD"){
       setIsCplxAsset(true);
-      setCategories(prev => [...prev, "Units"]);
     } else {
       setIsCplxAsset(false);
-      setCategories(["Basic Information", "Billing Items"]);
     }
     setValue("propertyType", e.target.value, { shouldValidate: true });
   }
+
+  const categories = [
+    landlordT('basicInformationTab'),
+    landlordT('billingItemsTab'),
+    ...(isCplxAsset ? [landlordT('unitsTab')] : [])
+  ];
 
   const handleRemoveSubProperty = (index: number) => {
     setManualRemoval(true);
@@ -400,7 +400,7 @@ const Page = () => {
                             <Controller
                               name="state"
                               control={control}
-                              rules={{ required: 'The state is required' }}
+                              rules={{ required: landlordT('theStateIsRequired') }}
                               render={({ field }) => (
                                 <Select
                                   options={filteredStates.map(c => ({ label: c.name, value: c.id }))}
@@ -408,7 +408,7 @@ const Page = () => {
                                   onChange={(selectedOption) => {
                                     field.onChange(selectedOption?.value);
                                   }}
-                                  placeholder="Select a state"
+                                  placeholder={landlordT('selectState')}
                                 />
                               )}
                             />
@@ -441,7 +441,7 @@ const Page = () => {
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{landlordT('street')}</label>
                             <Controller
                               name="street"
-                              rules={{ required: 'The street is required' }}
+                              rules={{ required: landlordT('theStreetIsRequired') }}
                               control={control}
                               render={({ field }) => (
                                 <Select
@@ -480,7 +480,7 @@ const Page = () => {
                         
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Property type
+                            {landlordT('propertyType')}
                           </label>
                           <select
                             {...register("propertyType", { required: landlordT('pleaseSelectThePropertyType') })}
@@ -493,7 +493,7 @@ const Page = () => {
                             <option value="">{landlordT('selectPropertyType')}</option>
                             {
                               PROPERTY_TYPE_OBJ_LIST.map((propType, index) =>(
-                                <option key={index} value={propType.value}>{landlordT(propType.value)}</option>
+                                <option key={index} value={propType.value}>{propType.label}</option>
                               ))
                             }
                           </select>
@@ -573,8 +573,8 @@ const Page = () => {
                               </label>
                               <div className='flex flex-row gap-1'>
                                 <select
-                                  className="px-3 py-1.5 w-30 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                  {...register(`currency`, { required: "Please select the currency" })}
+                                  className="px-3 py-1.5 w-30 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  {...register(`currency`, { required: landlordT('selectCurrency') })}
                                 >
                                   <option value="XAF">XAF</option>
                                   <option value="USD">USD</option>
@@ -606,12 +606,12 @@ const Page = () => {
                         </div>
 
                         <div className="space-y-4 ">
-                          <h3 className="font-medium text-gray-800 dark:text-gray-200">Tag</h3>
+                          <h3 className="font-medium text-gray-800 dark:text-gray-200">{landlordT('tag')}</h3>
                           <textarea
                             className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                             rows={4}
                             {...register("tag")}
-                            placeholder="Tags..."
+                            placeholder={landlordT('tags')}
                             defaultValue={""}
                           />
                         </div>
@@ -630,7 +630,7 @@ const Page = () => {
                             className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
                             defaultChecked={false}
                           />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">{landlordT(bi.label)}</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{bi.label}</span>
                         </label>
                       ))}
                     </div>
@@ -675,7 +675,6 @@ const Page = () => {
                                     {PROPERTY_TYPE_OBJ_LIST.slice(1).map((propType, index) => (
                                       <option key={index} value={propType.value}>
                                         {propType.label}
-                                        {commonT(propType.value)}
                                       </option>
                                     ))}
                                   </select>
@@ -716,7 +715,7 @@ const Page = () => {
                                       className="px-3 py-1.5 w-30 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                                       {...register(`UnitList.${index}.currency`, {
                                         validate: (value) =>
-                                          selectedPropertyType !== "CPLXMOD" || value !== "" || "Please select the Currency",
+                                          selectedPropertyType !== "CPLXMOD" || value !== "" || landlordT('selectCurrency'),
                                       })}
                                     >
                                       <option value="XAF">XAF</option>
@@ -756,11 +755,11 @@ const Page = () => {
                                   />
                                 </div>
                                 <div className="mt-3">
-                                  <h3 className="font-medium text-gray-700 dark:text-gray-300">Tag</h3>
+                                  <h3 className="font-medium text-gray-700 dark:text-gray-300">{landlordT('tag')}</h3>
                                   <textarea
                                     className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     rows={4}
-                                    placeholder={landlordT('describeTheProperty')}
+                                    placeholder={landlordT('tags')}
                                     {...register(`UnitList.${index}.tag`)}
                                   />
                                 </div>

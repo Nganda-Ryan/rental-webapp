@@ -1,10 +1,18 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { House, FileText, MessageSquare } from 'lucide-react';
 import { useRouter } from '@bprogress/next/app';
+import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import SectionWrapper from '@/components/Cards/SectionWrapper';
 import { ResponsiveTable } from '@/components/feature/Support/ResponsiveTable';
-import { getContractColumns, getInvoiceColumns, getUnitColumns, getRequestColumns, type PropertyRequestItem } from '@/config/propertyTableColumns';
+import {
+  getContractColumns,
+  getInvoiceColumns,
+  getInvoiceSummaryColumns,
+  getUnitColumns,
+  getRequestColumns,
+  type PropertyRequestItem,
+} from '@/config/propertyTableColumns';
 import { AssetDataDetailed, ContractData, InvoiceData, UnitData } from '@/types/AssetHooks';
 import { IUser } from '@/types/user';
 import { searchRequest } from '@/actions/requestAction';
@@ -61,7 +69,11 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
   onViewRequestDetail,
 }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const t = useTranslations('Common');
+  const propertyBase = pathname?.includes('/manager/properties/')
+    ? `/manager/properties/${asset?.Code ?? ''}`
+    : `/landlord/properties/${asset?.Code ?? ''}`;
   const [requests, setRequests] = useState<PropertyRequestItem[]>([]);
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
 
@@ -106,7 +118,11 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
         onViewPdf: onViewContractPdf,
       })
     : [];
-  const invoiceColumns = onInvoiceUpdate ? getInvoiceColumns(onInvoiceUpdate) : [];
+  const invoiceColumns = useMemo(
+    () =>
+      onInvoiceUpdate ? getInvoiceColumns(onInvoiceUpdate) : getInvoiceSummaryColumns(),
+    [onInvoiceUpdate],
+  );
   const unitColumns = getUnitColumns(asset as any, (unitCode) => {
     if (onUnitClick) {
       onUnitClick(unitCode);
@@ -143,7 +159,7 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
               showMore={
                 units.length > 3
                   ? {
-                      url: `/landlord/properties/${asset.Code}/units`,
+                      url: `${propertyBase}/units`,
                       label: t('showMoreUnits'),
                     }
                   : undefined
@@ -155,11 +171,11 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
                 {t('noUnitsAvailable')}
               </p>
               <a
-                href={`/landlord/properties/${asset.Code}/units`}
+                href={`${propertyBase}/units`}
                 className="text-sm text-primary-600 dark:text-primary-400 hover:underline px-3 pb-2 block"
                 onClick={(e) => {
                   e.preventDefault();
-                  router.push(`/landlord/properties/${asset.Code}/units`);
+                  router.push(`${propertyBase}/units`);
                 }}
               >
                 {t('viewOrAddUnits')}
@@ -197,7 +213,7 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
               showMore={
                 contracts.length > 5
                   ? {
-                      url: `/landlord/properties/${asset.Code}/contracts`,
+                      url: `${propertyBase}/contracts`,
                       label: 'Show more contracts',
                     }
                   : undefined
@@ -212,22 +228,14 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
       )}
 
       {/* INVOICES SECTION */}
-      {/* {showInvoices && invoices.length > 0 && (
+      {showInvoices && (
         <SectionWrapper title={t('invoiceHistory')} Icon={FileText}>
           {invoices.length > 0 ? (
             <ResponsiveTable
               columns={invoiceColumns}
-              data={invoices.slice(0, 3)}
-              onRowClick={(inv) => onInvoiceClick && onInvoiceClick(inv.Code)}
+              data={invoices.slice(0, 5)}
+              onRowClick={(inv) => onInvoiceClick?.(inv.Code)}
               keyField="Code"
-              showMore={
-                invoices.length > 3
-                  ? {
-                      url: `/landlord/properties/${asset.Code}/invoices`,
-                      label: t('showMoreInvoices'),
-                    }
-                  : undefined
-              }
             />
           ) : (
             <p className="text-gray-500 dark:text-gray-400 text-sm p-3">
@@ -235,7 +243,7 @@ export const AssetSections: React.FC<AssetSectionsProps> = ({
             </p>
           )}
         </SectionWrapper>
-          )} */}
+      )}
     </>
   );
 };

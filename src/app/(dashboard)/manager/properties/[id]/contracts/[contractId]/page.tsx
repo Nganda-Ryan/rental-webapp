@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import {
   User,
   Calendar,
+  CalendarRange,
   DollarSign,
   FileText,
   Mail,
@@ -14,8 +15,8 @@ import {
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import Breadcrumb from '@/components/Breadcrumbs/Breadcrumb';
 import { useParams } from 'next/navigation';
-import { createInvoice, getContract, searchInvoice, terminateLease, updateInvoice } from '@/actions/assetAction';
-import { IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, IUpdateInvoiceParam, SeachInvoiceParams } from '@/types/Property';
+import { createInvoice, getContract, searchInvoice, terminateLease, updateInvoice, postPoneContract } from '@/actions/assetAction';
+import { IContractDetail, IInvoice, IInvoiceForm, IInvoiceTableData, IUpdateInvoiceParam, SeachInvoiceParams, AssetDataDetailed } from '@/types/Property';
 import { getStatusBadge } from '@/lib/utils-component';
 import Button from '@/components/ui/Button';
 import Overlay from '@/components/Overlay';
@@ -32,15 +33,21 @@ import { PROFILE_LANDLORD_LIST } from "@/constant";
 import SectionWrapper from '@/components/Cards/SectionWrapper';
 import { roleStore } from '@/store/roleStore';
 import { useTranslations } from 'next-intl';
+import { ContractPdfViewerModal } from '@/components/feature/Properties/ContractPdfViewerModal';
 
 const ContractDetail = () => {
     const [contract, setContract] = useState<IContractDetail>();
+    const [contractAsset, setContractAsset] = useState<AssetDataDetailed | null>(null);
+    const [showPdfViewer, setShowPdfViewer] = useState(false);
     const [formDefaultInvoice, setFormDefaultInvoice] = useState<IInvoiceForm>();
     const [tempFormDefaultInvoice, setTempFormDefaultInvoice] = useState<IInvoiceForm>();
     const [isTerminatingContract, setIsTerminatingContract] = useState(false);
     const [invoiceTableData, setInvoiceTableData] = useState<IInvoiceForm[]>([]);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showActionModal, setShowActionModal] = useState(false);
+    const [showPostponeModal, setShowPostponeModal] = useState(false);
+    const [postponeNewEndDate, setPostponeNewEndDate] = useState('');
+    const [isPostponingContract, setIsPostponingContract] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
     const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
     const [showMobileActions, setShowMobileActions] = useState(false);
@@ -48,7 +55,7 @@ const ContractDetail = () => {
     const [action, setAction] = useState<"CREATE" | "UPDATE">("CREATE");
     const params = useParams();
     const router = useRouter();
-    const { isAuthorized } = roleStore();
+    const { isAuthorized, user } = roleStore();
     const t = useTranslations('Common');
       const landlordT = useTranslations('Landlord.assets');
       const commonT = useTranslations('Common');
@@ -140,6 +147,33 @@ const ContractDetail = () => {
                         setTempFormDefaultInvoice(_formDefaultInvoice);
                         setContract(_contract);
                         setInvoiceTableData(_invoiceTableData);
+
+                        // Store asset for PDF viewer (from API contractData.asset)
+                        const rawAsset = result.data.body.contractData.asset;
+                        if (rawAsset) {
+                            setContractAsset({
+                                Code: rawAsset.Code,
+                                Title: rawAsset.Title ?? '',
+                                Price: rawAsset.Price ?? 0,
+                                Currency: result.data.body.contractData.Currency ?? 'XOF',
+                                Permission: [],
+                                CoverUrl: rawAsset.CoverUrl ?? '',
+                                StatusCode: rawAsset.StatusCode ?? '',
+                                IsActive: rawAsset.IsActive ?? 1,
+                                TypeCode: rawAsset.TypeCode ?? '',
+                                IsVerified: rawAsset.IsVerified ?? 0,
+                                whoIs: '',
+                                BillingItems: result.data.body.contractData.billingItems?.map((bi: any) => bi.ItemCode ?? bi) ?? [],
+                                Address: rawAsset.Address
+                                    ? {
+                                        Code: rawAsset.Address.Code ?? '',
+                                        City: rawAsset.Address.City ?? '',
+                                        Country: rawAsset.Address.Country ?? '',
+                                        Street: rawAsset.Address.Street ?? '',
+                                    }
+                                    : { Code: '', City: '', Country: '', Street: '' },
+                            });
+                        }
 
                         // console.log('-->_formDefaultInvoice', _formDefaultInvoice);
                         // console.log('-->_invoiceTableData', _invoiceTableData);
@@ -342,6 +376,49 @@ const ContractDetail = () => {
             setShowActionModal(false);
         }
     }
+
+    const getContractEndDateYmd = () => {
+        if (!contract?.endDate) return '';
+        return contract.endDate.split('T')[0];
+    };
+
+    const handleOpenPostponeModal = () => {
+        const minDate = getContractEndDateYmd();
+        setPostponeNewEndDate(minDate);
+        setShowPostponeModal(true);
+    };
+
+    const handleConfirmPostpone = async () => {
+        if (!contract) return;
+        const minDate = getContractEndDateYmd();
+        if (!postponeNewEndDate.trim()) {
+            toast.error(commonT('newEndDateMustNotBeBefore'), { position: 'bottom-right' });
+            return;
+        }
+        if (postponeNewEndDate < minDate) {
+            toast.error(commonT('newEndDateMustNotBeBefore'), { position: 'bottom-right' });
+            return;
+        }
+        try {
+            setIsPostponingContract(true);
+            const result = await postPoneContract(contract.id, postponeNewEndDate);
+            if (result.code === 200 && result.data) {
+                setContract((prev) => prev ? { ...prev, endDate: postponeNewEndDate } : prev);
+                setShowPostponeModal(false);
+                toast.success(t('contractPostponed'), { position: 'bottom-right' });
+            } else if (result.error) {
+                if (result.code === 'SESSION_EXPIRED') {
+                    router.push('/signin');
+                    return;
+                }
+                toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
+            }
+        } catch (error) {
+            toast.error(commonT('unexpectedError'), { position: 'bottom-right' });
+        } finally {
+            setIsPostponingContract(false);
+        }
+    };
 
 
     const fetchInvoice = async (_contract: IContractDetail) => {
@@ -560,6 +637,9 @@ const ContractDetail = () => {
                                 <div className="hidden lg:block">
                                     <SectionWrapper title="Quick Actions">
                                         <div className="space-y-3 mb-3">
+                                            <Button onClick={() => setShowPdfViewer(true)} variant="info" disable={!contractAsset || !user} isSubmitBtn={false}>
+                                                <FileText size={16} /> View contract (PDF)
+                                            </Button>
                                             <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={contract.status == "INACTIVE"} isSubmitBtn={false}>
                                                 <DollarSign size={16} /> Create Invoice
                                             </Button>
@@ -567,8 +647,11 @@ const ContractDetail = () => {
                                         {
                                             contract?.status == "ACTIVE" && 
                                             (<div className="space-y-3">
+                                                <Button onClick={handleOpenPostponeModal} variant="neutral" disable={isPostponingContract} isSubmitBtn={false} loading={false}>
+                                                    <CalendarRange size={16} /> {t('postponeContract')}
+                                                </Button>
                                                 <Button onClick={handleClickTerminateLease} variant='danger' disable={false} isSubmitBtn={false} loading={isTerminatingContract}>
-                                                    <DollarSign size={16} /> Terminate Lease
+                                                    <DollarSign size={16} /> {t('terminateLease')}
                                                 </Button>
                                             </div>)
                                         }
@@ -614,6 +697,9 @@ const ContractDetail = () => {
                                     {/* MOBILE ACTIONS */}
                                     <div className="space-y-3 mb-20">
                                         <div className="space-y-3 mb-3">
+                                            <Button onClick={() => setShowPdfViewer(true)} variant="info" disable={!contractAsset || !user} isSubmitBtn={false}>
+                                                <FileText size={16} /> View contract (PDF)
+                                            </Button>
                                             <Button onClick={() => {setShowInvoiceGenerator(true); setAction("CREATE")}} variant='neutral' disable={contract.status == "INACTIVE"} isSubmitBtn={false}>
                                                 <DollarSign size={16} /> Create Invoice
                                             </Button>
@@ -621,8 +707,11 @@ const ContractDetail = () => {
                                         {
                                             contract?.status == "ACTIVE" && 
                                             (<div className="space-y-3">
+                                                <Button onClick={handleOpenPostponeModal} variant="neutral" disable={isPostponingContract} isSubmitBtn={false}>
+                                                    <CalendarRange size={16} /> {t('postponeContract')}
+                                                </Button>
                                                 <Button onClick={handleClickTerminateLease} variant='danger' disable={false} isSubmitBtn={false} loading={isTerminatingContract}>
-                                                    <DollarSign size={16} /> Terminate Lease
+                                                    <DollarSign size={16} /> {t('terminateLease')}
                                                 </Button>
                                             </div>)
                                         }
@@ -663,6 +752,62 @@ const ContractDetail = () => {
                                     message={`Are you sure you want to terminate lease #${contract.id} ?`}
                                 />
                             </Overlay>
+                            <Overlay isOpen={showPostponeModal} onClose={() => !isPostponingContract && setShowPostponeModal(false)}>
+                                <div className="rounded-lg w-full max-w-md mx-auto bg-white dark:bg-gray-800 p-6 shadow-xl">
+                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+                                        {t('postponeContract')}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                        {t('newEndDateMustNotBeBefore')}
+                                    </p>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label htmlFor="postpone-new-end-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                {t('newEndDate')}
+                                            </label>
+                                            <input
+                                                id="postpone-new-end-date"
+                                                type="date"
+                                                min={contract ? getContractEndDateYmd() : undefined}
+                                                value={postponeNewEndDate}
+                                                onChange={(e) => setPostponeNewEndDate(e.target.value)}
+                                                disabled={isPostponingContract}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                                            />
+                                        </div>
+                                        <div className="flex justify-end gap-3 pt-2">
+                                            <Button
+                                                variant="neutral"
+                                                isSubmitBtn={false}
+                                                fullWidth={false}
+                                                disable={isPostponingContract}
+                                                onClick={() => setShowPostponeModal(false)}
+                                            >
+                                                {t('cancel')}
+                                            </Button>
+                                            <Button
+                                                variant="neutral"
+                                                isSubmitBtn={false}
+                                                fullWidth={false}
+                                                disable={isPostponingContract || !postponeNewEndDate.trim()}
+                                                loading={isPostponingContract}
+                                                onClick={handleConfirmPostpone}
+                                            >
+                                                {t('confirmPostpone')}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Overlay>
+                            {contract && contractAsset && user && (
+                                <ContractPdfViewerModal
+                                    isOpen={showPdfViewer}
+                                    onClose={() => setShowPdfViewer(false)}
+                                    contract={contract}
+                                    asset={contractAsset}
+                                    contractor={user}
+                                />
+                            )}
                         </>
                         : 
                         <div>

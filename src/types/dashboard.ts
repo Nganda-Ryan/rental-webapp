@@ -104,3 +104,51 @@ export interface IDashboardResponse {
   TotalFinance?: number;
   TotalArrears?: number;
 }
+
+export interface ISupportDashboardCardValue {
+  value: number;
+  changePctThisMonth?: number;
+}
+
+export interface ISupportDashboardCards {
+  activeUsers: ISupportDashboardCardValue;
+  propertiesListed: ISupportDashboardCardValue;
+  pendingVerifications: { value: number };
+  monthlyActivity: { valuePct: number; changePctThisMonth?: number };
+}
+
+export interface ISupportUserGrowthPoint {
+  month: string;
+  value: number;
+}
+
+export type SupportUserDistributionRole = 'RENTER' | 'LANDLORD' | 'MANAGER' | 'SUPPORT';
+
+export interface ISupportUserDistributionItem {
+  label: string;
+  role: SupportUserDistributionRole | string;
+  percent: number;
+  count: number;
+}
+
+export type SupportRecentActivityUnit = 'days' | 'hours' | 'minutes' | string;
+
+export interface ISupportRecentActivityItem {
+  title: string;
+  ago: string;
+  unit: SupportRecentActivityUnit;
+}
+
+export interface ISupportVerificationStatus {
+  lessorVerificationsPct: number;
+  propertyVerificationsPct: number;
+  supportResponseRatePct: number;
+}
+
+export interface ISupportDashboardResponse {
+  cards: ISupportDashboardCards;
+  userGrowth: ISupportUserGrowthPoint[];
+  userDistribution: ISupportUserDistributionItem[];
+  recentActivity: ISupportRecentActivityItem[];
+  verificationStatus: ISupportVerificationStatus;
+}

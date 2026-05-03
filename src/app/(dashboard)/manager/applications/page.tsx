@@ -15,9 +15,9 @@ import { IApplication } from "@/types/requestTypes";
 import { Search } from "lucide-react";
 import autoAnimate from "@formkit/auto-animate";
 
-const ITEMS_PER_PAGE = 100; // 3 columns × 3 rows
+const ITEMS_PER_PAGE = 9; // 3 columns × 3 rows
 
-export default function Request() {
+export default function ApplicationsPage() {
   const router = useRouter();
   const t = useTranslations("Common");
   const navT = useTranslations("Navigation");
@@ -53,7 +53,6 @@ export default function Request() {
         offset: offset.toString(),
         page: currentPage.toString(),
         term: debouncedSearchTerm.trim() || undefined,
-        ApplyUser: false
       };
       
       console.log('-->searchRequest params', params);

@@ -74,7 +74,7 @@ const Page = () => {
                     fullWidth={false}
                     onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/landlord/properties/${params.id}/edit-unit?unitId=${unit.Code}`);
+                        router.push(`/manager/properties/${params.id}/edit-unit?unitId=${unit.Code}`);
                     }}
                 >
                     Edit
@@ -87,7 +87,7 @@ const Page = () => {
 
   const handleSelectUnit = (unitId: string) => {
     console.log('handleSelectUnit.unitId', unitId)
-    router.push(`/landlord/properties/${params.id}/units/${unitId}`)
+    router.push(`/manager/properties/${params.id}/units/${unitId}`)
   }
 
   const getUnits = (items:any[]): AssetData [] => {

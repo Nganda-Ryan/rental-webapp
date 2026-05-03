@@ -180,11 +180,7 @@ export function useQuickActions({
       });
     }
 
-    // Delete Asset - Always show if handler is provided
-    // This is a landlord-level action, so show it if the handler exists
-    // (Handler will be provided by landlord pages, indicating user has permission)
-    if (onDeleteAsset) {
-      console.log('ADD DELETE ACTION');
+    if (onDeleteAsset && permissions.canDeleteAsset) {
       actions.push({
         id: 'delete-asset',
         label: assetType === AssetType.PROPERTY
@@ -197,9 +193,7 @@ export function useQuickActions({
       });
     }
 
-    // Deactivate Asset - Show when asset exists AND is active
-    // These are landlord-level actions, so don't require canEditProperty permission
-    if (onDeactivateAsset && asset && isAssetActive === true) {
+    if (onDeactivateAsset && asset && isAssetActive === true && permissions.canDeactivateAsset) {
       actions.push({
         id: 'deactivate-asset',
         label: assetType === AssetType.PROPERTY
@@ -212,9 +206,7 @@ export function useQuickActions({
       });
     }
 
-    // Activate Asset - Show when asset exists AND is inactive
-    // These are landlord-level actions, so don't require canEditProperty permission
-    if (onActivateAsset && asset && isAssetActive === false) {
+    if (onActivateAsset && asset && isAssetActive === false && permissions.canActivateAsset) {
       actions.push({
         id: 'activate-asset',
         label: assetType === AssetType.PROPERTY

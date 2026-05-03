@@ -116,29 +116,33 @@ const PropertyDetail = () => {
     }
   }, [modals.invoiceGenerator, tempInvoiceFormDefaultValue]);
 
-  // Fetch dashboard data when asset is loaded
+  // Fetch dashboard when user may view it (DashBoardViewer or owner)
   useEffect(() => {
     const fetchDashboard = async () => {
-      if (asset?.Code) {
-        setIsLoadingDashboard(true);
-        try {
-          const result = await assetDashboard(asset.Code);
-          console.log('-->assetDashboard.result', result)
-          if (result.data?.body) {
-            setDashboardData(result.data.body as IGetAssetDashboard);
-          } else if (result.error) {
-            console.error('Failed to load dashboard:', result.error);
-          }
-        } catch (error) {
-          console.error('Error loading dashboard:', error);
-        } finally {
+      if (!asset?.Code || !permissions.canViewAssetDashboard) {
+        if (!permissions.canViewAssetDashboard) {
+          setDashboardData(null);
           setIsLoadingDashboard(false);
         }
+        return;
+      }
+      setIsLoadingDashboard(true);
+      try {
+        const result = await assetDashboard(asset.Code);
+        if (result.data?.body) {
+          setDashboardData(result.data.body as IGetAssetDashboard);
+        } else if (result.error) {
+          console.error('Failed to load dashboard:', result.error);
+        }
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+      } finally {
+        setIsLoadingDashboard(false);
       }
     };
 
     fetchDashboard();
-  }, [asset?.Code]);
+  }, [asset?.Code, permissions.canViewAssetDashboard]);
 
 
   // Action handlers
@@ -432,6 +436,7 @@ const PropertyDetail = () => {
       <AssetDetailsCard
         asset={asset}
         tenantInfo={tenantInfo}
+        showTenantInfo={permissions.canViewTenantInfo}
         showImage={true}
       />
       <AssetSections
@@ -441,17 +446,19 @@ const PropertyDetail = () => {
         units={units}
         user={user}
         showUnits={asset.Type === ASSET_TYPE_COMPLEXE}
-        showInvoices={asset.Type !== ASSET_TYPE_COMPLEXE}
-        showContracts={asset.Type !== ASSET_TYPE_COMPLEXE}
+        showInvoices={asset.Type !== ASSET_TYPE_COMPLEXE && permissions.canViewInvoices}
+        showContracts={asset.Type !== ASSET_TYPE_COMPLEXE && permissions.canViewContracts}
         onContractClick={handleSelectedContract}
         onViewContractPdf={(c) => setPdfViewerContract(c)}
         onViewRequestDetail={(item) => setSelectedRequest(item)}
         onUnitClick={handleSelectUnit}
       />
-      <AssetDashboard
-        dashboardData={dashboardData}
-        isLoading={isLoadingDashboard}
-      />
+      {permissions.canViewAssetDashboard && (
+        <AssetDashboard
+          dashboardData={dashboardData}
+          isLoading={isLoadingDashboard}
+        />
+      )}
     </>
   ) : (
     <Nodata />

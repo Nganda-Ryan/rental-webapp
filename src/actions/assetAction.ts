@@ -207,11 +207,10 @@ export async function getAsset(assetCode: string): Promise<any> {
   }
 }
 
-export async function searchAsset(params: SeachPropertyParams, profile: string) {
+export async function searchAsset(params: SeachPropertyParams, profile: string | undefined) {
   try {
     console.log("-->profile", profile)
     const session = await verifySession();
-    // console.log('-->session', session);
     const apiClient: AxiosInstance = axios.create({
       baseURL: process.env.SEARCH_WORKER_ENDPOINT,
       headers: {
@@ -219,13 +218,16 @@ export async function searchAsset(params: SeachPropertyParams, profile: string) 
         'Authorization': `Bearer ${session.accessToken}`,
       },
     });
+    console.log("params", params)
+    console.log("profileCode", session.Profiles.find(p => p.RoleCode === profile)?.Code)
+    const payload = profile ? {
+      ...params,
+      profileCode: session.Profiles.find(p => p.RoleCode === profile)?.Code
+    } : params;
     const response = await apiClient.request({
       method: 'GET',
       url: '/api/v1/Asset',
-      params: {
-        ...params,
-        profileCode: session.Profiles.find(p => p.RoleCode === profile)?.Code
-      }
+      params: payload
     });
     
     return {

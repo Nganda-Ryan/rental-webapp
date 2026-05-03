@@ -137,6 +137,13 @@ export interface AssetPermissions {
   canViewUnits: boolean;
   canAttachProperties: boolean;
   canShareLink: boolean;
+  /** Property dashboard (DashBoardViewer or owner) */
+  canViewAssetDashboard: boolean;
+  /** Tenant block on asset card (TenantsViewer / TenantsSuperViewer or owner) */
+  canViewTenantInfo: boolean;
+  canDeleteAsset: boolean;
+  canDeactivateAsset: boolean;
+  canActivateAsset: boolean;
 }
 
 /**
@@ -184,4 +191,9 @@ export interface UseAssetPermissionsParams {
   assetType: AssetType;
   activeContract: ContractData | null;
   userRole: string;
+  /**
+   * When set, UI is gated by getAsset `ConfigPermissionList` (manager flows).
+   * Omit on landlord pages so API codes are not applied.
+   */
+  grantedPermissions?: ReadonlyArray<{ Code: string; IsActive: number }>;
 }

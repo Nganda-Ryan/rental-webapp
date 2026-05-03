@@ -344,7 +344,8 @@
     "accountManagement": "Account Management",
     "landlordVerification": "Landlord Verification",
     "propertiesVerification": "Properties Verification",
-    "supportUsers": "Support Users"
+    "supportUsers": "Support Users",
+    "propertyList": "Property list"
   },
   "Table": {
     "searchPlaceholder": "Search...",
@@ -352,7 +353,10 @@
     "noResults": "No results found for \"{searchTerm}\"",
     "previous": "Previous",
     "page": "Page {page} / {totalPages}",
-    "next": "Next"
+    "next": "Next",
+    "rowsPerPage": "Rows per page",
+    "goToPage": "Go to page",
+    "showingRange": "{start}–{end} of {total}"
   },
   "PropertyCard": {
     "available": "Available",
@@ -653,6 +657,11 @@
       "propertyVerificationApproved": "Property Verification Approved",
       "newPropertyListed": "New Property Listed",
       "minutesAgo": "{count} minutes ago",
+      "agoFormat": "{count} {unit} ago",
+      "unit_days": "days",
+      "unit_hours": "hours",
+      "unit_minutes": "minutes",
+      "unit_seconds": "seconds",
       "lessorVerifications": "Lessor Verifications",
       "propertyVerifications": "Property Verifications",
       "supportResponseRate": "Support Response Rate",
@@ -688,6 +697,10 @@
       "failedToDeactivateAsset": "Failed to deactivate asset",
       "failedToActivateAsset": "Failed to activate asset",
       "failedToDeleteAsset": "Failed to delete asset"
+    },
+    "propertyList": {
+      "title": "Property list",
+      "sectionTitle": "All properties"
     },
     "landlordVerification": {
       "title": "Lessor Verification Requests",

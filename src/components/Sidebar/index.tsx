@@ -58,6 +58,13 @@ const ALL_MENU_GROUPS = [
         profiles: ["LANDLORD"],
       },
       {
+        icon: <LayoutDashboard size={20} />,
+        label: "Dashboard",
+        labelKey: "dashboard",
+        route: "/manager",
+        profiles: ["MANAGER"],
+      },
+      {
         icon: <Building size={20} />,
         label: "Properties",
         labelKey: "properties",
@@ -65,11 +72,25 @@ const ALL_MENU_GROUPS = [
         profiles: ["LANDLORD"],
       },
       {
+        icon: <Building size={20} />,
+        label: "Properties",
+        labelKey: "properties",
+        route: "/manager/properties",
+        profiles: ["MANAGER"],
+      },
+      {
         icon: <FileText size={20} />,
         label: "Requests",
         labelKey: "applicationsReceived",
         route: "/landlord/requests",
         profiles: ["LANDLORD"],
+      },
+      {
+        icon: <FileText size={20} />,
+        label: "Requests",
+        labelKey: "applicationsReceived",
+        route: "/manager/requests",
+        profiles: ["MANAGER"],
       },
       {
         icon: <LayoutDashboard size={20} />,
@@ -83,6 +104,13 @@ const ALL_MENU_GROUPS = [
         label: "Account Management",
         labelKey: "accountManagement",
         route: "/support/account-management",
+        profiles: ["SUPPORT", "ADMIN"],
+      },
+      {
+        icon: <Building size={20} />,
+        label: "Property list",
+        labelKey: "propertyList",
+        route: "/support/property-list",
         profiles: ["SUPPORT", "ADMIN"],
       },
       {

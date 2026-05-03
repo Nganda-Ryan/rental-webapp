@@ -1,11 +1,8 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import {
-  Search,
   Mail,
-  UserPlus,
   Phone,
-  Trash2,
   UserX,
   UserCheck,
 } from 'lucide-react';
@@ -23,11 +20,9 @@ import Nodata from '@/components/error/Nodata';
 import toast from 'react-hot-toast';
 import { useRouter } from '@bprogress/next/app';
 import { SuccessModal } from '@/components/Modal/SucessModal';
-import Loading from '@/components/error/Loading';
 import { SkeletonTable } from '@/components/skeleton/SkeletonTable';
 import Button from '@/components/ui/Button';
 
-import SectionWrapper from '@/components/Cards/SectionWrapper';
 import { roleStore } from '@/store/roleStore';
 import { useTranslations } from 'next-intl';
 
@@ -279,8 +274,6 @@ const Page = () => {
               <SkeletonTable rows={6} />
             }
           </div>
-          
-
 
           <Overlay isOpen={showNewUserForm} onClose={() => setShowNewUserForm(false)}>
             <NewSupportUserForm

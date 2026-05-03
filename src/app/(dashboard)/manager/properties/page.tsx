@@ -79,7 +79,7 @@ const PropertiesPage = () => {
 
     fetchData();
     listRef.current && autoAnimate(listRef.current, { duration: 300 });
-  }, [activeRole, router]);
+  }, [activeRole, commonT, router]);
 
   useEffect(() => {
     let filtered = assetList;
@@ -106,7 +106,7 @@ const PropertiesPage = () => {
   };
 
   const handleNewAsset = () => {
-    router.push('/landlord/properties/new');
+    router.push('/manager/properties/new');
   };
 
   // if (!isAuthorized(PROFILE_LANDLORD_LIST)) {

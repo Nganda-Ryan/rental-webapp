@@ -200,6 +200,11 @@
       "propertyVerificationApproved": "Vérification de propriété approuvée",
       "newPropertyListed": "Nouvelle propriété listée",
       "minutesAgo": "Il y a {count} minutes",
+      "agoFormat": "Il y a {count} {unit}",
+      "unit_days": "jours",
+      "unit_hours": "heures",
+      "unit_minutes": "minutes",
+      "unit_seconds": "secondes",
       "lessorVerifications": "Vérifications des bailleurs",
       "propertyVerifications": "Vérifications des propriétés",
       "supportResponseRate": "Taux de réponse du support",
@@ -235,6 +240,10 @@
       "failedToDeactivateAsset": "Échec de la désactivation de l'actif",
       "failedToActivateAsset": "Échec de l'activation de l'actif",
       "failedToDeleteAsset": "Échec de la suppression de l'actif"
+    },
+    "propertyList": {
+      "title": "Liste des propriétés",
+      "sectionTitle": "Toutes les propriétés"
     },
     "landlordVerification": {
       "title": "Demandes de vérification de bailleur",
@@ -626,7 +635,8 @@
     "accountManagement": "Gestion des comptes",
     "landlordVerification": "Vérification des propriétaires",
     "propertiesVerification": "Vérification des propriétés",
-    "supportUsers": "Utilisateurs de support"
+    "supportUsers": "Utilisateurs de support",
+    "propertyList": "Liste des propriétés"
   },
   "Table": {
     "searchPlaceholder": "Rechercher...",
@@ -634,7 +644,10 @@
     "noResults": "Aucun résultat trouvé pour \"{searchTerm}\"",
     "previous": "Précédent",
     "page": "Page {page} / {totalPages}",
-    "next": "Suivant"
+    "next": "Suivant",
+    "rowsPerPage": "Lignes par page",
+    "goToPage": "Aller à la page",
+    "showingRange": "{start}–{end} sur {total}"
   },
   "PropertyCard": {
     "available": "Disponible",

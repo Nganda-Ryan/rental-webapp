@@ -14,6 +14,8 @@ export interface AssetDetailsCardProps {
   asset: AssetDataDetailed | null;
   /** Optional tenant information */
   tenantInfo?: TenantInfo | null;
+  /** When false, tenant details are hidden even if tenantInfo is set */
+  showTenantInfo?: boolean;
   /** Whether to show image */
   showImage?: boolean;
   /** Whether asset is loading */
@@ -27,6 +29,7 @@ export interface AssetDetailsCardProps {
 export const AssetDetailsCard: React.FC<AssetDetailsCardProps> = ({
   asset,
   tenantInfo,
+  showTenantInfo = true,
   showImage = true,
   isLoading = false,
 }) => {
@@ -137,7 +140,7 @@ export const AssetDetailsCard: React.FC<AssetDetailsCardProps> = ({
         )}
 
         {/* Tenant Information */}
-        {tenantInfo && (
+        {showTenantInfo && tenantInfo && (
           <div className="grid grid-cols-1 sm:grid-cols-2 py-4 gap-4 border-t border-gray-100 dark:border-gray-700">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Name</p>

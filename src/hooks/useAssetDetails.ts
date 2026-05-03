@@ -15,6 +15,7 @@ import {
   TenantInfo,
 } from '@/types/AssetHooks';
 import { IUserPermission } from '@/types/user';
+import { ASSET_TYPE_COMPLEXE } from '@/constant';
 export function useAssetDetails({
   assetId,
   assetType,
@@ -143,7 +144,6 @@ export function useAssetDetails({
 
       const result = await getAsset(assetId);
       const body = result?.data?.body;
-      console.log('getAsset result', body?.ConfigPermissionList);
       if (!body?.assetData) {
         if (result?.error) {
           if (result.code === 'SESSION_EXPIRED') {
@@ -155,9 +155,6 @@ export function useAssetDetails({
         throw new Error('Asset not found');
       }
       setPermissionList(body.ConfigPermissionList ?? []);
-      console.log('permissionList', body.ConfigPermissionList);
-      console.log('result.data.body', body);
-
       const item = body.assetData;
 
       // Transform asset data
@@ -203,8 +200,6 @@ export function useAssetDetails({
         ? transformUnits(rawUnits)
         : [];
 
-        console.log('unitsData', unitsData)
-
       // Transform managers
       const managersData = item.managers
         ? transformManagers(item.managers ?? [], body.ConfigPermissionList)
@@ -216,7 +211,6 @@ export function useAssetDetails({
       let tenantInfoData: TenantInfo | null = null;
 
       if (item.contracts && item.contracts.length > 0) {
-        console.log('item.contracts', item.contracts)
         const rawActiveContract =
           item.contracts.find((c: any) => c.StatusCode === 'ACTIVE') || item.contracts[0];
 
@@ -239,9 +233,9 @@ export function useAssetDetails({
         }
       }
 
-      // Fetch invoices if contracts exist
+      // Invoices: load for non-complex assets even without contracts (managers may not receive contracts in getAsset)
       let invoicesData: InvoiceData[] = [];
-      if (contractsData.length > 0) {
+      if (assetData.Type !== ASSET_TYPE_COMPLEXE) {
         const invoiceResult = await searchInvoice({
           orderBy: 'Item.CreatedAt',
           orderMode: 'desc',
@@ -256,7 +250,6 @@ export function useAssetDetails({
       }
 
       // Update state
-      console.log('assetData', assetData)
       setAsset(assetData);
       setActiveContract(activeContractData);
       setContracts(contractsData.reverse()); // Reverse to show most recent first

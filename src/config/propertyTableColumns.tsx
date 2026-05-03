@@ -4,7 +4,7 @@ import { capitalize, capitalizeEachWord, formatDateToText, formatNumberWithSpace
 import { getStatusBadge } from "@/lib/utils-component";
 import Button from "@/components/ui/Button";
 import { ProfileDetail } from "@/types/authTypes";
-import { UnitData } from "@/types/AssetHooks";
+import { UnitData, InvoiceData } from "@/types/AssetHooks";
 
 export interface GetContractColumnsOptions {
   /** Navigate to contract detail page */
@@ -194,6 +194,42 @@ export const getInvoiceColumns = (handleClickUpdateInvoice: (invoice: IInvoiceFo
   },
 ];
 
+/** Read-only columns for asset detail list (`searchInvoice` / useAssetDetails shape). */
+export const getInvoiceSummaryColumns = () => [
+  {
+    key: 'Code',
+    label: 'ID',
+    priority: 'medium' as const,
+    render: (_: unknown, invoice: InvoiceData) => (
+      <div className="text-gray-800 text-sm dark:text-gray-100">{invoice.Code}</div>
+    ),
+  },
+  {
+    key: 'DueDate',
+    label: 'Due',
+    priority: 'medium' as const,
+    render: (_: unknown, invoice: InvoiceData) => (
+      <div className="text-sm text-gray-800 dark:text-gray-100">{invoice.DueDate || '—'}</div>
+    ),
+  },
+  {
+    key: 'Amount',
+    label: 'Amount',
+    priority: 'medium' as const,
+    render: (_: unknown, invoice: InvoiceData) => (
+      <div className="text-sm text-gray-800 dark:text-gray-100">
+        {formatNumberWithSpaces(invoice.Amount)}
+      </div>
+    ),
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    priority: 'high' as const,
+    render: (_: unknown, invoice: InvoiceData) => <>{getStatusBadge(invoice.Status)}</>,
+  },
+];
+
 export const getUnitColumns = (
   asset: AssetData,
   onEdit: (unitCode: string) => void,
@@ -249,6 +285,54 @@ export const getUnitColumns = (
         </Button>
       </div>
     ),
+  },
+];
+
+/** Admin/support asset list row (mapped AssetData) */
+export const getSupportAssetListColumns = (t: (key: string) => string) => [
+  {
+    key: 'Title',
+    label: t('propertyName'),
+    priority: 'high' as const,
+    render: (_: unknown, row: AssetData) => (
+      <div className="font-medium text-gray-800 dark:text-gray-100">{row.Title}</div>
+    ),
+  },
+  {
+    key: 'Address',
+    label: t('address'),
+    priority: 'medium' as const,
+    render: (_: unknown, row: AssetData) => (
+      <div className="text-sm text-gray-600 dark:text-gray-300">
+        {[row.Address?.Street, row.Address?.City, row.Address?.Country].filter(Boolean).join(', ')}
+      </div>
+    ),
+  },
+  {
+    key: 'TypeCode',
+    label: t('propertyType'),
+    priority: 'medium' as const,
+    render: (typeCode: string, row: AssetData) => (
+      <span className="text-sm text-gray-800 dark:text-gray-100">
+        {t(row.TypeCode) || row.TypeCode}
+      </span>
+    ),
+  },
+  {
+    key: 'Price',
+    label: t('price'),
+    priority: 'low' as const,
+    render: (_: unknown, row: AssetData) => (
+      <span className="text-sm text-gray-800 dark:text-gray-100">
+        {formatNumberWithSpaces(row.Price)} {row.Currency}
+      </span>
+    ),
+  },
+  {
+    key: 'StatusCode',
+    label: t('status'),
+    priority: 'medium' as const,
+    render: (_: unknown, row: AssetData) => getStatusBadge(row.StatusCode, t),
   },
 ];
 
