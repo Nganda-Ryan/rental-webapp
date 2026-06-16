@@ -13,6 +13,7 @@ import Overlay from "@/components/Overlay";
 import PrincingCardSkeleton from "@/components/skeleton/PrincingCardSkeleton";
 import UserInfoForm from "@/components/UserInfoForm";
 import useColorMode from "@/hooks/useColorMode";
+import { ROLE_RENTER } from "@/constant";
 import { useConfigStore } from "@/lib/store/configStore";
 import { roleStore } from "@/store/roleStore";
 import { ProfileDetail } from "@/types/authTypes";
@@ -48,7 +49,7 @@ const Settings = () => {
     const [loadingMessage, setLoadingMessage] = useState(commonT('updatingProfile'));
 
 
-    const { user, setUser } = roleStore();
+    const { user, setUser, activeRole } = roleStore();
     const [userInfo, setUserInfo] = useState<ProfileDetail | undefined>(user)
     const router = useRouter();
 
@@ -324,8 +325,8 @@ const Settings = () => {
                     </div>
                 </div>
 
-                {/* Consumption */}
-                <PlanConsumption />
+                {/* Consumption — not relevant for renters */}
+                {activeRole !== ROLE_RENTER && <PlanConsumption />}
                 {/* Appearance Section  & Preferences */}
                 <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-6 mb-6">
                     <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
@@ -378,7 +379,7 @@ const Settings = () => {
                     </div>
                 </div>
                 
-                {/* Security */}
+                {/* Security (security questions section disabled in SecuritySection) */}
                 <SecuritySection />
 
                 

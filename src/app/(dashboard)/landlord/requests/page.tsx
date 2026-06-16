@@ -160,8 +160,8 @@ export default function Request() {
             ))}
           </div>
         ) : (
-          <div className="flex items-center justify-center py-12 w-96 mx-auto">
-            <Nodata  />
+          <div className="w-full">
+            <Nodata />
           </div>
         )}
 

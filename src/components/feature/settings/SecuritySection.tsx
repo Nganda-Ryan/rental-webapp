@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl';
 const SecuritySection = () => {
     const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
     const [isChangeEmailModalOpen, setIsChangeEmailModalOpen] = useState(false);
-    const [isSecurityQuestionsModalOpen, setIsSecurityQuestionsModalOpen] = useState(false);
+    // const [isSecurityQuestionsModalOpen, setIsSecurityQuestionsModalOpen] = useState(false);
     const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
     const { user } = roleStore();
     const t = useTranslations('Common');
@@ -45,8 +45,8 @@ const SecuritySection = () => {
             </div>
           </div>
 
-          {/* Security Questions */}
-          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
+          {/* Security Questions — temporarily disabled */}
+          {/* <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
             <h3 className="font-medium mb-3 text-gray-800 dark:text-gray-200">{t('securityQuestions')}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
               {t('securityQuestionsDescription')}
@@ -57,7 +57,7 @@ const SecuritySection = () => {
             >
               {t('setSecurityQuestions')}
             </button>
-          </div>
+          </div> */}
 
           {/* Two-Factor Authentication */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm space-y-3 sm:space-y-0">
