@@ -43,6 +43,7 @@ export const LoginForm = () => {
     try {
       const formData = new FormData(e.currentTarget);
       const result = await login(formData);
+      console.log("handleSubmit", result);
       if (result?.error) {
         if (result.code == "validation") {
           if (isValidationError(result.error)) {

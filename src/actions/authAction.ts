@@ -2,7 +2,6 @@
 
 
 import { createSession, deleteSession, verifySession } from "@/lib/session";
-import { getAuth as getAdminAuth } from "firebase-admin/auth";
 import { signIn, signUp } from "@/lib/auth";
 import { loginSchema, signUpSchema } from "@/lib/validations";
 import { CreateUserType, ISetSecurityQuestion, IUserData } from "@/types/user";
@@ -11,7 +10,6 @@ import { getCloudflareUser, me } from "@/database/userService";
 import { ProfileDetail, SessionPayload } from "@/types/authTypes";
 import { PROFILE_LIST } from "@/constant";
 import { auth } from "@/lib/firebase";
-import { adminAuth } from "@/lib/firebaseAdmin";
 
 
 
@@ -257,11 +255,13 @@ export async function changePassword(currentPassword: string, newPassword: strin
     const token = session.accessToken;
 
     // Vérifier le token pour obtenir le uid
-    const decodedToken = await getAdminAuth().verifyIdToken(token);
+    const { getFirebaseAdminAuth } = await import("@/lib/firebaseAdmin");
+    const adminAuth = getFirebaseAdminAuth();
+    const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
 
     // Mettre à jour le mot de passe côté serveur
-    await getAdminAuth().updateUser(uid, { password: newPassword });
+    await adminAuth.updateUser(uid, { password: newPassword });
 
     return {
       data: "success",
@@ -306,6 +306,8 @@ export async function changePassword(currentPassword: string, newPassword: strin
 export async function changeEmail(newEmail: string) {
   try {
     const session = await verifySession();
+    const { getFirebaseAdminAuth } = await import("@/lib/firebaseAdmin");
+    const adminAuth = getFirebaseAdminAuth();
     const decodedToken = await adminAuth.verifyIdToken(session.accessToken);
 
     await adminAuth.updateUser(decodedToken.uid, {
