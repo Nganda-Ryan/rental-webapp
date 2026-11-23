@@ -15,7 +15,7 @@ import toast from 'react-hot-toast';
 import { useRouter } from '@bprogress/next/app';
 import { ProcessingModal } from '@/components/Modal/ProcessingModal';
 import { useConfigStore } from "@/lib/store/configStore";
-import { ICity, IState, IStreet } from "@/types/configType";
+import { useLocationFilters } from "@/hooks/useLocationFilters";
 import { Select } from "@/components/ui/Select";
 import { useTranslations } from "next-intl";
 import { useTranslatedConstants } from '@/hooks/useTranslatedConstants';
@@ -30,9 +30,6 @@ const Page = () => {
   const [isCplxAsset, setIsCplxAsset] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
   const [manualRemoval, setManualRemoval] = useState(false);
-  const [filteredStates, setFilteredStates] = useState<IState[]>([]);
-  const [filteredCities, setFilteredCities] = useState<ICity[]>([]);
-  const [filteredStreets, setFilteredStreet] = useState<IStreet[]>([]);
   const [dropdownOpenList, setDropdownOpenList] = useState<boolean[]>([]);
   const [selectedPropertyType, setSelectedPropertyType] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -159,33 +156,17 @@ const Page = () => {
   const selectedState = watch('state')
   const selectedCity = watch('city')
 
-  // Filtrage dynamique
-  useEffect(
-    () => {
-      console.log('country changed', selectedCountry)
-      const filteredStates = configStore.state.filter((s) => (s. country_id == configStore.country.find((c) => c.sortname === selectedCountry)?.id))
-      console.log('--->filteredStates', filteredStates);
-      setFilteredStates(filteredStates);
-    },
-    [configStore.country, configStore.state, selectedCountry]
-  )
+  const {
+    filteredStates,
+    filteredCities,
+    filteredStreets,
+    isCountriesLoading,
+    isStatesLoading,
+    isCitiesLoading,
+    isStreetsLoading,
+  } = useLocationFilters(selectedCountry, selectedState, selectedCity);
 
-  useEffect(
-    () => {
-      console.log('-->selectedState', selectedState)
-      setFilteredCities(configStore.city.filter((c) => c.state_id === selectedState))
-    },
-    [configStore.city, selectedState]
-  )
-
-  useEffect(
-    () => {
-      console.log('-->selectedState', selectedCity)
-      setFilteredStreet(configStore.street.filter((s) => s.city_id === selectedCity))
-    },
-    [configStore.street, selectedCity]
-  )
-  
+  const country = useConfigStore((s) => s.country);
 
 
   const handleFormValidSubmit = async (data: AssetFormValue) => {
@@ -381,11 +362,15 @@ const Page = () => {
                               control={control}
                               render={({ field }) => (
                                 <Select
-                                  options={configStore.country.map(c => ({ label: c.name, value: c.sortname }))}
-                                  value={configStore.country.map(c => ({ label: c.name, value: c.sortname })).find(c => c.value === field.value) ?? null}
+                                  options={country.map(c => ({ label: c.name, value: c.sortname }))}
+                                  value={country.map(c => ({ label: c.name, value: c.sortname })).find(c => c.value === field.value) ?? null}
                                   onChange={(selectedOption) => {
                                     field.onChange(selectedOption?.value);
+                                    setValue('state', '');
+                                    setValue('city', '');
+                                    setValue('street', '');
                                   }}
+                                  isLoading={isCountriesLoading}
                                   placeholder={landlordT('selectCountry')}
                                 />
                               )}
@@ -407,7 +392,10 @@ const Page = () => {
                                   value={filteredStates.map(c => ({ label: c.name, value: c.id })).find(c => c.value === field.value) ?? null}
                                   onChange={(selectedOption) => {
                                     field.onChange(selectedOption?.value);
+                                    setValue('city', '');
+                                    setValue('street', '');
                                   }}
+                                  isLoading={isStatesLoading}
                                   placeholder={landlordT('selectState')}
                                 />
                               )}
@@ -428,7 +416,9 @@ const Page = () => {
                                   value={filteredCities.map(c => ({ label: c.name, value: c.id })).find(c => c.value === field.value) ?? null}
                                   onChange={(selectedOption) => {
                                     field.onChange(selectedOption?.value);
+                                    setValue('street', '');
                                   }}
+                                  isLoading={isCitiesLoading}
                                   placeholder={landlordT('selectCity')}
                                 />
                               )}
@@ -450,6 +440,7 @@ const Page = () => {
                                   onChange={(selectedOption) => {
                                     field.onChange(selectedOption?.value);
                                   }}
+                                  isLoading={isStreetsLoading}
                                   placeholder={landlordT('selectStreet')}
                                 />
                               )}

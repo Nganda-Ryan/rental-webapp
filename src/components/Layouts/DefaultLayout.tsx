@@ -2,7 +2,12 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { locationConfigs } from "@/actions/configsAction";
+import {
+  fetchLocationCities,
+  fetchLocationCountries,
+  fetchLocationStates,
+  fetchLocationStreets,
+} from "@/actions/configsAction";
 import { useRouter } from "@bprogress/next/app";
 import toast from "react-hot-toast";
 import { useConfigStore } from "@/lib/store/configStore";
@@ -15,31 +20,69 @@ export default function DefaultLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const configStore = useConfigStore();
+  const mergeConfig = useConfigStore((s) => s.mergeConfig);
+  const setLocationLoading = useConfigStore((s) => s.setLocationLoading);
   const router = useRouter();
   const { activeRole } = roleStore();
-    const landlordT = useTranslations('Landlord.assets');
-    const commonT = useTranslations('Common');
+  const commonT = useTranslations('Common');
+
   useEffect(() => {
-    init();
+    void init();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- load location config once on mount
   }, []);
 
-  const init = async () => {
-    try {
-      const result = await locationConfigs();
-      if(result.data){
-        configStore.setConfig(result.data);
-      } else if (result.error) {
-        if (result.code === 'SESSION_EXPIRED') {
-          router.push('/signin');
-          return;
-        }
-        toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des adresses :', error)
+  const handleLocationError = (code: string | undefined, error: string | null) => {
+    if (code === 'SESSION_EXPIRED') {
+      router.push('/signin');
+      return true;
     }
-  }
+    if (error) {
+      toast.error(error ?? commonT('unexpectedError'), { position: 'bottom-right' });
+    }
+    return false;
+  };
+
+  const init = async () => {
+    const { country, state, city, street } = useConfigStore.getState();
+    const needsInitialLoad =
+      country.length === 0 || state.length === 0 || city.length === 0 || street.length === 0;
+
+    if (needsInitialLoad) {
+      setLocationLoading(true);
+    }
+
+    try {
+      const [countryResult, stateResult] = await Promise.all([
+        fetchLocationCountries(),
+        fetchLocationStates(),
+      ]);
+
+      if (handleLocationError(countryResult.code, countryResult.error)) return;
+      if (handleLocationError(stateResult.code, stateResult.error)) return;
+
+      mergeConfig({
+        ...(countryResult.data ? { country: countryResult.data } : {}),
+        ...(stateResult.data ? { state: stateResult.data } : {}),
+      });
+
+      const [cityResult, streetResult] = await Promise.all([
+        fetchLocationCities(),
+        fetchLocationStreets(),
+      ]);
+
+      if (handleLocationError(cityResult.code, cityResult.error)) return;
+      if (handleLocationError(streetResult.code, streetResult.error)) return;
+
+      mergeConfig({
+        ...(cityResult.data ? { city: cityResult.data } : {}),
+        ...(streetResult.data ? { street: streetResult.data } : {}),
+      });
+    } catch (error) {
+      console.error('Erreur lors du chargement des adresses :', error);
+    } finally {
+      setLocationLoading(false);
+    }
+  };
   return (
     <>
       {/* <AuthProvider> */}

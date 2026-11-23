@@ -64,7 +64,7 @@ export function Select({
             <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
               Aucun résultat trouvé.
             </div>
-          ) : (
+          ) : filteredOptions.length === 0 ? null : (
             filteredOptions.map((option) => (
               <ComboboxOption
                 key={option.value}
