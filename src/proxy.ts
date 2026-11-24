@@ -12,7 +12,7 @@ const routeRoles: Record<string, string[]> = {
 
 const publicRoutes = ['/signin', '/signup', '/unauthorized', '/'];
 
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
   // ✅ Ne pas vérifier les routes publiques
   const isPublic = publicRoutes.some(publicPath => path.startsWith(publicPath));

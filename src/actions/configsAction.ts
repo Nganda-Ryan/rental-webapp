@@ -47,17 +47,21 @@ async function fetchLocationList<T extends { name: string }>(
     }
 }
 
-export const fetchLocationCountries = () =>
-    fetchLocationList<ICountry>(process.env.COUNTRY_ENDPOINT)
+export async function fetchLocationCountries() {
+    return fetchLocationList<ICountry>(process.env.COUNTRY_ENDPOINT)
+}
 
-export const fetchLocationStates = () =>
-    fetchLocationList<IState>(process.env.STATE_ENDPOINT)
+export async function fetchLocationStates() {
+    return fetchLocationList<IState>(process.env.STATE_ENDPOINT)
+}
 
-export const fetchLocationCities = () =>
-    fetchLocationList<ICity>(process.env.CITY_ENDPOINT)
+export async function fetchLocationCities() {
+    return fetchLocationList<ICity>(process.env.CITY_ENDPOINT)
+}
 
-export const fetchLocationStreets = () =>
-    fetchLocationList<IStreet>(process.env.STREET_ENDPOINT)
+export async function fetchLocationStreets() {
+    return fetchLocationList<IStreet>(process.env.STREET_ENDPOINT)
+}
 
 export const locationConfigs = async () => {
     try {

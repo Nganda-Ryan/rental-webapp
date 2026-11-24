@@ -1,6 +1,6 @@
 "use client"
-import React, { useActionState, useState } from 'react';
-import { Building2, Eye, EyeOff, Lock, Mail} from 'lucide-react';
+import React, { useState } from 'react';
+import { Eye, EyeOff, Lock, Mail} from 'lucide-react';
 import { login } from '@/actions/authAction';
 import { useFormStatus } from 'react-dom';
 import toast from 'react-hot-toast';
@@ -22,58 +22,77 @@ const INITIAL_STATE : FormError= {
 }
 
 function isValidationError(error: unknown): error is Record<string, string[]> {
-  return typeof error !== null && error === 'object';
+  return error !== null && typeof error === 'object';
 }
 
 export const LoginForm = () => {
-  // const [state, loginAction] = useActionState(login, undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState(INITIAL_STATE);
-    const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-    const authT = useTranslations('Auth');
-    const commonT = useTranslations('Common');
-
+  const authT = useTranslations('Auth');
+  const commonT = useTranslations('Common');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
     setFormError(INITIAL_STATE);
-  
+
+    const formData = new FormData(e.currentTarget);
+    const username = String(formData.get('username') ?? '').trim();
+    const password = String(formData.get('password') ?? '');
+
+    const clientErrors: FormError = {
+      username: !username ? authT('usernameRequired') : null,
+      password: !password
+        ? authT('passwordRequired')
+        : password.length < 8
+          ? authT('passwordMinLength')
+          : null,
+      message: null,
+    };
+
+    if (clientErrors.username || clientErrors.password) {
+      setFormError({
+        ...clientErrors,
+        message: authT('formHasErrors'),
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      const formData = new FormData(e.currentTarget);
       const result = await login(formData);
-      console.log("handleSubmit", result);
       if (result?.error) {
         if (result.code == "validation") {
           if (isValidationError(result.error)) {
+            const usernameError = result.error.username?.[0]
+              ? authT('invalidUsername')
+              : "";
+            const passwordError = result.error.password?.[0]
+              ? authT('passwordMinLength')
+              : "";
             setFormError({
-              message: "",
-              username: result.error.username?.[0] ?? "",
-              password: result.error.password?.[0] ?? ""
+              message: authT('formHasErrors'),
+              username: usernameError,
+              password: passwordError,
             });
           }
-        } else {
-          if (result.error !== null && typeof result.error !== 'object') {
-            toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
-            setFormError({
-              message: result.error,
-              username: "",
-              password: null
-            })
-          }
-        }      
-      } else {
-        setIsLoading(false);
-        if (result.redirectTo) {
-          router.push(result.redirectTo);
-          toast.success(commonT('loginSuccess'), { position: 'bottom-right' });
-        } else {
-          toast.error(commonT('systemError'), { position: 'bottom-right' });
+        } else if (result.error !== null && typeof result.error !== 'object') {
+          toast.error(result.error ?? commonT('unexpectedError'), { position: 'bottom-right' });
+          setFormError({
+            message: result.error,
+            username: "",
+            password: "",
+          });
         }
+      } else if (result.redirectTo) {
+        router.push(result.redirectTo);
+        toast.success(commonT('loginSuccess'), { position: 'bottom-right' });
+      } else {
+        toast.error(commonT('systemError'), { position: 'bottom-right' });
       }
-      return;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erreur inattendue :', error);
       toast.error(commonT('systemError'), { position: 'bottom-right' });
     } finally {
@@ -101,7 +120,10 @@ export const LoginForm = () => {
         {/* <h1 className="text-3xl font-bold text-[#083959]">Welcome back</h1> */}
         <p className="mt-2 text-gray-600">{authT('signInPrompt')}</p>
       </div>
-      <form onSubmit={handleSubmit} className="sm:mt-8 space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="sm:mt-8 space-y-6">
+        {formError.message && (
+          <p className="text-sm text-red-500" role="alert">{formError.message}</p>
+        )}
         <div className="space-y-4">
           <div>
             <div className="mt-1 relative">
@@ -112,12 +134,12 @@ export const LoginForm = () => {
                 id="username"
                 name="username"
                 type="text"
-                required
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent"
+                aria-invalid={Boolean(formError.username)}
+                className={`block w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent ${formError.username ? 'border-red-500' : 'border-gray-300'}`}
                 placeholder={authT('usernameOrEmail')}
               />
             </div>
-            {formError.username && <p className="text-red-500">{formError.username}</p>}
+            {formError.username && <p className="mt-1 text-sm text-red-500">{formError.username}</p>}
           </div>
           <div>
             <label
@@ -134,9 +156,9 @@ export const LoginForm = () => {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                required
                 autoComplete='current-password'
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent"
+                aria-invalid={Boolean(formError.password)}
+                className={`block w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent ${formError.password ? 'border-red-500' : 'border-gray-300'}`}
                 placeholder={authT('enterPassword')}
               />
               <button
@@ -147,7 +169,7 @@ export const LoginForm = () => {
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            {formError.password && <p className="text-red-500">{formError.password}</p>}
+            {formError.password && <p className="mt-1 text-sm text-red-500">{formError.password}</p>}
           </div>
         </div>
         <div className="flex items-center justify-between">
